@@ -1,5 +1,7 @@
 package com.hotel.model;
 
+import com.hotel.model.enumeration.StatutChambre;
+
 public class Chambre {
 
     private int idChambre ;

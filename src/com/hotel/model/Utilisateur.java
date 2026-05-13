@@ -1,5 +1,7 @@
 package com.hotel.model;
 
+import com.hotel.model.enumeration.Role;
+
 public class Utilisateur {
     private int idUtilisateur ;
     private String nom ;
