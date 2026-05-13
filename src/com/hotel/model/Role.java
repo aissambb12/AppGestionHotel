@@ -1,4 +1,10 @@
 package com.hotel.model;
 
-public class Role {
+public enum Role {
+
+    ADMIN,
+    RECEPTIONNISTE,
+    MAINTENANCE,
+    RESTAURANT
+
 }
