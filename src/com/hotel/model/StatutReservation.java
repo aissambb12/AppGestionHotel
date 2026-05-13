@@ -1,4 +1,8 @@
 package com.hotel.model;
 
-public class StatutReservation {
+public enum StatutReservation {
+
+        EN_ATTENTE,
+        CONFIRMEE,
+        ANNULEE
 }
