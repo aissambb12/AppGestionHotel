@@ -1,4 +1,4 @@
 package com.hotel.dao;
 
-public class UtilisateurDAO {
+public interface UtilisateurDAO {
 }

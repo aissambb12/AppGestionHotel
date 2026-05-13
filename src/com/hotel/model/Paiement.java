@@ -1,4 +1,4 @@
 package com.hotel.model;
 
-public class ModePaiement {
+public class Paiement {
 }

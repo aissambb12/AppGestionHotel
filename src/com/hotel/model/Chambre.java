@@ -1,22 +1,21 @@
 package com.hotel.model;
 
+import com.hotel.model.enumeration.StatutChambre;
+
 public class Chambre {
 
-    private int idChambre;
-    private String numero;
-    private String type;
-    private double prixParNuit;
-    private StatutChambre statut;
+    private int idChambre ;
+    private String numero ;
+    private String type ;
+    private double prixParNuit ;
+    private StatutChambre statu ;
 
-    public Chambre() {
-    }
-
-    public Chambre(int idChambre, String numero, String type, double prixParNuit, StatutChambre statut) {
-        this.idChambre = idChambre;
-        this.numero = numero;
-        this.type = type;
+    public Chambre(StatutChambre statu, double prixParNuit, String type, String numero, int idChambre) {
+        this.statu = statu;
         this.prixParNuit = prixParNuit;
-        this.statut = statut;
+        this.type = type;
+        this.numero = numero;
+        this.idChambre = idChambre;
     }
 
     public int getIdChambre() {
@@ -51,22 +50,13 @@ public class Chambre {
         this.prixParNuit = prixParNuit;
     }
 
-    public StatutChambre getStatut() {
-        return statut;
+    public StatutChambre getStatu() {
+        return statu;
     }
 
-    public void setStatut(StatutChambre statut) {
-        this.statut = statut;
+    public void setStatu(StatutChambre statu) {
+        this.statu = statu;
     }
 
-    @Override
-    public String toString() {
-        return "Chambre{" +
-                "idChambre=" + idChambre +
-                ", numero='" + numero + '\'' +
-                ", type='" + type + '\'' +
-                ", prixParNuit=" + prixParNuit +
-                ", statut=" + statut +
-                '}';
-    }
+
 }

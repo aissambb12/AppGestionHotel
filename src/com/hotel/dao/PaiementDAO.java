@@ -1,4 +1,4 @@
 package com.hotel.dao;
 
-public class PaiementDAO {
+public interface PaiementDAO {
 }
