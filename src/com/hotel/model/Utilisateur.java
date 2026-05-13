@@ -15,6 +15,8 @@ public class Utilisateur {
         this.nom = nom;
     }
 
+    public Utilisateur() {}
+
     public int getIdUtilisateur() {
         return idUtilisateur;
     }
