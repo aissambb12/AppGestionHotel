@@ -6,17 +6,19 @@ public class Client {
     private String nom ;
     private String prenom ;
     private String cin ;
-    private String tlephone ;
+    private String telephone ;
     private String email ;
 
-    public Client(String email, String tlephone, String cin, String prenom, String nom, int idClient) {
+    public Client(String email, String telephone, String cin, String prenom, String nom, int idClient) {
         this.email = email;
-        this.tlephone = tlephone;
+        this.telephone = telephone;
         this.cin = cin;
         this.prenom = prenom;
         this.nom = nom;
         this.idClient = idClient;
     }
+
+    public Client() {}
 
     public int getIdClient() {
         return idClient;
@@ -42,12 +44,12 @@ public class Client {
         this.cin = cin;
     }
 
-    public String getTlephone() {
-        return tlephone;
+    public String getTelephone() {
+        return telephone;
     }
 
-    public void setTlephone(String tlephone) {
-        this.tlephone = tlephone;
+    public void setTelephone(String tlephone) {
+        this.telephone = tlephone;
     }
 
     public String getPrenom() {
