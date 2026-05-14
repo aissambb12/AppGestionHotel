@@ -2,7 +2,8 @@ package com.hotel.model.enumeration;
 
 public enum StatutReservation {
 
-    EN_ATTENTE,
-    CONFIRMEE,
-    ANNULEE
+    RESERVEE,
+    EN_COURS,
+    ANNULEE,
+    TERMINEE
 }

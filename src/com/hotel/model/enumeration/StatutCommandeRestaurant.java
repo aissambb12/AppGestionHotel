@@ -4,6 +4,6 @@ public enum StatutCommandeRestaurant {
 
     EN_ATTENTE,
     PREPAREE,
-    LIVREE,
+    SERVRIE,
     ANNULEE
 }
