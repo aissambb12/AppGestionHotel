@@ -1,7 +1,7 @@
 package com.hotel.dao;
 
 import com.hotel.model.CommandeRestaurant;
-import com.hotel.model.StatutCommandeRestaurant;
+import com.hotel.model.enumeration.StatutCommandeRestaurant;
 import java.util.List;
 
 public interface CommandeRestaurantDAO {

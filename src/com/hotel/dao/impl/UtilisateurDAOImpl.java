@@ -1,7 +1,7 @@
 package com.hotel.dao.impl;
 
 import com.hotel.dao.UtilisateurDAO;
-import com.hotel.model.Role;
+import com.hotel.model.enumeration.Role;
 import com.hotel.model.Utilisateur;
 import com.hotel.util.DatabaseConnection;
 

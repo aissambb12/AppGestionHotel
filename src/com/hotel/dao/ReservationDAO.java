@@ -2,7 +2,7 @@ package com.hotel.dao;
 
 
 import com.hotel.model.Reservation;
-import com.hotel.model.StatutReservation;
+import com.hotel.model.enumeration.StatutReservation;
 import java.util.List;
 
 public interface ReservationDAO {

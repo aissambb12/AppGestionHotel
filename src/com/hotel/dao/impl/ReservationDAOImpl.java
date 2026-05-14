@@ -2,6 +2,7 @@ package com.hotel.dao.impl;
 
 import com.hotel.dao.ReservationDAO;
 import com.hotel.model.*;
+import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.util.DatabaseConnection;
 
 import java.sql.*;

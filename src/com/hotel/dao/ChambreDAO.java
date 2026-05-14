@@ -1,7 +1,7 @@
 package com.hotel.dao;
 
 import com.hotel.model.Chambre;
-import com.hotel.model.StatutChambre;
+import com.hotel.model.enumeration.StatutChambre;
 import java.util.List;
 
 public interface ChambreDAO {

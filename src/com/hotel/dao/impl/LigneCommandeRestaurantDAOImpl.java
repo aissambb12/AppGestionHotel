@@ -40,7 +40,7 @@ public class LigneCommandeRestaurantDAOImpl implements LigneCommandeRestaurantDA
             ps.setInt(2, ligne.getPlat().getIdPlat());
             ps.setInt(3, ligne.getQuantite());
             ps.setDouble(4, ligne.getPrixUnitaire());
-            ps.setInt(5, ligne.getIdLigne());
+            ps.setInt(5, ligne.getIdLigneCommande());
 
             ps.executeUpdate();
 
@@ -187,7 +187,7 @@ public class LigneCommandeRestaurantDAOImpl implements LigneCommandeRestaurantDA
         Plat plat = new Plat();
         plat.setIdPlat(rs.getInt("id_plat"));
 
-        ligne.setIdLigne(rs.getInt("id_ligne"));
+        ligne.setIdLigneCommande(rs.getInt("id_ligne"));
         ligne.setCommandeRestaurant(commande);
         ligne.setPlat(plat);
         ligne.setQuantite(rs.getInt("quantite"));

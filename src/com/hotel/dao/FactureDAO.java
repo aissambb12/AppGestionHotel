@@ -1,7 +1,7 @@
 package com.hotel.dao;
 
 import com.hotel.model.Facture;
-import com.hotel.model.StatutFacture;
+import com.hotel.model.enumeration.StatutFacture;
 import java.util.List;
 
 public interface FactureDAO {

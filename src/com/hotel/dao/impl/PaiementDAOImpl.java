@@ -2,6 +2,7 @@ package com.hotel.dao.impl;
 
 import com.hotel.dao.PaiementDAO;
 import com.hotel.model.*;
+import com.hotel.model.enumeration.ModePaiement;
 import com.hotel.util.DatabaseConnection;
 
 import java.sql.*;
