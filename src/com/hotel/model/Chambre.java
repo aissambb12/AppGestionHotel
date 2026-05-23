@@ -3,62 +3,40 @@ package com.hotel.model;
 import com.hotel.model.enumeration.StatutChambre;
 
 public class Chambre {
+    private int idChambre;
+    private String numero;
+    private String categorie;
+    private double prixUnitaire;
+    private StatutChambre statutChambre;
 
-    private int idChambre ;
-    private String numero ;
-    private String type ;
-    private double prixParNuit ;
-    private StatutChambre statut;
+    public Chambre() {
+    }
 
-    public Chambre(StatutChambre statu, double prixParNuit, String type, String numero, int idChambre) {
-        this.statut = statu;
-        this.prixParNuit = prixParNuit;
-        this.type = type;
-        this.numero = numero;
+    public Chambre(int idChambre, String numero, String categorie, double prixUnitaire, StatutChambre statut) {
         this.idChambre = idChambre;
-    }
-
-    public Chambre() {}
-
-    public int getIdChambre() {
-        return idChambre;
-    }
-
-    public void setIdChambre(int idChambre) {
-        this.idChambre = idChambre;
-    }
-
-    public String getNumero() {
-        return numero;
-    }
-
-    public void setNumero(String numero) {
         this.numero = numero;
+        this.categorie = categorie;
+        this.prixUnitaire = prixUnitaire;
+        this.statutChambre = statut;
     }
 
-    public String getType() {
-        return type;
+    public int getIdChambre() { return idChambre; }
+    public void setIdChambre(int idChambre) { this.idChambre = idChambre; }
+
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+
+    public String getCategorie() { return categorie; }
+    public void setCategorie(String categorie) { this.categorie = categorie; }
+
+    public double getPrixUnitaire() { return prixUnitaire; }
+    public void setPrixUnitaire(double prixUnitaire) { this.prixUnitaire = prixUnitaire; }
+
+    public StatutChambre getStatutChambre() { return statutChambre; }
+    public void setStatutChambre(StatutChambre statutChambre) { this.statutChambre = statutChambre; }
+
+    @Override
+    public String toString() {
+        return "Chambre " + numero + " [" + categorie + "] - " + statutChambre;
     }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public double getPrixParNuit() {
-        return prixParNuit;
-    }
-
-    public void setPrixParNuit(double prixParNuit) {
-        this.prixParNuit = prixParNuit;
-    }
-
-    public StatutChambre getStatut() {
-        return statut;
-    }
-
-    public void setStatut(StatutChambre statut) {
-        this.statut = statut;
-    }
-
-
 }

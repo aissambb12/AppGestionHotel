@@ -1,77 +1,59 @@
 package com.hotel.service;
 
 import com.hotel.dao.ChambreDAO;
-import com.hotel.dao.impl.ChambreDAOImpl;
+import com.hotel.dao.ChambreDAOImpl;
 import com.hotel.model.Chambre;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.util.ValidationUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class ChambreService {
 
-    private ChambreDAO chambreDAO = new ChambreDAOImpl();
+    private ChambreDAO chambreDAO;
 
-    public void ajouterChambre(Chambre chambre) {
+    public ChambreService() {
+        this.chambreDAO = new ChambreDAOImpl();
+    }
 
+    public boolean ajouterChambre(Chambre chambre) {
         if (ValidationUtil.estVide(chambre.getNumero())) {
-            System.out.println("Numéro de chambre obligatoire.");
-            return;
+            throw new IllegalArgumentException("Le numéro de la chambre est obligatoire.");
+        }
+        if (!ValidationUtil.estPrixValide(chambre.getPrixUnitaire())) {
+            throw new IllegalArgumentException("Le prix de la chambre ne peut pas être négatif.");
         }
 
-        if (ValidationUtil.estVide(chambre.getType())) {
-            System.out.println("Type de chambre obligatoire.");
-            return;
+        // Par défaut, une nouvelle chambre est disponible
+        chambre.setStatutChambre(StatutChambre.DISPONIBLE);
+        return chambreDAO.ajouter(chambre);
+    }
+
+    public boolean modifierChambre(Chambre chambre) {
+        if (!ValidationUtil.estPrixValide(chambre.getPrixUnitaire())) {
+            throw new IllegalArgumentException("Le prix de la chambre ne peut pas être négatif.");
+        }
+        return chambreDAO.modifier(chambre);
+    }
+
+    /**
+     * Moteur de recherche pour le réceptionniste : trouve les chambres libres.
+     */
+    public List<Chambre> rechercherChambresDisponibles(LocalDate arrivee, LocalDate depart, String categorie) {
+        // 1. Validation stricte des dates grâce à notre utilitaire
+        if (!ValidationUtil.sontDatesReservationValides(arrivee, depart)) {
+            throw new IllegalArgumentException("La date de départ doit être ultérieure à la date d'arrivée.");
+        }
+        if (!ValidationUtil.estDateDansLeFuturOuAujourdhui(arrivee)) {
+            throw new IllegalArgumentException("Impossible de rechercher une disponibilité dans le passé.");
         }
 
-        if (!ValidationUtil.estPrixValide(chambre.getPrixParNuit())) {
-            System.out.println("Prix invalide.");
-            return;
-        }
-
-        if (chambre.getStatut() == null) {
-            chambre.setStatut(StatutChambre.DISPONIBLE);
-        }
-
-        chambreDAO.ajouter(chambre);
-        System.out.println("Chambre ajoutée avec succès.");
+        // 2. Appel au DAO si les dates sont logiques
+        return chambreDAO.listerChambresDisponibles(arrivee, depart, categorie);
     }
 
-    public void modifierChambre(Chambre chambre) {
-
-        if (chambre.getIdChambre() <= 0) {
-            System.out.println("ID chambre invalide.");
-            return;
-        }
-
-        chambreDAO.modifier(chambre);
-        System.out.println("Chambre modifiée avec succès.");
-    }
-
-    public void supprimerChambre(int idChambre) {
-
-        if (idChambre <= 0) {
-            System.out.println("ID chambre invalide.");
-            return;
-        }
-
-        chambreDAO.supprimer(idChambre);
-        System.out.println("Chambre supprimée avec succès.");
-    }
-
-    public Chambre rechercherChambre(int idChambre) {
-        return chambreDAO.rechercherParId(idChambre);
-    }
-
-    public List<Chambre> listerChambres() {
-        return chambreDAO.listerTous();
-    }
-
-    public List<Chambre> listerChambresDisponibles() {
-        return chambreDAO.listerDisponibles();
-    }
-
-    public void changerStatut(int idChambre, StatutChambre statut) {
-        chambreDAO.changerStatut(idChambre, statut);
+    public List<Chambre> listerToutesLesChambres() {
+        return chambreDAO.listerToutes();
     }
 }

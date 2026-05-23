@@ -1,7 +1,6 @@
-package com.hotel.dao.impl;
+package com.hotel.dao;
 
-import com.hotel.dao.MaintenanceDAO;
-import com.hotel.model.*;
+import com.hotel.model.Maintenance;
 import com.hotel.model.enumeration.StatutMaintenance;
 import com.hotel.util.DatabaseConnection;
 
@@ -12,166 +11,79 @@ import java.util.List;
 public class MaintenanceDAOImpl implements MaintenanceDAO {
 
     @Override
-    public void ajouter(Maintenance maintenance) {
-        String sql = "INSERT INTO maintenance(id_chambre, date_debut, date_fin, description, statut) VALUES (?, ?, ?, ?, ?)";
-
+    public boolean planifier(Maintenance m) {
+        String sql = "INSERT INTO maintenances (id_chambre, date_debut, date_fin, description, statut_maintenance) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, maintenance.getChambre().getIdChambre());
-            ps.setDate(2, new java.sql.Date(maintenance.getDateDebut().getTime()));
-
-            if (maintenance.getDateFin() != null) {
-                ps.setDate(3, new java.sql.Date(maintenance.getDateFin().getTime()));
-            } else {
-                ps.setNull(3, Types.DATE);
-            }
-
-            ps.setString(4, maintenance.getDescription());
-            ps.setString(5, maintenance.getStatut().name());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            ps.setInt(1, m.getIdChambre());
+            ps.setDate(2, Date.valueOf(m.getDateDebut()));
+            ps.setDate(3, Date.valueOf(m.getDateFin()));
+            ps.setString(4, m.getDescription());
+            ps.setString(5, StatutMaintenance.EN_COURS.name());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
     @Override
-    public void modifier(Maintenance maintenance) {
-        String sql = "UPDATE maintenance SET id_chambre=?, date_debut=?, date_fin=?, description=?, statut=? WHERE id_maintenance=?";
-
+    public boolean terminerMaintenance(int idMaintenance, String statut) {
+        String sql = "UPDATE maintenances SET statut_maintenance = ? WHERE id_maintenance = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, maintenance.getChambre().getIdChambre());
-            ps.setDate(2, new java.sql.Date(maintenance.getDateDebut().getTime()));
-
-            if (maintenance.getDateFin() != null) {
-                ps.setDate(3, new java.sql.Date(maintenance.getDateFin().getTime()));
-            } else {
-                ps.setNull(3, Types.DATE);
-            }
-
-            ps.setString(4, maintenance.getDescription());
-            ps.setString(5, maintenance.getStatut().name());
-            ps.setInt(6, maintenance.getIdMaintenance());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            ps.setString(1, statut);
+            ps.setInt(2, idMaintenance);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
     @Override
-    public void supprimer(int idMaintenance) {
-        String sql = "DELETE FROM maintenance WHERE id_maintenance=?";
-
+    public Maintenance trouverParId(int idMaintenance) {
+        String sql = "SELECT * FROM maintenances WHERE id_maintenance = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, idMaintenance);
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public Maintenance rechercherParId(int idMaintenance) {
-        String sql = "SELECT * FROM maintenance WHERE id_maintenance=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idMaintenance);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return construireMaintenance(rs);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapperMaintenance(rs);
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
     @Override
-    public List<Maintenance> listerTous() {
-        List<Maintenance> maintenances = new ArrayList<>();
-        String sql = "SELECT * FROM maintenance";
+    public List<Maintenance> listerToutes() { return executerSelect("SELECT * FROM maintenances"); }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                maintenances.add(construireMaintenance(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return maintenances;
-    }
+    @Override
+    public List<Maintenance> listerActives() { return executerSelect("SELECT * FROM maintenances WHERE statut_maintenance = 'EN_COURS'"); }
 
     @Override
     public List<Maintenance> listerParChambre(int idChambre) {
-        List<Maintenance> maintenances = new ArrayList<>();
-        String sql = "SELECT * FROM maintenance WHERE id_chambre=?";
-
+        String sql = "SELECT * FROM maintenances WHERE id_chambre = ?";
+        List<Maintenance> liste = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, idChambre);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    maintenances.add(construireMaintenance(rs));
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return maintenances;
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) liste.add(mapperMaintenance(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
     }
 
-    @Override
-    public void terminerMaintenance(int idMaintenance) {
-        String sql = "UPDATE maintenance SET statut='TERMINEE', date_fin=CURDATE() WHERE id_maintenance=?";
-
+    private List<Maintenance> executerSelect(String sql) {
+        List<Maintenance> liste = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idMaintenance);
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) liste.add(mapperMaintenance(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
     }
 
-    private Maintenance construireMaintenance(ResultSet rs) throws SQLException {
-        Maintenance maintenance = new Maintenance();
-
-        Chambre chambre = new Chambre();
-        chambre.setIdChambre(rs.getInt("id_chambre"));
-
-        maintenance.setIdMaintenance(rs.getInt("id_maintenance"));
-        maintenance.setChambre(chambre);
-        maintenance.setDateDebut(rs.getDate("date_debut"));
-        maintenance.setDateFin(rs.getDate("date_fin"));
-        maintenance.setDescription(rs.getString("description"));
-        maintenance.setStatut(StatutMaintenance.valueOf(rs.getString("statut")));
-
-        return maintenance;
+    private Maintenance mapperMaintenance(ResultSet rs) throws SQLException {
+        return new Maintenance(
+                rs.getInt("id_maintenance"),
+                rs.getInt("id_chambre"),
+                rs.getDate("date_debut").toLocalDate(),
+                rs.getDate("date_fin").toLocalDate(),
+                rs.getString("description"),
+                StatutMaintenance.valueOf(rs.getString("statut_maintenance"))
+        );
     }
 }

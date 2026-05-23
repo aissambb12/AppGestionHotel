@@ -1,65 +1,74 @@
 package com.hotel.util;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 
 public class DateUtil {
 
-    private static final String FORMAT_DATE = "yyyy-MM-dd";
+    // Formats standards de la base de données et de l'interface
+    private static final DateTimeFormatter FORMAT_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter FORMAT_DATE_HEURE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private DateUtil() {
     }
 
-    public static Date stringVersDate(String dateTexte) {
-        if (dateTexte == null || dateTexte.trim().isEmpty()) {
-            return null;
-        }
-
-        SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATE);
-        sdf.setLenient(false);
-
+    /**
+     * Convertit un texte (ex: "2026-06-02") en objet LocalDate.
+     * Très utile pour récupérer ce que l'utilisateur tape dans un JTextField Swing.
+     */
+    public static LocalDate stringVersLocalDate(String dateTexte) {
+        if (ValidationUtil.estVide(dateTexte)) return null;
         try {
-            return sdf.parse(dateTexte);
-        } catch (ParseException e) {
-            return null;
+            return LocalDate.parse(dateTexte.trim(), FORMAT_DATE);
+        } catch (DateTimeParseException e) {
+            return null; // Retourne null si le format n'est pas respecté
         }
     }
 
-    public static String dateVersString(Date date) {
-        if (date == null) {
-            return "";
-        }
+    /**
+     * Convertit un objet LocalDate en texte pour l'afficher proprement dans un tableau Swing.
+     */
+    public static String localDateVersString(LocalDate date) {
+        if (date == null) return "";
+        return date.format(FORMAT_DATE);
+    }
 
-        SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATE);
-        return sdf.format(date);
+    public static String localDateTimeVersString(LocalDateTime dateTime) {
+        if (dateTime == null) return "";
+        return dateTime.format(FORMAT_DATE_HEURE);
     }
 
     public static boolean estDateValide(String dateTexte) {
-        return stringVersDate(dateTexte) != null;
+        return stringVersLocalDate(dateTexte) != null;
     }
 
-    public static boolean estDateFinApresDateDebut(Date dateDebut, Date dateFin) {
-        if (dateDebut == null || dateFin == null) {
-            return false;
-        }
-
-        return dateFin.after(dateDebut);
+    /**
+     * Vérifie que le départ est bien APRÈS l'arrivée (logique stricte).
+     */
+    public static boolean estDateFinApresDateDebut(LocalDate dateDebut, LocalDate dateFin) {
+        if (dateDebut == null || dateFin == null) return false;
+        return dateFin.isAfter(dateDebut);
     }
 
-    public static int calculerNombreNuits(Date dateDebut, Date dateFin) {
-        if (!estDateFinApresDateDebut(dateDebut, dateFin)) {
+    /**
+     * Calcule automatiquement le nombre de nuits entre deux dates.
+     */
+    public static int calculerNombreNuits(LocalDate dateArrivee, LocalDate dateDepart) {
+        if (!estDateFinApresDateDebut(dateArrivee, dateDepart)) {
             return 0;
         }
-
-        long differenceMillis = dateFin.getTime() - dateDebut.getTime();
-        long nombreJours = TimeUnit.MILLISECONDS.toDays(differenceMillis);
-
-        return (int) nombreJours;
+        // Magie de l'API java.time : calcule la différence en jours
+        return (int) ChronoUnit.DAYS.between(dateArrivee, dateDepart);
     }
 
-    public static Date dateAujourdhui() {
-        return new Date();
+    public static LocalDate dateAujourdhui() {
+        return LocalDate.now();
+    }
+
+    public static LocalDateTime dateEtHeureMaintenant() {
+        return LocalDateTime.now();
     }
 }

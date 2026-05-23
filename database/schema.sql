@@ -1,139 +1,117 @@
 DROP DATABASE IF EXISTS hotel_db;
 CREATE DATABASE hotel_db
 CHARACTER SET utf8mb4
-COLLATE utf8mb4_general_ci;
+COLLATE utf8mb4_unicode_ci;
 
 USE hotel_db;
 
-CREATE TABLE utilisateur (
-    id_utilisateur INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    login VARCHAR(50) NOT NULL UNIQUE,
-    mot_de_passe VARCHAR(100) NOT NULL,
-    role ENUM('ADMIN', 'RECEPTIONNISTE', 'MAINTENANCE', 'RESTAURANT') NOT NULL
-);
+-- 1. Table Personnel / Gestion des utilisateurs et de la sécurité
+CREATE TABLE utilisateurs (
+                              id_utilisateur INT AUTO_INCREMENT PRIMARY KEY,
+                              nom VARCHAR(50) NOT NULL,
+                              prenom VARCHAR(50) NOT NULL,
+                              email VARCHAR(100) UNIQUE NOT NULL,
+                              mot_de_passe VARCHAR(255) NOT NULL, -- Stockage exclusif de hachages sécurisés (ex: BCrypt)
+                              role ENUM('ADMIN', 'RECEPTIONNISTE', 'MAINTENANCE') NOT NULL,
+                              statut ENUM('ACTIF', 'INACTIF') DEFAULT 'ACTIF'
+) ENGINE=InnoDB;
 
-CREATE TABLE client (
-    id_client INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    prenom VARCHAR(100) NOT NULL,
-    cin VARCHAR(20) NOT NULL UNIQUE,
-    telephone VARCHAR(20),
-    email VARCHAR(100)
-);
+-- 2. Table Client
+CREATE TABLE clients (
+                         id_client INT AUTO_INCREMENT PRIMARY KEY,
+                         nom VARCHAR(50) NOT NULL,
+                         prenom VARCHAR(50) NOT NULL,
+                         cin VARCHAR(50) UNIQUE NOT NULL ,
+                         email VARCHAR(100) UNIQUE NOT NULL,
+                         telephone VARCHAR(20)
+) ENGINE=InnoDB;
 
-CREATE TABLE chambre (
-    id_chambre INT AUTO_INCREMENT PRIMARY KEY,
-    numero VARCHAR(10) NOT NULL UNIQUE,
-    type VARCHAR(50) NOT NULL,
-    prix_par_nuit DECIMAL(10,2) NOT NULL,
-    statut ENUM('DISPONIBLE', 'RESERVEE', 'OCCUPEE', 'MAINTENANCE') NOT NULL DEFAULT 'DISPONIBLE'
-);
+-- 3. Table Chambre
+CREATE TABLE chambres (
+                          id_chambre INT AUTO_INCREMENT PRIMARY KEY,
+                          numero VARCHAR(10) UNIQUE NOT NULL,
+                          categorie ENUM('SIMPLE', 'DOUBLE', 'SUITE') NOT NULL,
+                          prix_unitaire DECIMAL(10, 2) NOT NULL,
+                          statut ENUM('DISPONIBLE', 'OCCUPEE', 'MAINTENANCE') DEFAULT 'DISPONIBLE',
+                          CONSTRAINT chk_prix_chambre CHECK (prix_unitaire >= 0)
+) ENGINE=InnoDB;
 
-CREATE TABLE reservation (
-    id_reservation INT AUTO_INCREMENT PRIMARY KEY,
-    id_client INT NOT NULL,
-    id_chambre INT NOT NULL,
-    date_debut DATE NOT NULL,
-    date_fin DATE NOT NULL,
-    statut ENUM('RESERVEE', 'EN_COURS', 'ANNULEE', 'TERMINEE') NOT NULL DEFAULT 'RESERVEE',
+-- 4. Table Maintenance (Cruciale : gère l'historique et les blocages par date pour entretien)
+CREATE TABLE maintenances (
+                              id_maintenance INT AUTO_INCREMENT PRIMARY KEY,
+                              id_chambre INT NOT NULL,
+                              date_debut DATE NOT NULL,
+                              date_fin DATE NOT NULL,
+                              description TEXT,
+                              statut_maintenance ENUM('EN_COURS', 'TERMINEE') DEFAULT 'EN_COURS',
+                              FOREIGN KEY (id_chambre) REFERENCES chambres(id_chambre) ON DELETE RESTRICT,
+                              CONSTRAINT chk_dates_maint CHECK (date_fin >= date_debut)
+) ENGINE=InnoDB;
 
-    CONSTRAINT fk_reservation_client
-        FOREIGN KEY (id_client) REFERENCES client(id_client)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
+-- 5. Table Reservation (En-tête de la réservation)
+CREATE TABLE reservations (
+                              id_reservation INT AUTO_INCREMENT PRIMARY KEY,
+                              id_client INT NOT NULL,
+                              id_utilisateur INT NOT NULL, -- Traçabilité : quel réceptionniste a créé la réservation
+                              date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                              statut_reservation ENUM('CONFIRMEE', 'ANNULEE', 'TERMINEE') DEFAULT 'CONFIRMEE',
+                              FOREIGN KEY (id_client) REFERENCES clients(id_client) ON DELETE RESTRICT,
+                              FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur) ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
-    CONSTRAINT fk_reservation_chambre
-        FOREIGN KEY (id_chambre) REFERENCES chambre(id_chambre)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
+-- 6. Table de liaison Reservation_Chambres (Gestion des groupes et des nuitées)
+CREATE TABLE reservation_chambres (
+                                      id_reservation INT NOT NULL,
+                                      id_chambre INT NOT NULL,
+                                      date_arrivee DATE NOT NULL,
+                                      date_depart DATE NOT NULL,
+                                      prix_applique DECIMAL(10, 2) NOT NULL, -- Historisation du prix au moment de la réservation
+                                      PRIMARY KEY (id_reservation, id_chambre, date_arrivee),
+                                      FOREIGN KEY (id_reservation) REFERENCES reservations(id_reservation) ON DELETE CASCADE,
+                                      FOREIGN KEY (id_chambre) REFERENCES chambres(id_chambre) ON DELETE RESTRICT,
+                                      CONSTRAINT chk_dates_res CHECK (date_depart > date_arrivee),
+                                      CONSTRAINT chk_prix_app CHECK (prix_applique >= 0)
+) ENGINE=InnoDB;
 
-    CONSTRAINT chk_dates_reservation
-        CHECK (date_fin > date_debut)
-);
+-- 7. Table Catalogue des Services Supplémentaires
+CREATE TABLE services_supplementaires (
+                                          id_service INT AUTO_INCREMENT PRIMARY KEY,
+                                          nom_service VARCHAR(50) NOT NULL,
+                                          type_service ENUM('RESTAURANT', 'PARKING', 'SPA') NOT NULL,
+                                          prix_service DECIMAL(10, 2) NOT NULL,
+                                          CONSTRAINT chk_prix_service CHECK (prix_service >= 0)
+) ENGINE=InnoDB;
 
-CREATE TABLE maintenance (
-    id_maintenance INT AUTO_INCREMENT PRIMARY KEY,
-    id_chambre INT NOT NULL,
-    date_debut DATE NOT NULL,
-    date_fin DATE,
-    description VARCHAR(255) NOT NULL,
-    statut ENUM('EN_COURS', 'TERMINEE', 'ANNULEE') NOT NULL DEFAULT 'EN_COURS',
+-- 8. Table de liaison Reservation_Services (Suivi des consommations durant le séjour)
+CREATE TABLE reservation_services (
+                                      id_consommation INT AUTO_INCREMENT PRIMARY KEY,
+                                      id_reservation INT NOT NULL,
+                                      id_service INT NOT NULL,
+                                      quantite INT NOT NULL DEFAULT 1,
+                                      date_consommation DATE NOT NULL,
+                                      FOREIGN KEY (id_reservation) REFERENCES reservations(id_reservation) ON DELETE CASCADE,
+                                      FOREIGN KEY (id_service) REFERENCES services_supplementaires(id_service) ON DELETE RESTRICT,
+                                      CONSTRAINT chk_quantite CHECK (quantite > 0)
+) ENGINE=InnoDB;
 
-    CONSTRAINT fk_maintenance_chambre
-        FOREIGN KEY (id_chambre) REFERENCES chambre(id_chambre)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
+-- 9. Table Facture (Générée lors du check-out)
+CREATE TABLE factures (
+                          id_facture INT AUTO_INCREMENT PRIMARY KEY,
+                          id_reservation INT UNIQUE NOT NULL, -- Une seule facture officielle par réservation
+                          montant_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+                          date_facture TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          statut_facture ENUM('EN_ATTENTE', 'PAYEE', 'ANNULEE') DEFAULT 'EN_ATTENTE',
+                          FOREIGN KEY (id_reservation) REFERENCES reservations(id_reservation) ON DELETE RESTRICT,
+                          CONSTRAINT chk_montant_total CHECK (montant_total >= 0)
+) ENGINE=InnoDB;
 
-CREATE TABLE plat (
-    id_plat INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    description VARCHAR(255),
-    prix DECIMAL(10,2) NOT NULL,
-    disponible BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE commande_restaurant (
-    id_commande INT AUTO_INCREMENT PRIMARY KEY,
-    id_reservation INT NOT NULL,
-    date_commande DATE NOT NULL,
-    statut ENUM('EN_ATTENTE', 'PREPAREE', 'SERVIE', 'ANNULEE') NOT NULL DEFAULT 'EN_ATTENTE',
-
-    CONSTRAINT fk_commande_reservation
-        FOREIGN KEY (id_reservation) REFERENCES reservation(id_reservation)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE ligne_commande_restaurant (
-    id_ligne INT AUTO_INCREMENT PRIMARY KEY,
-    id_commande INT NOT NULL,
-    id_plat INT NOT NULL,
-    quantite INT NOT NULL,
-    prix_unitaire DECIMAL(10,2) NOT NULL,
-
-    CONSTRAINT fk_ligne_commande
-        FOREIGN KEY (id_commande) REFERENCES commande_restaurant(id_commande)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT fk_ligne_plat
-        FOREIGN KEY (id_plat) REFERENCES plat(id_plat)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT chk_quantite_positive
-        CHECK (quantite > 0)
-);
-
-CREATE TABLE facture (
-    id_facture INT AUTO_INCREMENT PRIMARY KEY,
-    id_reservation INT NOT NULL UNIQUE,
-    date_facture DATE NOT NULL,
-    montant_hebergement DECIMAL(10,2) NOT NULL DEFAULT 0,
-    montant_restaurant DECIMAL(10,2) NOT NULL DEFAULT 0,
-    montant_total DECIMAL(10,2) NOT NULL DEFAULT 0,
-    statut ENUM('NON_PAYEE', 'PARTIELLEMENT_PAYEE', 'PAYEE') NOT NULL DEFAULT 'NON_PAYEE',
-
-    CONSTRAINT fk_facture_reservation
-        FOREIGN KEY (id_reservation) REFERENCES reservation(id_reservation)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE paiement (
-    id_paiement INT AUTO_INCREMENT PRIMARY KEY,
-    id_facture INT NOT NULL,
-    date_paiement DATE NOT NULL,
-    montant DECIMAL(10,2) NOT NULL,
-    mode_paiement ENUM('ESPECES', 'CARTE', 'VIREMENT') NOT NULL,
-
-    CONSTRAINT fk_paiement_facture
-        FOREIGN KEY (id_facture) REFERENCES facture(id_facture)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT chk_montant_paiement
-        CHECK (montant > 0)
-);
+-- 10. Table Paiement (Suivi des transactions pour solder la facture)
+CREATE TABLE paiements (
+                           id_paiement INT AUTO_INCREMENT PRIMARY KEY,
+                           id_facture INT NOT NULL,
+                           montant_paye DECIMAL(10, 2) NOT NULL,
+                           date_paiement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           mode_paiement ENUM('ESPECES', 'CARTE', 'VIREMENT') NOT NULL,
+                           FOREIGN KEY (id_facture) REFERENCES factures(id_facture) ON DELETE RESTRICT,
+                           CONSTRAINT chk_montant_paye CHECK (montant_paye > 0)
+) ENGINE=InnoDB;

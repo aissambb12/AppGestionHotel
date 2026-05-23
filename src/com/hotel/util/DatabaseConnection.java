@@ -6,28 +6,30 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
+    private static Connection connection = null;
+
     private static final String URL = "jdbc:mysql://localhost:3306/hotel_db";
-
     private static final String USER = "root";
-
-
     private static final String PASSWORD = "";
 
+    private DatabaseConnection() {}
 
-    private DatabaseConnection() {
-    }
+    public static Connection getConnection() {
+        try {
+            if (connection == null || connection.isClosed()) {
 
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
+                try {
+                    Class.forName("com.mysql.cj.jdbc.Driver");
+                } catch (ClassNotFoundException e) {
+                    Class.forName("com.mysql.jdbc.Driver");
+                }
 
-    public static boolean testerConnexion() {
-        try (Connection connection = getConnection()) {
-            return connection != null && !connection.isClosed();
-        } catch (SQLException e) {
-            System.out.println("Erreur de connexion à la base de données.");
-            System.out.println("Message : " + e.getMessage());
-            return false;
+                connection = DriverManager.getConnection(URL, USER, PASSWORD);
+                System.out.println("Connexion réussie à la base de données hotel_db !");
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur critique de connexion : " + e.getMessage());
         }
+        return connection;
     }
 }

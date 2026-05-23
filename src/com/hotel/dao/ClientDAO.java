@@ -4,10 +4,11 @@ import com.hotel.model.Client;
 import java.util.List;
 
 public interface ClientDAO {
-
-    void ajouter(Client client);
-    void modifier(Client client);
-    void supprimer(int idClient);
-    Client rechercherParId(int idClient);
+    boolean ajouter(Client client);
+    boolean modifier(Client client);
+    boolean supprimer(int idClient);
+    Client trouverParId(int idClient);
+    Client trouverParCin(String cin); // Exigence légale pour éviter les doublons
     List<Client> listerTous();
+    List<Client> rechercherParMotCle(String motCle); // Recherche dynamique (par nom, prénom ou CIN) pour l'UI Swing
 }

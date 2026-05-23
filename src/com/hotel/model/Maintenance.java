@@ -2,27 +2,35 @@ package com.hotel.model;
 
 import com.hotel.model.enumeration.StatutMaintenance;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class Maintenance {
-
     private int idMaintenance;
-    private Date dateDebut;
-    private Date dateFin;
+    private int idChambre;
+    private LocalDate dateDebut;
+    private LocalDate dateFin;
     private String description;
-    private StatutMaintenance statut;
-    private Chambre chambre;
+    private StatutMaintenance statutMaintenance;
 
     public Maintenance() {
     }
 
-    public Maintenance(int idMaintenance, Date dateDebut, Date dateFin, String description, StatutMaintenance statut, Chambre chambre) {
+    public Maintenance(int idMaintenance, int idChambre, LocalDate dateDebut, LocalDate dateFin, String description, StatutMaintenance statutMaintenance) {
         this.idMaintenance = idMaintenance;
+        this.idChambre = idChambre;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.description = description;
-        this.statut = statut;
-        this.chambre = chambre;
+        this.statutMaintenance = statutMaintenance;
+    }
+
+    public Maintenance(int idChambre, LocalDate dateDebut, LocalDate dateFin, String description, StatutMaintenance statutMaintenance) {
+        this.idChambre = idChambre;
+        this.dateDebut = dateDebut;
+        this.dateFin = dateFin;
+        this.description = description;
+        this.statutMaintenance = statutMaintenance;
     }
 
     public int getIdMaintenance() {
@@ -33,19 +41,27 @@ public class Maintenance {
         this.idMaintenance = idMaintenance;
     }
 
-    public Date getDateDebut() {
+    public int getIdChambre() {
+        return idChambre;
+    }
+
+    public void setIdChambre(int idChambre) {
+        this.idChambre = idChambre;
+    }
+
+    public LocalDate getDateDebut() {
         return dateDebut;
     }
 
-    public void setDateDebut(Date dateDebut) {
+    public void setDateDebut(LocalDate dateDebut) {
         this.dateDebut = dateDebut;
     }
 
-    public Date getDateFin() {
+    public LocalDate getDateFin() {
         return dateFin;
     }
 
-    public void setDateFin(Date dateFin) {
+    public void setDateFin(LocalDate dateFin) {
         this.dateFin = dateFin;
     }
 
@@ -57,31 +73,15 @@ public class Maintenance {
         this.description = description;
     }
 
-    public StatutMaintenance getStatut() {
-        return statut;
+    public StatutMaintenance getStatutMaintenance() {
+        return statutMaintenance;
     }
 
-    public void setStatut(StatutMaintenance statut) {
-        this.statut = statut;
+    public void setStatutMaintenance(StatutMaintenance statutMaintenance) {
+        this.statutMaintenance = statutMaintenance;
     }
 
-    public Chambre getChambre() {
-        return chambre;
-    }
-
-    public void setChambre(Chambre chambre) {
-        this.chambre = chambre;
-    }
-
-    @Override
     public String toString() {
-        return "Maintenance{" +
-                "idMaintenance=" + idMaintenance +
-                ", dateDebut=" + dateDebut +
-                ", dateFin=" + dateFin +
-                ", description='" + description + '\'' +
-                ", statut=" + statut +
-                ", chambre=" + chambre +
-                '}';
+        return "Maintenance Chambre " + idChambre + " [" + statutMaintenance + "]";
     }
 }

@@ -4,13 +4,12 @@ import com.hotel.model.Paiement;
 import java.util.List;
 
 public interface PaiementDAO {
-
-    void ajouter(Paiement paiement);
-    void modifier(Paiement paiement);
-    void supprimer(int idPaiement);
-    Paiement rechercherParId(int idPaiement);
-    List<Paiement> listerTous();
-
+    boolean enregistrerPaiement(Paiement paiement);
     List<Paiement> listerParFacture(int idFacture);
-    double calculerTotalPaye(int idFacture);
+
+    /**
+     * Permet de savoir si la somme des paiements effectués couvre la totalité du montant de la facture.
+     * Utile pour autoriser le changement de statut de la facture à 'PAYEE'.
+     */
+    double obtenirTotalPayePourFacture(int idFacture);
 }

@@ -1,7 +1,6 @@
-package com.hotel.dao.impl;
+package com.hotel.dao;
 
-import com.hotel.dao.ReservationDAO;
-import com.hotel.model.*;
+import com.hotel.model.Reservation;
 import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.util.DatabaseConnection;
 
@@ -12,156 +11,100 @@ import java.util.List;
 public class ReservationDAOImpl implements ReservationDAO {
 
     @Override
-    public void ajouter(Reservation reservation) {
-        String sql = "INSERT INTO reservation(id_client, id_chambre, date_debut, date_fin, statut) VALUES (?, ?, ?, ?, ?)";
-
+    public int ajouter(Reservation r) {
+        // Clé générée par MySQL est retournée
+        String sql = "INSERT INTO reservations (id_client, id_utilisateur, statut_reservation) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, r.getIdClient());
+            ps.setInt(2, r.getIdUtilisateur());
+            ps.setString(3, r.getStatut().name());
 
-            ps.setInt(1, reservation.getClient().getIdClient());
-            ps.setInt(2, reservation.getChambre().getIdChambre());
-            ps.setDate(3, new java.sql.Date(reservation.getDateDebut().getTime()));
-            ps.setDate(4, new java.sql.Date(reservation.getDateFin().getTime()));
-            ps.setString(5, reservation.getStatut().name());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void modifier(Reservation reservation) {
-        String sql = "UPDATE reservation SET id_client=?, id_chambre=?, date_debut=?, date_fin=?, statut=? WHERE id_reservation=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, reservation.getClient().getIdClient());
-            ps.setInt(2, reservation.getChambre().getIdChambre());
-            ps.setDate(3, new java.sql.Date(reservation.getDateDebut().getTime()));
-            ps.setDate(4, new java.sql.Date(reservation.getDateFin().getTime()));
-            ps.setString(5, reservation.getStatut().name());
-            ps.setInt(6, reservation.getIdReservation());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void supprimer(int idReservation) {
-        String sql = "DELETE FROM reservation WHERE id_reservation=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idReservation);
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public Reservation rechercherParId(int idReservation) {
-        String sql = "SELECT * FROM reservation WHERE id_reservation=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idReservation);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return construireReservation(rs);
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1); // Retourne l'id_reservation généré
+                    }
                 }
             }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return -1; // Échec
+    }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public boolean modifierStatut(int idReservation, String statut) {
+        String sql = "UPDATE reservations SET statut_reservation = ? WHERE id_reservation = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, statut);
+            ps.setInt(2, idReservation);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
 
+    @Override
+    public Reservation trouverParId(int idReservation) {
+        String sql = "SELECT * FROM reservations WHERE id_reservation = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idReservation);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapperReservation(rs);
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
     @Override
-    public List<Reservation> listerTous() {
-        List<Reservation> reservations = new ArrayList<>();
-        String sql = "SELECT * FROM reservation";
+    public List<Reservation> listerToutes() { return executerSelect("SELECT * FROM reservations"); }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                reservations.add(construireReservation(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return reservations;
+    @Override
+    public List<Reservation> listerParClient(int idClient) {
+        String sql = "SELECT * FROM reservations WHERE id_client = ?";
+        return executerSelectParam(sql, idClient);
     }
 
     @Override
-    public void changerStatut(int idReservation, StatutReservation statut) {
-        String sql = "UPDATE reservation SET statut=? WHERE id_reservation=?";
-
+    public List<Reservation> listerParStatut(String statut) {
+        List<Reservation> liste = new ArrayList<>();
+        String sql = "SELECT * FROM reservations WHERE statut_reservation = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, statut.name());
-            ps.setInt(2, idReservation);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            ps.setString(1, statut);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) liste.add(mapperReservation(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
     }
 
-    @Override
-    public List<Reservation> listerReservationsEnCours() {
-        List<Reservation> reservations = new ArrayList<>();
-        String sql = "SELECT * FROM reservation WHERE statut='EN_COURS'";
-
+    private List<Reservation> executerSelect(String sql) {
+        List<Reservation> liste = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                reservations.add(construireReservation(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return reservations;
+            while (rs.next()) liste.add(mapperReservation(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
     }
 
-    private Reservation construireReservation(ResultSet rs) throws SQLException {
-        Reservation reservation = new Reservation();
+    private List<Reservation> executerSelectParam(String sql, int param) {
+        List<Reservation> liste = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, param);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) liste.add(mapperReservation(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
+    }
 
-        Client client = new Client();
-        client.setIdClient(rs.getInt("id_client"));
-
-        Chambre chambre = new Chambre();
-        chambre.setIdChambre(rs.getInt("id_chambre"));
-
-        reservation.setIdReservation(rs.getInt("id_reservation"));
-        reservation.setClient(client);
-        reservation.setChambre(chambre);
-        reservation.setDateDebut(rs.getDate("date_debut"));
-        reservation.setDateFin(rs.getDate("date_fin"));
-        reservation.setStatut(StatutReservation.valueOf(rs.getString("statut")));
-
-        return reservation;
+    private Reservation mapperReservation(ResultSet rs) throws SQLException {
+        return new Reservation(
+                rs.getInt("id_reservation"),
+                rs.getInt("id_client"),
+                rs.getInt("id_utilisateur"),
+                rs.getTimestamp("date_creation").toLocalDateTime(),
+                StatutReservation.valueOf(rs.getString("statut_reservation"))
+        );
     }
 }

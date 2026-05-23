@@ -1,148 +1,76 @@
 package com.hotel.service;
 
-import com.hotel.dao.ChambreDAO;
-import com.hotel.dao.ClientDAO;
-import com.hotel.dao.ReservationDAO;
-import com.hotel.dao.impl.ChambreDAOImpl;
-import com.hotel.dao.impl.ClientDAOImpl;
-import com.hotel.dao.impl.ReservationDAOImpl;
+import com.hotel.dao.*;
+import com.hotel.dao.FactureDAOImpl;
+import com.hotel.dao.ReservationChambreDAOImpl;
+import com.hotel.dao.ReservationDAOImpl;
 import com.hotel.model.*;
-import com.hotel.model.enumeration.StatutChambre;
+import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.util.DateUtil;
+import com.hotel.util.ValidationUtil;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public class ReservationService {
 
-    private ClientDAO clientDAO = new ClientDAOImpl();
-    private ChambreDAO chambreDAO = new ChambreDAOImpl();
-    private ReservationDAO reservationDAO = new ReservationDAOImpl();
+    // Ce service a besoin de communiquer avec 3 DAO différents !
+    private ReservationDAO reservationDAO;
+    private ReservationChambreDAO reservationChambreDAO;
+    private FactureDAO factureDAO;
 
-    public void creerReservation(int idClient, int idChambre, String dateDebutTexte, String dateFinTexte) {
-
-        Client client = clientDAO.rechercherParId(idClient);
-
-        if (client == null) {
-            System.out.println("Client introuvable.");
-            return;
-        }
-
-        Chambre chambre = chambreDAO.rechercherParId(idChambre);
-
-        if (chambre == null) {
-            System.out.println("Chambre introuvable.");
-            return;
-        }
-
-        if (chambre.getStatut() != StatutChambre.DISPONIBLE) {
-            System.out.println("Chambre non disponible.");
-            return;
-        }
-
-        Date dateDebut = DateUtil.stringVersDate(dateDebutTexte);
-        Date dateFin = DateUtil.stringVersDate(dateFinTexte);
-
-        if (dateDebut == null || dateFin == null) {
-            System.out.println("Format de date invalide.");
-            return;
-        }
-
-        if (!DateUtil.estDateFinApresDateDebut(dateDebut, dateFin)) {
-            System.out.println("La date de fin doit être après la date de début.");
-            return;
-        }
-
-        Reservation reservation = new Reservation();
-        reservation.setClient(client);
-        reservation.setChambre(chambre);
-        reservation.setDateDebut(dateDebut);
-        reservation.setDateFin(dateFin);
-        reservation.setStatut(StatutReservation.RESERVEE);
-
-        reservationDAO.ajouter(reservation);
-        chambreDAO.changerStatut(idChambre, StatutChambre.RESERVEE);
-
-        System.out.println("Réservation créée avec succès.");
+    public ReservationService() {
+        this.reservationDAO = new ReservationDAOImpl();
+        this.reservationChambreDAO = new ReservationChambreDAOImpl();
+        this.factureDAO = new FactureDAOImpl();
     }
 
-    public void effectuerCheckIn(int idReservation) {
+    /**
+     * Orchestre la création complète d'un dossier de réservation.
+     */
+    public boolean creerNouvelleReservation(Reservation reservation, List<Chambre> chambresReservees, LocalDate arrivee, LocalDate depart) {
 
-        Reservation reservation = reservationDAO.rechercherParId(idReservation);
-
-        if (reservation == null) {
-            System.out.println("Réservation introuvable.");
-            return;
+        // 1. Validation des dates
+        if (!ValidationUtil.sontDatesReservationValides(arrivee, depart)) {
+            throw new IllegalArgumentException("Les dates de séjour sont incohérentes.");
         }
 
-        if (reservation.getStatut() != StatutReservation.RESERVEE) {
-            System.out.println("La réservation n'est pas valide pour le check-in.");
-            return;
+        // 2. Vérification de sécurité (Double Check) : Les chambres sont-elles TOUJOURS libres ?
+        for (Chambre c : chambresReservees) {
+            if (reservationChambreDAO.estChambreOccupee(c.getIdChambre(), arrivee, depart)) {
+                throw new IllegalStateException("Alerte Surbooking : La chambre " + c.getNumero() + " vient d'être réservée par un autre utilisateur.");
+            }
         }
 
-        reservationDAO.changerStatut(idReservation, StatutReservation.EN_COURS);
-        chambreDAO.changerStatut(
-                reservation.getChambre().getIdChambre(),
-                StatutChambre.OCCUPEE
-        );
+        // 3. Étape A : Créer l'entête de la réservation
+        reservation.setStatut(StatutReservation.CONFIRMEE);
+        int idReservationGenere = reservationDAO.ajouter(reservation);
 
-        System.out.println("Check-in effectué avec succès.");
-    }
+        if (idReservationGenere == -1) return false; // Échec critique
 
-    public void effectuerCheckOut(int idReservation) {
+        // 4. Étape B : Lier les chambres choisies à cette réservation
+        double totalEstime = 0.0;
+        int nuits = DateUtil.calculerNombreNuits(arrivee, depart);
 
-        Reservation reservation = reservationDAO.rechercherParId(idReservation);
-
-        if (reservation == null) {
-            System.out.println("Réservation introuvable.");
-            return;
+        for (Chambre c : chambresReservees) {
+            ReservationChambre rc = new ReservationChambre(idReservationGenere, c.getIdChambre(), arrivee, depart, c.getPrixUnitaire());
+            reservationChambreDAO.affecterChambre(rc);
+            totalEstime += (c.getPrixUnitaire() * nuits); // Calcul local provisoire
         }
 
-        if (reservation.getStatut() != StatutReservation.EN_COURS) {
-            System.out.println("La réservation n'est pas en cours.");
-            return;
-        }
+        // 5. Étape C : Créer la facture initiale (EN_ATTENTE) pour ce client
+        Facture factureInitiale = new Facture();
+        factureInitiale.setIdReservation(idReservationGenere);
+        factureInitiale.setMontantTotal(totalEstime);
+        factureInitiale.setDateFacture(DateUtil.dateEtHeureMaintenant());
+        factureInitiale.setStatutFacture(StatutFacture.EN_ATTENTE);
+        factureDAO.creerFacture(factureInitiale);
 
-        FacturationService facturationService = new FacturationService();
-        facturationService.genererFacture(idReservation);
-
-        reservationDAO.changerStatut(idReservation, StatutReservation.TERMINEE);
-        chambreDAO.changerStatut(
-                reservation.getChambre().getIdChambre(),
-                StatutChambre.DISPONIBLE
-        );
-
-        System.out.println("Check-out effectué avec succès.");
+        return true; // Succès total du processus !
     }
 
-    public void annulerReservation(int idReservation) {
-
-        Reservation reservation = reservationDAO.rechercherParId(idReservation);
-
-        if (reservation == null) {
-            System.out.println("Réservation introuvable.");
-            return;
-        }
-
-        reservationDAO.changerStatut(idReservation, StatutReservation.ANNULEE);
-        chambreDAO.changerStatut(
-                reservation.getChambre().getIdChambre(),
-                StatutChambre.DISPONIBLE
-        );
-
-        System.out.println("Réservation annulée.");
-    }
-
-    public Reservation rechercherReservation(int idReservation) {
-        return reservationDAO.rechercherParId(idReservation);
-    }
-
-    public List<Reservation> listerReservations() {
-        return reservationDAO.listerTous();
-    }
-
-    public List<Reservation> listerReservationsEnCours() {
-        return reservationDAO.listerReservationsEnCours();
+    public List<Reservation> listerToutesLesReservations() {
+        return reservationDAO.listerToutes();
     }
 }

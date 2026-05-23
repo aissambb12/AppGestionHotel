@@ -1,18 +1,17 @@
 package com.hotel.dao;
 
-
 import com.hotel.model.Reservation;
-import com.hotel.model.enumeration.StatutReservation;
 import java.util.List;
 
 public interface ReservationDAO {
-
-    void ajouter(Reservation reservation);
-    void modifier(Reservation reservation);
-    void supprimer(int idReservation);
-    Reservation rechercherParId(int idReservation);
-    List<Reservation> listerTous();
-
-    void changerStatut(int idReservation, StatutReservation statut);
-    List<Reservation> listerReservationsEnCours();
+    /**
+     * Insère la réservation et retourne l'ID généré par la base de données.
+     * Cet ID est obligatoire pour pouvoir insérer ensuite dans 'reservation_chambres'.
+     */
+    int ajouter(Reservation reservation);
+    boolean modifierStatut(int idReservation, String statut);
+    Reservation trouverParId(int idReservation);
+    List<Reservation> listerToutes();
+    List<Reservation> listerParClient(int idClient);
+    List<Reservation> listerParStatut(String statut);
 }

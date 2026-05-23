@@ -1,24 +1,31 @@
 package com.hotel.model;
 
 public class Client {
-
-    private int idClient ;
-    private String nom ;
-    private String prenom ;
-    private String cin ;
-    private String telephone ;
-    private String email ;
-
-    public Client(String email, String telephone, String cin, String prenom, String nom, int idClient) {
-        this.email = email;
-        this.telephone = telephone;
-        this.cin = cin;
-        this.prenom = prenom;
-        this.nom = nom;
-        this.idClient = idClient;
-    }
+    private int idClient;
+    private String nom;
+    private String prenom;
+    private String cin;
+    private String email;
+    private String telephone;
 
     public Client() {}
+
+    public Client(int idClient, String cin, String nom, String prenom, String email, String telephone) {
+        this.idClient = idClient;
+        this.cin = cin;
+        this.nom = nom;
+        this.prenom = prenom;
+        this.email = email;
+        this.telephone = telephone;
+    }
+
+    public Client(String cin, String nom, String prenom, String email, String telephone) {
+        this.cin = cin;
+        this.nom = nom;
+        this.prenom = prenom;
+        this.email = email;
+        this.telephone = telephone;
+    }
 
     public int getIdClient() {
         return idClient;
@@ -28,28 +35,12 @@ public class Client {
         this.idClient = idClient;
     }
 
-    public String getEmail() {
-        return email;
+    public String getNom() {
+        return nom;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getCin() {
-        return cin;
-    }
-
-    public void setCin(String cin) {
-        this.cin = cin;
-    }
-
-    public String getTelephone() {
-        return telephone;
-    }
-
-    public void setTelephone(String tlephone) {
-        this.telephone = tlephone;
+    public void setNom(String nom) {
+        this.nom = nom;
     }
 
     public String getPrenom() {
@@ -60,11 +51,32 @@ public class Client {
         this.prenom = prenom;
     }
 
-    public String getNom() {
-        return nom;
+    public String getCin() {
+        return cin;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setCin(String cin) {
+        this.cin = cin;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
+    @Override
+    public String toString() {
+        return nom + " " + prenom + " " + cin + " (" + email + ")";
     }
 }

@@ -1,85 +1,61 @@
 package com.hotel.service;
 
+import com.hotel.dao.ChambreDAOImpl;
 import com.hotel.dao.ChambreDAO;
 import com.hotel.dao.MaintenanceDAO;
-import com.hotel.dao.impl.ChambreDAOImpl;
-import com.hotel.dao.impl.MaintenanceDAOImpl;
-import com.hotel.model.*;
+import com.hotel.dao.MaintenanceDAOImpl;
+import com.hotel.model.Maintenance;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.model.enumeration.StatutMaintenance;
+import com.hotel.util.ValidationUtil;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public class MaintenanceService {
 
-    private ChambreDAO chambreDAO = new ChambreDAOImpl();
-    private MaintenanceDAO maintenanceDAO = new MaintenanceDAOImpl();
+    private MaintenanceDAO maintenanceDAO;
+    private ChambreDAO chambreDAO; // Besoin d'accès aux chambres pour changer leur statut
 
-    public void mettreEnMaintenance(int idChambre, String description) {
+    public MaintenanceService() {
+        this.maintenanceDAO = new MaintenanceDAOImpl();
+        this.chambreDAO = new ChambreDAOImpl();
+    }
 
-        Chambre chambre = chambreDAO.rechercherParId(idChambre);
-
-        if (chambre == null) {
-            System.out.println("Chambre introuvable.");
-            return;
+    public boolean declarerPanne(Maintenance maintenance) {
+        if (!ValidationUtil.sontDatesReservationValides(maintenance.getDateDebut(), maintenance.getDateFin())) {
+            throw new IllegalArgumentException("Les dates de maintenance sont incohérentes.");
         }
 
-        if (chambre.getStatut() == StatutChambre.OCCUPEE) {
-            System.out.println("Impossible : chambre occupée.");
-            return;
+        // 1. Enregistrer la maintenance
+        boolean succes = maintenanceDAO.planifier(maintenance);
+
+        // 2. Bloquer physiquement la chambre
+        if (succes) {
+            chambreDAO.modifierStatut(maintenance.getIdChambre(), StatutChambre.MAINTENANCE.name());
         }
+        return succes;
+    }
 
-        if (chambre.getStatut() == StatutChambre.RESERVEE) {
-            System.out.println("Impossible : chambre réservée.");
-            return;
+    /**
+     * C'est ici que votre remarque prend tout son sens !
+     * On termine la maintenance ET on libère la chambre.
+     */
+    public boolean terminerMaintenance(int idMaintenance) {
+        Maintenance m = maintenanceDAO.trouverParId(idMaintenance);
+        if (m == null) return false;
+
+        // 1. Clôturer le ticket de maintenance
+        boolean succes = maintenanceDAO.terminerMaintenance(idMaintenance, StatutMaintenance.TERMINEE.name());
+
+        // 2. Rendre la chambre de nouveau disponible pour les clients !
+        if (succes) {
+            chambreDAO.modifierStatut(m.getIdChambre(), StatutChambre.DISPONIBLE.name());
         }
-
-        Maintenance maintenance = new Maintenance();
-        maintenance.setChambre(chambre);
-        maintenance.setDateDebut(new Date());
-        maintenance.setDateFin(null);
-        maintenance.setDescription(description);
-        maintenance.setStatut(StatutMaintenance.EN_COURS);
-
-        maintenanceDAO.ajouter(maintenance);
-        chambreDAO.changerStatut(idChambre, StatutChambre.MAINTENANCE);
-
-        System.out.println("Chambre mise en maintenance.");
+        return succes;
     }
 
-    public void terminerMaintenance(int idMaintenance) {
-
-        Maintenance maintenance = maintenanceDAO.rechercherParId(idMaintenance);
-
-        if (maintenance == null) {
-            System.out.println("Maintenance introuvable.");
-            return;
-        }
-
-        maintenanceDAO.terminerMaintenance(idMaintenance);
-
-        chambreDAO.changerStatut(
-                maintenance.getChambre().getIdChambre(),
-                StatutChambre.DISPONIBLE
-        );
-
-        System.out.println("Maintenance terminée.");
-    }
-
-    public void supprimerMaintenance(int idMaintenance) {
-        maintenanceDAO.supprimer(idMaintenance);
-    }
-
-    public Maintenance rechercherMaintenance(int idMaintenance) {
-        return maintenanceDAO.rechercherParId(idMaintenance);
-    }
-
-    public List<Maintenance> listerMaintenances() {
-        return maintenanceDAO.listerTous();
-    }
-
-    public List<Maintenance> listerParChambre(int idChambre) {
-        return maintenanceDAO.listerParChambre(idChambre);
+    public List<Maintenance> listerMaintenancesEnCours() {
+        return maintenanceDAO.listerActives();
     }
 }

@@ -3,25 +3,33 @@ package com.hotel.model;
 
 import com.hotel.model.enumeration.ModePaiement;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Paiement {
 
     private int idPaiement;
-    private Date datePaiement;
-    private double montant;
+    private int idFacture;
+    private double montantPaye;
+    private LocalDateTime datePaiement;
     private ModePaiement modePaiement;
-    private Facture facture;
 
     public Paiement() {
     }
 
-    public Paiement(int idPaiement, Date datePaiement, double montant, ModePaiement modePaiement, Facture facture) {
+    public Paiement(int idPaiement, int idFacture, double montantPaye, LocalDateTime datePaiement, ModePaiement modePaiement) {
         this.idPaiement = idPaiement;
+        this.idFacture = idFacture;
+        this.montantPaye = montantPaye;
         this.datePaiement = datePaiement;
-        this.montant = montant;
         this.modePaiement = modePaiement;
-        this.facture = facture;
+    }
+
+    public Paiement(int idFacture, double montantPaye, LocalDateTime datePaiement, ModePaiement modePaiement) {
+        this.idFacture = idFacture;
+        this.montantPaye = montantPaye;
+        this.datePaiement = datePaiement;
+        this.modePaiement = modePaiement;
     }
 
     public int getIdPaiement() {
@@ -32,20 +40,28 @@ public class Paiement {
         this.idPaiement = idPaiement;
     }
 
-    public Date getDatePaiement() {
+    public int getIdFacture() {
+        return idFacture;
+    }
+
+    public void setIdFacture(int idFacture) {
+        this.idFacture = idFacture;
+    }
+
+    public double getMontantPaye() {
+        return montantPaye;
+    }
+
+    public void setMontantPaye(double montantPaye) {
+        this.montantPaye = montantPaye;
+    }
+
+    public LocalDateTime getDatePaiement() {
         return datePaiement;
     }
 
-    public void setDatePaiement(Date datePaiement) {
+    public void setDatePaiement(LocalDateTime datePaiement) {
         this.datePaiement = datePaiement;
-    }
-
-    public double getMontant() {
-        return montant;
-    }
-
-    public void setMontant(double montant) {
-        this.montant = montant;
     }
 
     public ModePaiement getModePaiement() {
@@ -56,22 +72,8 @@ public class Paiement {
         this.modePaiement = modePaiement;
     }
 
-    public Facture getFacture() {
-        return facture;
-    }
-
-    public void setFacture(Facture facture) {
-        this.facture = facture;
-    }
-
     @Override
     public String toString() {
-        return "Paiement{" +
-                "idPaiement=" + idPaiement +
-                ", datePaiement=" + datePaiement +
-                ", montant=" + montant +
-                ", modePaiement=" + modePaiement +
-                ", facture=" + facture +
-                '}';
+        return "Paiement de " + montantPaye + " via " + modePaiement + " le " + datePaiement;
     }
 }

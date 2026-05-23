@@ -2,30 +2,38 @@ package com.hotel.model;
 
 import com.hotel.model.enumeration.StatutReservation;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Reservation {
 
     private int idReservation;
-    private Date dateDebut;
-    private Date dateFin;
+    private int idClient;
+    private int idUtilisateur;
+    private LocalDateTime dateCreation;
     private StatutReservation statut;
 
-    private Client client;
-    private Chambre chambre;
 
     public Reservation() {
     }
 
-    public Reservation(int idReservation, Date dateDebut, Date dateFin,  StatutReservation statut, Client client, Chambre chambre) {
+    public Reservation(int idReservation, int idClient, int idUtilisateur, LocalDateTime dateCreation, StatutReservation statut) {
         this.idReservation = idReservation;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
-
+        this.idClient = idClient;
+        this.idUtilisateur = idUtilisateur;
+        this.dateCreation = dateCreation;
         this.statut = statut;
-        this.client = client;
-        this.chambre = chambre;
     }
+
+    public Reservation(int idClient, int idUtilisateur, LocalDateTime dateCreation, StatutReservation statut) {
+        this.idClient = idClient;
+        this.idUtilisateur = idUtilisateur;
+        this.dateCreation = dateCreation;
+        this.statut = statut;
+    }
+
+
 
     public int getIdReservation() {
         return idReservation;
@@ -35,23 +43,29 @@ public class Reservation {
         this.idReservation = idReservation;
     }
 
-    public Date getDateDebut() {
-        return dateDebut;
+    public int getIdClient() {
+        return idClient;
     }
 
-    public void setDateDebut(Date dateDebut) {
-        this.dateDebut = dateDebut;
+    public void setIdClient(int idClient) {
+        this.idClient = idClient;
     }
 
-    public Date getDateFin() {
-        return dateFin;
+    public int getIdUtilisateur() {
+        return idUtilisateur;
     }
 
-    public void setDateFin(Date dateFin) {
-        this.dateFin = dateFin;
+    public void setIdUtilisateur(int idUtilisateur) {
+        this.idUtilisateur = idUtilisateur;
     }
 
+    public LocalDateTime getDateCreation() {
+        return dateCreation;
+    }
 
+    public void setDateCreation(LocalDateTime dateCreation) {
+        this.dateCreation = dateCreation;
+    }
 
     public StatutReservation getStatut() {
         return statut;
@@ -61,31 +75,7 @@ public class Reservation {
         this.statut = statut;
     }
 
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
-
-    public Chambre getChambre() {
-        return chambre;
-    }
-
-    public void setChambre(Chambre chambre) {
-        this.chambre = chambre;
-    }
-
-    @Override
     public String toString() {
-        return "Reservation{" +
-                "idReservation=" + idReservation +
-                ", dateDebut=" + dateDebut +
-                ", dateFin=" + dateFin +
-                ", statut=" + statut +
-                ", client=" + client +
-                ", chambre=" + chambre +
-                '}';
+        return "Réservation n° " + idReservation + " [Client: " + idClient + ", Créée le: " + dateCreation + "] - " + statut + " par: " + idUtilisateur;
     }
 }

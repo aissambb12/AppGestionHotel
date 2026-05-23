@@ -1,7 +1,6 @@
-package com.hotel.dao.impl;
+package com.hotel.dao;
 
-import com.hotel.dao.FactureDAO;
-import com.hotel.model.*;
+import com.hotel.model.Facture;
 import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.util.DatabaseConnection;
 
@@ -12,172 +11,90 @@ import java.util.List;
 public class FactureDAOImpl implements FactureDAO {
 
     @Override
-    public void ajouter(Facture facture) {
-        String sql = """
-                INSERT INTO facture(
-                    id_reservation,
-                    date_facture,
-                    montant_hebergement,
-                    montant_restaurant,
-                    montant_total,
-                    statut
-                ) VALUES (?, ?, ?, ?, ?, ?)
-                """;
-
+    public boolean creerFacture(Facture f) {
+        String sql = "INSERT INTO factures (id_reservation, montant_total, statut_facture) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, facture.getReservation().getIdReservation());
-            ps.setDate(2, new java.sql.Date(facture.getDateFacture().getTime()));
-            ps.setDouble(3, facture.getMontantHebergement());
-            ps.setDouble(4, facture.getMontantRestaurant());
-            ps.setDouble(5, facture.getMontantTotal());
-            ps.setString(6, facture.getStatut().name());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            ps.setInt(1, f.getIdReservation());
+            ps.setDouble(2, f.getMontantTotal());
+            ps.setString(3, f.getStatutFacture().name());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
     @Override
-    public void modifier(Facture facture) {
-        String sql = """
-                UPDATE facture 
-                SET id_reservation=?, date_facture=?, montant_hebergement=?, 
-                    montant_restaurant=?, montant_total=?, statut=?
-                WHERE id_facture=?
-                """;
-
+    public boolean modifierStatut(int idFacture, String statut) {
+        String sql = "UPDATE factures SET statut_facture=? WHERE id_facture=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, facture.getReservation().getIdReservation());
-            ps.setDate(2, new java.sql.Date(facture.getDateFacture().getTime()));
-            ps.setDouble(3, facture.getMontantHebergement());
-            ps.setDouble(4, facture.getMontantRestaurant());
-            ps.setDouble(5, facture.getMontantTotal());
-            ps.setString(6, facture.getStatut().name());
-            ps.setInt(7, facture.getIdFacture());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            ps.setString(1, statut); ps.setInt(2, idFacture);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
     @Override
-    public void supprimer(int idFacture) {
-        String sql = "DELETE FROM facture WHERE id_facture=?";
-
+    public Facture trouverParId(int idFacture) {
+        String sql = "SELECT * FROM factures WHERE id_facture = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idFacture);
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public Facture rechercherParId(int idFacture) {
-        String sql = "SELECT * FROM facture WHERE id_facture=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idFacture);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return construireFacture(rs);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
+            ps.setInt(1, idFacture); ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapperFacture(rs);
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
     @Override
-    public List<Facture> listerTous() {
-        List<Facture> factures = new ArrayList<>();
-        String sql = "SELECT * FROM facture";
+    public Facture trouverParReservation(int idReservation) {
+        String sql = "SELECT * FROM factures WHERE id_reservation = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            ps.setInt(1, idReservation); ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapperFacture(rs);
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+
+    @Override
+    public List<Facture> listerToutes() {
+        List<Facture> liste = new ArrayList<>();
+        String sql = "SELECT * FROM factures";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
-            while (rs.next()) {
-                factures.add(construireFacture(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return factures;
+            while (rs.next()) liste.add(mapperFacture(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return liste;
     }
 
     @Override
-    public Facture rechercherParReservation(int idReservation) {
-        String sql = "SELECT * FROM facture WHERE id_reservation=?";
-
+    public double calculerMontantTotal(int idReservation) {
+        // Calcule (Prix des chambres * Nuits) + (Prix Extras * Quantité)
+        String sql = "SELECT " +
+                " (SELECT COALESCE(SUM(prix_applique * DATEDIFF(date_depart, date_arrivee)), 0) FROM reservation_chambres WHERE id_reservation = ?) + " +
+                " (SELECT COALESCE(SUM(rs.quantite * ss.prix_service), 0) FROM reservation_services rs JOIN services_supplementaires ss ON rs.id_service = ss.id_service WHERE rs.id_reservation = ?) " +
+                "AS total";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idReservation);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return construireFacture(rs);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+            ps.setInt(1, idReservation); ps.setInt(2, idReservation);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble("total");
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0.0;
     }
 
-    @Override
-    public void changerStatut(int idFacture, StatutFacture statut) {
-        String sql = "UPDATE facture SET statut=? WHERE id_facture=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, statut.name());
-            ps.setInt(2, idFacture);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Facture construireFacture(ResultSet rs) throws SQLException {
-        Facture facture = new Facture();
-
-        Reservation reservation = new Reservation();
-        reservation.setIdReservation(rs.getInt("id_reservation"));
-
-        facture.setIdFacture(rs.getInt("id_facture"));
-        facture.setReservation(reservation);
-        facture.setDateFacture(rs.getDate("date_facture"));
-        facture.setMontantHebergement(rs.getDouble("montant_hebergement"));
-        facture.setMontantRestaurant(rs.getDouble("montant_restaurant"));
-        facture.setMontantTotal(rs.getDouble("montant_total"));
-        facture.setStatut(StatutFacture.valueOf(rs.getString("statut")));
-
-        return facture;
+    private Facture mapperFacture(ResultSet rs) throws SQLException {
+        return new Facture(
+                rs.getInt("id_facture"),
+                rs.getInt("id_reservation"),
+                rs.getDouble("montant_total"),
+                rs.getTimestamp("date_facture").toLocalDateTime(),
+                StatutFacture.valueOf(rs.getString("statut_facture"))
+        );
     }
 }

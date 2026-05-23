@@ -2,29 +2,33 @@ package com.hotel.model;
 
 import com.hotel.model.enumeration.StatutFacture;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Facture {
 
     private int idFacture;
-    private Date dateFacture;
-    private double montantHebergement;
-    private double montantRestaurant;
+    private int idReservation;
     private double montantTotal;
-    private StatutFacture statut;
-    private Reservation reservation;
+    private LocalDateTime dateFacture;
+    private StatutFacture statutFacture;
 
     public Facture() {
     }
 
-    public Facture(int idFacture, Date dateFacture, double montantHebergement, double montantRestaurant, double montantTotal, StatutFacture statut, Reservation reservation) {
+    public Facture(int idReservation, int idFacture, double montantTotal, LocalDateTime dateFacture, StatutFacture statutFacture) {
+        this.idReservation = idReservation;
         this.idFacture = idFacture;
-        this.dateFacture = dateFacture;
-        this.montantHebergement = montantHebergement;
-        this.montantRestaurant = montantRestaurant;
         this.montantTotal = montantTotal;
-        this.statut = statut;
-        this.reservation = reservation;
+        this.dateFacture = dateFacture;
+        this.statutFacture = statutFacture;
+    }
+
+    public Facture(int idReservation, double montantTotal, LocalDateTime dateFacture, StatutFacture statutFacture) {
+        this.idReservation = idReservation;
+        this.montantTotal = montantTotal;
+        this.dateFacture = dateFacture;
+        this.statutFacture = statutFacture;
     }
 
     public int getIdFacture() {
@@ -35,28 +39,12 @@ public class Facture {
         this.idFacture = idFacture;
     }
 
-    public Date getDateFacture() {
-        return dateFacture;
+    public int getIdReservation() {
+        return idReservation;
     }
 
-    public void setDateFacture(Date dateFacture) {
-        this.dateFacture = dateFacture;
-    }
-
-    public double getMontantHebergement() {
-        return montantHebergement;
-    }
-
-    public void setMontantHebergement(double montantHebergement) {
-        this.montantHebergement = montantHebergement;
-    }
-
-    public double getMontantRestaurant() {
-        return montantRestaurant;
-    }
-
-    public void setMontantRestaurant(double montantRestaurant) {
-        this.montantRestaurant = montantRestaurant;
+    public void setIdReservation(int idReservation) {
+        this.idReservation = idReservation;
     }
 
     public double getMontantTotal() {
@@ -67,32 +55,24 @@ public class Facture {
         this.montantTotal = montantTotal;
     }
 
-    public StatutFacture getStatut() {
-        return statut;
+    public LocalDateTime getDateFacture() {
+        return dateFacture;
     }
 
-    public void setStatut(StatutFacture statut) {
-        this.statut = statut;
+    public void setDateFacture(LocalDateTime dateFacture) {
+        this.dateFacture = dateFacture;
     }
 
-    public Reservation getReservation() {
-        return reservation;
+    public StatutFacture getStatutFacture() {
+        return statutFacture;
     }
 
-    public void setReservation(Reservation reservation) {
-        this.reservation = reservation;
+    public void setStatutFacture(StatutFacture statutFacture) {
+        this.statutFacture = statutFacture;
     }
 
     @Override
     public String toString() {
-        return "Facture{" +
-                "idFacture=" + idFacture +
-                ", dateFacture=" + dateFacture +
-                ", montantHebergement=" + montantHebergement +
-                ", montantRestaurant=" + montantRestaurant +
-                ", montantTotal=" + montantTotal +
-                ", statut=" + statut +
-                ", reservation=" + reservation +
-                '}';
+        return "Facture n°" + idFacture + " - Total: " + montantTotal + " [" + statutFacture + "]";
     }
 }

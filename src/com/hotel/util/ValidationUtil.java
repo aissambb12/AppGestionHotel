@@ -1,19 +1,16 @@
 package com.hotel.util;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.regex.Pattern;
 
 public class ValidationUtil {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    // Expressions régulières (Regex)
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    private static final Pattern TELEPHONE_PATTERN = Pattern.compile("^[0-9]{10}$");
+    private static final Pattern CIN_PATTERN = Pattern.compile("^[A-Za-z]{1,2}[0-9]{4,8}$");
 
-    private static final Pattern TELEPHONE_PATTERN =
-            Pattern.compile("^[0-9]{10}$");
-
-    private static final Pattern CIN_PATTERN =
-            Pattern.compile("^[A-Za-z]{1,2}[0-9]{4,8}$");
-
+    // Constructeur privé pour empêcher l'instanciation (Classe 100% statique)
     private ValidationUtil() {
     }
 
@@ -22,51 +19,26 @@ public class ValidationUtil {
     }
 
     public static boolean estEmailValide(String email) {
-        if (estVide(email)) {
-            return false;
-        }
-
-        return EMAIL_PATTERN.matcher(email).matches();
+        if (estVide(email)) return false;
+        return EMAIL_PATTERN.matcher(email.trim()).matches();
     }
 
     public static boolean estTelephoneValide(String telephone) {
-        if (estVide(telephone)) {
-            return false;
-        }
-
-        return TELEPHONE_PATTERN.matcher(telephone).matches();
+        if (estVide(telephone)) return false;
+        return TELEPHONE_PATTERN.matcher(telephone.trim()).matches();
     }
 
     public static boolean estCinValide(String cin) {
-        if (estVide(cin)) {
-            return false;
-        }
-
-        return CIN_PATTERN.matcher(cin).matches();
-    }
-
-    public static boolean estNombrePositif(double nombre) {
-        return nombre > 0;
-    }
-
-    public static boolean estEntierPositif(int nombre) {
-        return nombre > 0;
+        if (estVide(cin)) return false;
+        return CIN_PATTERN.matcher(cin.trim().toUpperCase()).matches();
     }
 
     public static boolean estPrixValide(double prix) {
-        return prix > 0;
-    }
-
-    public static boolean sontDatesReservationValides(Date dateDebut, Date dateFin) {
-        return DateUtil.estDateFinApresDateDebut(dateDebut, dateFin);
+        return prix >= 0; // Aligné avec la contrainte SQL CHECK (prix >= 0)
     }
 
     public static boolean estQuantiteValide(int quantite) {
-        return quantite > 0;
-    }
-
-    public static boolean estLoginValide(String login) {
-        return !estVide(login) && login.length() >= 3;
+        return quantite > 0; // Aligné avec la contrainte SQL CHECK (quantite > 0)
     }
 
     public static boolean estMotDePasseValide(String motDePasse) {
@@ -74,6 +46,20 @@ public class ValidationUtil {
     }
 
     public static boolean estNomValide(String nom) {
-        return !estVide(nom) && nom.length() >= 2;
+        return !estVide(nom) && nom.trim().length() >= 2;
+    }
+
+    // --- Validations liées aux Dates ---
+
+    public static boolean sontDatesReservationValides(LocalDate dateArrivee, LocalDate dateDepart) {
+        return DateUtil.estDateFinApresDateDebut(dateArrivee, dateDepart);
+    }
+
+    /**
+     * Vérifie si la date choisie n'est pas dans le passé (pour éviter de réserver hier).
+     */
+    public static boolean estDateDansLeFuturOuAujourdhui(LocalDate date) {
+        if (date == null) return false;
+        return !date.isBefore(LocalDate.now());
     }
 }
