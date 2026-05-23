@@ -35,19 +35,22 @@ public class ReservationServicesDAOImpl implements ReservationServicesDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReservation);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    // Utilisation de votre constructeur exact avec les bons types !
                     ReservationServices extra = new ReservationServices(
+                            rs.getInt("id_consommation"),
                             rs.getInt("id_reservation"),
                             rs.getInt("id_service"),
                             rs.getInt("quantite"),
-                            rs.getDouble("prix_applique")
+                            rs.getDate("date_consommation").toLocalDate()
                     );
                     liste.add(extra);
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Erreur lors de la récupération des services consommés : " + e.getMessage());
         }
         return liste;
     }

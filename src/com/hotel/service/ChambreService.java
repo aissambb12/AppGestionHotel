@@ -53,6 +53,31 @@ public class ChambreService {
         return chambreDAO.listerChambresDisponibles(arrivee, depart, categorie);
     }
 
+    /**
+     * Récupère tous les détails d'une chambre via son ID.
+     */
+    public Chambre obtenirDetailsChambre(int idChambre) {
+        if (idChambre <= 0) {
+            throw new IllegalArgumentException("ID de chambre invalide.");
+        }
+        return chambreDAO.trouverParId(idChambre);
+    }
+
+    /**
+     * Modifie le statut d'une chambre (ex: DISPONIBLE, OCCUPEE, EN_MAINTENANCE)
+     */
+    public boolean modifierStatutChambre(int idChambre, String nouveauStatut) {
+        if (idChambre <= 0) {
+            throw new IllegalArgumentException("ID de chambre invalide.");
+        }
+        if (nouveauStatut == null || nouveauStatut.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le statut ne peut pas être vide.");
+        }
+
+        // Appel au DAO qui exécute l'UPDATE en base de données
+        return chambreDAO.modifierStatut(idChambre, nouveauStatut);
+    }
+
     public List<Chambre> listerToutesLesChambres() {
         return chambreDAO.listerToutes();
     }

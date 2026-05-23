@@ -116,12 +116,12 @@ public class LoginFrame extends JFrame {
                 switch (utilisateurConnecte.getRole()) {
                     case ADMIN:
                         JOptionPane.showMessageDialog(this, "Accès Master - Bienvenue Directeur " + utilisateurConnecte.getNom());
-                        // new DashboardAdminFrame(utilisateurConnecte).setVisible(true); // Vue Full Accès
+                        new DashboardAdminFrame(utilisateurConnecte).setVisible(true); // Vue Full Accès
                         break;
 
                     case RECEPTIONNISTE:
                         JOptionPane.showMessageDialog(this, "Accès Accueil - Bienvenue Réceptionniste " + utilisateurConnecte.getNom());
-                        // new DashboardReceptionnisteFrame(utilisateurConnecte).setVisible(true); // Vue Réservations/Clients
+                        new DashboardReceptionnisteFrame(utilisateurConnecte).setVisible(true); // Vue Réservations/Clients
                         break;
 
                     case MAINTENANCE:
@@ -144,17 +144,5 @@ public class LoginFrame extends JFrame {
         }
     }
 
-    // Point d'entrée pour lancer uniquement cette fenêtre
-    public static void main(String[] args) {
-        // Appliquer un style natif Windows/Mac à Swing pour que ce soit plus joli
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        SwingUtilities.invokeLater(() -> {
-            new LoginFrame().setVisible(true);
-        });
-    }
 }

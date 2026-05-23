@@ -14,6 +14,7 @@ import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.util.ValidationUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class FacturationService {
@@ -68,6 +69,29 @@ public class FacturationService {
 
         // 4. Clôturer définitivement la réservation
         return reservationDAO.modifierStatut(idReservation, StatutReservation.TERMINEE.name());
+    }
+
+    /**
+     * Calcule le CA sur une période donnée (factures PAYEES uniquement).
+     */
+    public double obtenirChiffreAffaires(LocalDate dateDebut, LocalDate dateFin) {
+        if (dateDebut == null || dateFin == null) {
+            throw new IllegalArgumentException("Les dates sont obligatoires.");
+        }
+        if (dateDebut.isAfter(dateFin)) {
+            throw new IllegalArgumentException("La date de début doit précéder la date de fin.");
+        }
+        return factureDAO.calculerChiffreAffaires(dateDebut, dateFin);
+    }
+
+    /**
+     * Récupère la liste de tous les services supplémentaires (Spa, Restaurant) consommés par une réservation.
+     */
+    public List<ReservationServices> obtenirDetailsConsommations(int idReservation) {
+        if (idReservation <= 0) {
+            throw new IllegalArgumentException("ID de réservation invalide.");
+        }
+        return reservationServicesDAO.listerConsommationsParReservation(idReservation);
     }
 
     /**

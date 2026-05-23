@@ -70,6 +70,17 @@ public class ReservationService {
         return true; // Succès total du processus !
     }
 
+    /**
+     * Valide le Check-In du client et passe la réservation au statut EN_COURS.
+     */
+    public boolean validerCheckIn(int idReservation) {
+        if (idReservation <= 0) {
+            throw new IllegalArgumentException("ID de réservation invalide.");
+        }
+        // Utilisation de votre Enum StatutReservation
+        return reservationDAO.modifierStatut(idReservation, StatutReservation.CONFIRMEE.name());
+    }
+
     public List<Reservation> listerToutesLesReservations() {
         return reservationDAO.listerToutes();
     }

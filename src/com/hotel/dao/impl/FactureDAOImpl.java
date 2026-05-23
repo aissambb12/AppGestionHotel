@@ -5,6 +5,7 @@ import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.util.DatabaseConnection;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,27 @@ public class FactureDAOImpl implements FactureDAO {
             if (rs.next()) return mapperFacture(rs);
         } catch (SQLException e) { e.printStackTrace(); }
         return null;
+    }
+
+    @Override
+    public double calculerChiffreAffaires(LocalDate dateDebut, LocalDate dateFin) {
+        String sql = "SELECT SUM(montant_total) as total FROM factures WHERE statut_facture = 'PAYEE' AND DATE(date_facture) BETWEEN ? AND ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(dateDebut));
+            ps.setDate(2, java.sql.Date.valueOf(dateFin));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du calcul du CA : " + e.getMessage());
+        }
+        return 0.0;
     }
 
     @Override

@@ -1,47 +1,68 @@
 package com.hotel.vue;
 
+import com.hotel.model.Chambre;
+import com.hotel.model.Reservation;
+import com.hotel.model.ReservationServices;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.Role;
 import com.hotel.service.UtilisateurService;
+import com.hotel.service.ChambreService;
+import com.hotel.service.ReservationService;
+import com.hotel.service.FacturationService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class DashboardAdminFrame extends JFrame {
 
     private Utilisateur adminConnecte;
-    private UtilisateurService utilisateurService;
 
-    // Composants pour la gestion du personnel
-    private JTextField txtNom, txtPrenom, txtEmail;
-    private JPasswordField txtMotDePasse;
-    private JComboBox<Role> comboRole;
-    private DefaultTableModel tableModelPersonnel;
-    private JTable tablePersonnel;
+    // Services (Back-End)
+    private UtilisateurService utilisateurService;
+    private ChambreService chambreService;
+    private ReservationService reservationService;
+    private FacturationService facturationService;
+
+    // Modèles de tables pour pouvoir les rafraîchir
+    private DefaultTableModel modelePersonnel;
+    private DefaultTableModel modeleChambres;
+    private DefaultTableModel modeleReservations;
 
     public DashboardAdminFrame(Utilisateur admin) {
         this.adminConnecte = admin;
-        this.utilisateurService = new UtilisateurService();
 
-        setTitle("Hotel Manager - Espace Administration (" + admin.getNom() + ")");
-        setSize(1000, 700);
+        // Initialisation des connexions
+        this.utilisateurService = new UtilisateurService();
+        this.chambreService = new ChambreService();
+        this.reservationService = new ReservationService();
+        this.facturationService = new FacturationService();
+
+        setTitle("Hotel Manager - Mode Administrateur (" + admin.getNom() + ")");
+        setSize(1100, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         initialiserComposants();
-        chargerDonneesPersonnel(); // Charger la table au démarrage
+
+        // Chargement automatique de toutes les données au démarrage
+        chargerDonneesPersonnel();
+        chargerDonneesChambres();
+        chargerDonneesReservations();
     }
 
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // --- EN-TÊTE (Header) ---
+        // --- EN-TÊTE ---
         JPanel panelHeader = new JPanel(new BorderLayout());
         panelHeader.setBackground(ThemeUtil.BLEU_NUIT);
         panelHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("TABLEAU DE BORD ADMINISTRATEUR");
+        JLabel lblTitre = new JLabel("TABLEAU DE BORD - MASTER ADMIN");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
@@ -57,164 +78,254 @@ public class DashboardAdminFrame extends JFrame {
         panelHeader.add(btnDeconnexion, BorderLayout.EAST);
         add(panelHeader, BorderLayout.NORTH);
 
-        // --- SYSTÈME D'ONGLETS ---
+        // --- ONGLETS ---
         JTabbedPane onglets = new JTabbedPane();
         onglets.setFont(ThemeUtil.POLICE_BOUTON);
 
-        onglets.addTab("👥 Gestion du Personnel", creerOngletPersonnel());
-        onglets.addTab("🗂️ Toutes les Réservations", creerOngletReservations());
+        onglets.addTab("👥 Personnel", creerOngletPersonnel());
         onglets.addTab("🛏️ Parc des Chambres", creerOngletChambres());
-        // onglets.addTab("📊 Statistiques", new JPanel()); // Pour plus tard
+        onglets.addTab("🗂️ Réservations & Extras", creerOngletReservations());
+        onglets.addTab("📊 Chiffre d'Affaires", creerOngletStatistiques());
 
         add(onglets, BorderLayout.CENTER);
     }
 
     // =========================================================
-    // ONGLET 1 : GESTION DU PERSONNEL (Ajout et Liste)
+    // ONGLET 1 : PERSONNEL
     // =========================================================
     private JPanel creerOngletPersonnel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.GRIS_FOND);
 
-        // FORMULAIRE D'AJOUT (En haut)
-        JPanel panelFormulaire = new JPanel(new GridBagLayout());
-        panelFormulaire.setBorder(BorderFactory.createTitledBorder("Ajouter un nouvel employé"));
-        panelFormulaire.setBackground(ThemeUtil.GRIS_FOND);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        JPanel panelForm = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelForm.setBorder(BorderFactory.createTitledBorder("Gérer le personnel"));
 
-        // Ligne 1
-        gbc.gridx = 0; gbc.gridy = 0; panelFormulaire.add(new JLabel("Nom :"), gbc);
-        gbc.gridx = 1; txtNom = new JTextField(15); panelFormulaire.add(txtNom, gbc);
-
-        gbc.gridx = 2; panelFormulaire.add(new JLabel("Prénom :"), gbc);
-        gbc.gridx = 3; txtPrenom = new JTextField(15); panelFormulaire.add(txtPrenom, gbc);
-
-        // Ligne 2
-        gbc.gridx = 0; gbc.gridy = 1; panelFormulaire.add(new JLabel("Email :"), gbc);
-        gbc.gridx = 1; txtEmail = new JTextField(15); panelFormulaire.add(txtEmail, gbc);
-
-        gbc.gridx = 2; panelFormulaire.add(new JLabel("Mot de Passe :"), gbc);
-        gbc.gridx = 3; txtMotDePasse = new JPasswordField(15); panelFormulaire.add(txtMotDePasse, gbc);
-
-        // Ligne 3 : Sélection du rôle (Le fameux Full Accès pour créer d'autres rôles !)
-        gbc.gridx = 0; gbc.gridy = 2; panelFormulaire.add(new JLabel("Rôle :"), gbc);
-        gbc.gridx = 1;
-        // On liste uniquement les rôles qu'un admin peut créer (pas de SuperAdmin par exemple)
-        comboRole = new JComboBox<>(new Role[]{Role.RECEPTIONNISTE, Role.MAINTENANCE, Role.ADMIN});
-        panelFormulaire.add(comboRole, gbc);
-
-        gbc.gridx = 3;
-        JButton btnAjouter = new JButton("Créer le compte");
+        JButton btnAjouter = new JButton("Créer un employé");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouter);
-        btnAjouter.addActionListener(e -> ajouterEmploye());
-        panelFormulaire.add(btnAjouter, gbc);
 
-        // TABLEAU DES EMPLOYÉS (Au centre)
-        String[] colonnes = {"ID", "Nom", "Prénom", "Email", "Rôle", "Statut"};
-        tableModelPersonnel = new DefaultTableModel(colonnes, 0);
-        tablePersonnel = new JTable(tableModelPersonnel);
-        tablePersonnel.setRowHeight(25);
+        JButton btnChangerStatut = new JButton("Activer / Désactiver l'employé sélectionné");
+        btnChangerStatut.setBackground(Color.DARK_GRAY);
+        btnChangerStatut.setForeground(Color.WHITE);
 
-        JScrollPane scrollPane = new JScrollPane(tablePersonnel);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Liste des employés"));
+        panelForm.add(btnAjouter);
+        panelForm.add(btnChangerStatut);
 
-        panel.add(panelFormulaire, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        String[] colonnes = {"ID", "Nom", "Email", "Rôle", "Statut"};
+        modelePersonnel = new DefaultTableModel(colonnes, 0);
+        JTable tablePersonnel = new JTable(modelePersonnel);
 
-        return panel;
-    }
+        // ACTION : Changer le statut
+        btnChangerStatut.addActionListener(e -> {
+            int ligne = tablePersonnel.getSelectedRow();
+            if (ligne != -1) {
+                int idUtilisateur = (int) modelePersonnel.getValueAt(ligne, 0);
+                String statutActuel = (String) modelePersonnel.getValueAt(ligne, 4);
 
-    // =========================================================
-    // ONGLET 2 : VUE GLOBALE DES RÉSERVATIONS
-    // =========================================================
-    private JPanel creerOngletReservations() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.GRIS_FOND);
-
-        JLabel lblInfo = new JLabel("Ici, l'administrateur pourra voir l'historique complet de toutes les réservations.", SwingConstants.CENTER);
-        lblInfo.setFont(ThemeUtil.POLICE_NORMALE);
-
-        // TODO: Créer une JTable pour afficher la liste des réservations via ReservationService
-        panel.add(lblInfo, BorderLayout.CENTER);
-        return panel;
-    }
-
-    // =========================================================
-    // ONGLET 3 : PARC DES CHAMBRES
-    // =========================================================
-    private JPanel creerOngletChambres() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.GRIS_FOND);
-
-        JLabel lblInfo = new JLabel("Ici, l'administrateur pourra voir toutes les chambres et forcer leur statut.", SwingConstants.CENTER);
-        lblInfo.setFont(ThemeUtil.POLICE_NORMALE);
-
-        // TODO: Créer une JTable pour afficher la liste des chambres via ChambreService
-        panel.add(lblInfo, BorderLayout.CENTER);
-        return panel;
-    }
-
-    // =========================================================
-    // LOGIQUE MÉTIER (Actions des boutons)
-    // =========================================================
-    private void ajouterEmploye() {
-        try {
-            // Récupérer les données
-            String nom = txtNom.getText();
-            String prenom = txtPrenom.getText();
-            String email = txtEmail.getText();
-            String motDePasse = new String(txtMotDePasse.getPassword());
-            Role role = (Role) comboRole.getSelectedItem();
-
-            // Créer l'objet
-            Utilisateur nouvelEmploye = new Utilisateur();
-            nouvelEmploye.setNom(nom);
-            nouvelEmploye.setPrenom(prenom);
-            nouvelEmploye.setEmail(email);
-            nouvelEmploye.setMotDEPasse(motDePasse);
-            nouvelEmploye.setRole(role);
-
-            // Appel au Service qui gère les validations (email valide, mdp > 4, etc.)
-            boolean succes = utilisateurService.inscrireEmploye(nouvelEmploye);
-
-            if (succes) {
-                JOptionPane.showMessageDialog(this, "Compte employé créé avec succès !");
-                viderFormulairePersonnel();
-                chargerDonneesPersonnel(); // Rafraîchir la table
+                if ("ACTIF".equals(statutActuel)) {
+                    utilisateurService.desactiverEmploye(idUtilisateur);
+                    JOptionPane.showMessageDialog(this, "Employé désactivé.");
+                } else {
+                    utilisateurService.activerEmploye(idUtilisateur);
+                    JOptionPane.showMessageDialog(this, "Employé réactivé.");
+                }
+                chargerDonneesPersonnel(); // Rafraîchir la table instantanément
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur lors de la création en base de données.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Veuillez sélectionner un employé.", "Avertissement", JOptionPane.WARNING_MESSAGE);
             }
+        });
 
-        } catch (IllegalArgumentException ex) {
-            // Attrape les erreurs de notre couche Service (ex: "Email déjà existant")
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Saisie Invalide", JOptionPane.WARNING_MESSAGE);
-        }
+        panel.add(panelForm, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tablePersonnel), BorderLayout.CENTER);
+        return panel;
     }
 
     private void chargerDonneesPersonnel() {
-        // Vider la table actuelle
-        tableModelPersonnel.setRowCount(0);
-
-        // Demander la liste au service
-        for (Utilisateur u : utilisateurService.listerTousLesEmployes()) {
-            Object[] ligne = {
-                    u.getIdUtilisateur(),
-                    u.getNom(),
-                    u.getPrenom(),
-                    u.getEmail(),
-                    u.getRole().name(),
-                    u.getStatut().name()
-            };
-            tableModelPersonnel.addRow(ligne);
+        modelePersonnel.setRowCount(0);
+        List<Utilisateur> employes = utilisateurService.listerTousLesEmployes();
+        for (Utilisateur u : employes) {
+            modelePersonnel.addRow(new Object[]{
+                    u.getIdUtilisateur(), u.getNom(), u.getEmail(),
+                    u.getRole() != null ? u.getRole().name() : "N/A",
+                    u.getStatut() != null ? u.getStatut().name() : "N/A"
+            });
         }
     }
 
-    private void viderFormulairePersonnel() {
-        txtNom.setText("");
-        txtPrenom.setText("");
-        txtEmail.setText("");
-        txtMotDePasse.setText("");
-        comboRole.setSelectedIndex(0);
+    // =========================================================
+    // ONGLET 2 : CHAMBRES
+    // =========================================================
+    private JPanel creerOngletChambres() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton btnAjouterChambre = new JButton("Ajouter Chambre");
+        ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouterChambre);
+
+        JButton btnSignalerPanne = new JButton("⚠️ Signaler en Panne");
+        btnSignalerPanne.setBackground(Color.ORANGE);
+        btnSignalerPanne.setForeground(Color.BLACK);
+
+        panelActions.add(btnAjouterChambre);
+        panelActions.add(btnSignalerPanne);
+
+        String[] colonnes = {"ID", "Numéro", "Catégorie", "Prix", "Statut"};
+        modeleChambres = new DefaultTableModel(colonnes, 0);
+        JTable tableChambres = new JTable(modeleChambres);
+
+        // ACTION : Mettre en panne
+        btnSignalerPanne.addActionListener(e -> {
+            int ligne = tableChambres.getSelectedRow();
+            if (ligne != -1) {
+                String statutActuel = modeleChambres.getValueAt(ligne, 4).toString();
+                if ("EN_MAINTENANCE".equals(statutActuel)) {
+                    JOptionPane.showMessageDialog(this, "Cette chambre est déjà en maintenance.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    int idChambre = (int) modeleChambres.getValueAt(ligne, 0);
+
+                    try {
+                        // Supposant que vous ayez une méthode modifierStatutChambre dans votre service
+                        chambreService.modifierStatutChambre(idChambre, "EN_MAINTENANCE");
+                        JOptionPane.showMessageDialog(this, "Chambre envoyée en maintenance !");
+                        chargerDonneesChambres(); // Rafraîchir la table
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage());
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Veuillez sélectionner une chambre.");
+            }
+        });
+
+        panel.add(panelActions, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tableChambres), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void chargerDonneesChambres() {
+        modeleChambres.setRowCount(0);
+        List<Chambre> chambres = chambreService.listerToutesLesChambres();
+        for (Chambre c : chambres) {
+            modeleChambres.addRow(new Object[]{
+                    c.getIdChambre(), c.getNumero(), c.getCategorie(), c.getPrixUnitaire(), c.getStatutChambre()
+            });
+        }
+    }
+
+    // =========================================================
+    // ONGLET 3 : RÉSERVATIONS & EXTRAS
+    // =========================================================
+    private JPanel creerOngletReservations() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton btnDetails = new JButton("🔍 Voir les Extras & Détails");
+        ThemeUtil.appliquerThemeBoutonPrincipal(btnDetails);
+        panelActions.add(btnDetails);
+
+        String[] colonnes = {"ID Réservation", "ID Client", "Date Arrivée", "Date Départ", "Statut"};
+        modeleReservations = new DefaultTableModel(colonnes, 0);
+        JTable tableReservations = new JTable(modeleReservations);
+
+        // ACTION : Voir les extras
+        btnDetails.addActionListener(e -> {
+            int ligne = tableReservations.getSelectedRow();
+            if (ligne != -1) {
+                int idResa = (int) modeleReservations.getValueAt(ligne, 0);
+
+                // Appel au Back-End
+                List<ReservationServices> extras = facturationService.obtenirDetailsConsommations(idResa);
+                afficherDetailsPopUp(idResa, extras);
+
+            } else {
+                JOptionPane.showMessageDialog(this, "Veuillez sélectionner une réservation.");
+            }
+        });
+
+        panel.add(panelActions, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tableReservations), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void chargerDonneesReservations() {
+        modeleReservations.setRowCount(0);
+        List<Reservation> reservations = reservationService.listerToutesLesReservations();
+
+        for (Reservation r : reservations) {
+            modeleReservations.addRow(new Object[]{
+                    r.getIdReservation(),
+                    r.getIdClient(),
+                    r.getDateCreation(), // On utilise la vraie date disponible !
+                    r.getStatut() != null ? r.getStatut().name() : "N/A"
+            });
+        }
+    }
+
+    private void afficherDetailsPopUp(int idResa, List<ReservationServices> extras) {
+        if (extras == null || extras.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Aucun service supplémentaire n'a été consommé pour cette réservation.", "Détails Réservation N°" + idResa, JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("Liste des extras consommés :\n\n");
+        for (ReservationServices rs : extras) {
+            sb.append("- ID Service: ").append(rs.getIdService())
+                    .append(" | Quantité: ").append(rs.getQuantite())
+                    .append(" | Date: ").append(rs.getDateConsommation()).append("\n");
+        }
+
+        JOptionPane.showMessageDialog(this, sb.toString(), "Extras de la Réservation N°" + idResa, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // =========================================================
+    // ONGLET 4 : STATISTIQUES (Chiffre d'Affaires)
+    // =========================================================
+    private JPanel creerOngletStatistiques() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(ThemeUtil.GRIS_FOND);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        JLabel lblTitre = new JLabel("Calcul du Chiffre d'Affaires");
+        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(lblTitre, gbc);
+
+        gbc.gridwidth = 1; gbc.gridy = 1;
+        panel.add(new JLabel("Date de début (YYYY-MM-DD) :"), gbc);
+        JTextField txtDateDebut = new JTextField(10);
+        gbc.gridx = 1; panel.add(txtDateDebut, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Date de fin (YYYY-MM-DD) :"), gbc);
+        JTextField txtDateFin = new JTextField(10);
+        gbc.gridx = 1; panel.add(txtDateFin, gbc);
+
+        JButton btnCalculer = new JButton("Calculer CA");
+        ThemeUtil.appliquerThemeBoutonPrincipal(btnCalculer);
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        panel.add(btnCalculer, gbc);
+
+        JLabel lblResultat = new JLabel("Total : 0.00");
+        lblResultat.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblResultat.setForeground(ThemeUtil.DORE_LUXE);
+        gbc.gridy = 4;
+        panel.add(lblResultat, gbc);
+
+        // ACTION : Calculer le CA avec la BDD
+        btnCalculer.addActionListener(e -> {
+            try {
+                LocalDate dateDebut = LocalDate.parse(txtDateDebut.getText());
+                LocalDate dateFin = LocalDate.parse(txtDateFin.getText());
+
+                double ca = facturationService.obtenirChiffreAffaires(dateDebut, dateFin);
+                lblResultat.setText("Total : " + String.format("%.2f", ca) + " MAD");
+
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "Format de date invalide. Utilisez AAAA-MM-JJ.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erreur de calcul : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        return panel;
     }
 }
