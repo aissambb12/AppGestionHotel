@@ -21,7 +21,10 @@ public class FactureDAOImpl implements FactureDAO {
             ps.setDouble(2, f.getMontantTotal());
             ps.setString(3, f.getStatutFacture().name());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.creerFacture : " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -30,9 +33,13 @@ public class FactureDAOImpl implements FactureDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, statut); ps.setInt(2, idFacture);
+            ps.setString(1, statut);
+            ps.setInt(2, idFacture);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.modifierStatut : " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -41,9 +48,13 @@ public class FactureDAOImpl implements FactureDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idFacture); ResultSet rs = ps.executeQuery();
-            if (rs.next()) return mapperFacture(rs);
-        } catch (SQLException e) { e.printStackTrace(); }
+            ps.setInt(1, idFacture);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapperFacture(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.trouverParId : " + e.getMessage());
+        }
         return null;
     }
 
@@ -59,11 +70,12 @@ public class FactureDAOImpl implements FactureDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getDouble("total");
+                    double total = rs.getDouble("total");
+                    return rs.wasNull() ? 0.0 : total;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erreur lors du calcul du CA : " + e.getMessage());
+            System.err.println("❌ FactureDAO.calculerChiffreAffaires : " + e.getMessage());
         }
         return 0.0;
     }
@@ -74,39 +86,50 @@ public class FactureDAOImpl implements FactureDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idReservation); ResultSet rs = ps.executeQuery();
-            if (rs.next()) return mapperFacture(rs);
-        } catch (SQLException e) { e.printStackTrace(); }
+            ps.setInt(1, idReservation);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapperFacture(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.trouverParReservation : " + e.getMessage());
+        }
         return null;
     }
 
     @Override
     public List<Facture> listerToutes() {
         List<Facture> liste = new ArrayList<>();
-        String sql = "SELECT * FROM factures";
+        String sql = "SELECT * FROM factures ORDER BY date_facture DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) liste.add(mapperFacture(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.listerToutes : " + e.getMessage());
+        }
         return liste;
     }
 
     @Override
     public double calculerMontantTotal(int idReservation) {
-        // Calcule (Prix des chambres * Nuits) + (Prix Extras * Quantité)
-        String sql = "SELECT " +
-                " (SELECT COALESCE(SUM(prix_applique * DATEDIFF(date_depart, date_arrivee)), 0) FROM reservation_chambres WHERE id_reservation = ?) + " +
-                " (SELECT COALESCE(SUM(rs.quantite * ss.prix_service), 0) FROM reservation_services rs JOIN services_supplementaires ss ON rs.id_service = ss.id_service WHERE rs.id_reservation = ?) " +
-                "AS total";
+        String sql = "SELECT COALESCE(SUM(rc.prix_applique * DATEDIFF(rc.date_depart, rc.date_arrivee)), 0) as total_chambres " +
+                "FROM reservation_chambres rc " +
+                "WHERE rc.id_reservation = ?";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idReservation); ps.setInt(2, idReservation);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getDouble("total");
-        } catch (SQLException e) { e.printStackTrace(); }
+            ps.setInt(1, idReservation);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total_chambres");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ FactureDAO.calculerMontantTotal : " + e.getMessage());
+        }
         return 0.0;
     }
 
@@ -115,7 +138,7 @@ public class FactureDAOImpl implements FactureDAO {
                 rs.getInt("id_facture"),
                 rs.getInt("id_reservation"),
                 rs.getDouble("montant_total"),
-                rs.getTimestamp("date_facture").toLocalDateTime(),
+                rs.getTimestamp("date_facture") != null ? rs.getTimestamp("date_facture").toLocalDateTime() : null,
                 StatutFacture.valueOf(rs.getString("statut_facture"))
         );
     }

@@ -1,29 +1,22 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
-import com.hotel.service.MaintenanceService;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+        import java.awt.*;
 
 public class DashboardMaintenanceFrame extends JFrame {
 
     private Utilisateur technicienConnecte;
-    private MaintenanceService maintenanceService;
-
-    // Composants
-    private DefaultTableModel modeleInterventions;
-    private JTable tableInterventions;
 
     public DashboardMaintenanceFrame(Utilisateur technicien) {
         this.technicienConnecte = technicien;
-        // this.maintenanceService = new MaintenanceService(); // À décommenter une fois prêt
 
-        setTitle("Hotel Manager - Espace Technique (" + technicien.getNom() + ")");
-        setSize(900, 600); // Fenêtre un peu plus petite car moins de menus
+        setTitle("Hotel Manager - Maintenance");
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setResizable(false);
 
         initialiserComposants();
     }
@@ -31,117 +24,137 @@ public class DashboardMaintenanceFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // --- EN-TÊTE (Header) ---
-        JPanel panelHeader = new JPanel(new BorderLayout());
-        panelHeader.setBackground(ThemeUtil.BLEU_NUIT);
-        panelHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        // === EN-TÊTE ===
+        JPanel panelHeader = creerHeader();
+        add(panelHeader, BorderLayout.NORTH);
 
-        JLabel lblTitre = new JLabel("🔧 DÉPARTEMENT TECHNIQUE & MAINTENANCE");
+        // === PANEL PRINCIPAL AVEC ICÔNES ===
+        JPanel panelPrincipal = creerPanelIcones();
+        add(panelPrincipal, BorderLayout.CENTER);
+    }
+
+    private JPanel creerHeader() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(ThemeUtil.BLEU_NUIT);
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+
+        JLabel lblTitre = new JLabel("🔧 DÉPARTEMENT MAINTENANCE");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
-        JButton btnDeconnexion = new JButton("Déconnexion");
-        btnDeconnexion.setBackground(Color.RED);
-        btnDeconnexion.setForeground(Color.WHITE);
+        JLabel lblUtilisateur = new JLabel("👤 " + technicienConnecte.getNom());
+        lblUtilisateur.setFont(ThemeUtil.POLICE_NORMALE);
+        lblUtilisateur.setForeground(ThemeUtil.BLANC);
+
+        JButton btnDeconnexion = new JButton("🚪 Déconnexion");
+        btnDeconnexion.setBackground(ThemeUtil.ROUGE_ERREUR);
+        btnDeconnexion.setForeground(ThemeUtil.BLANC);
+        btnDeconnexion.setFont(ThemeUtil.POLICE_BOUTON);
+        btnDeconnexion.setFocusPainted(false);
+        btnDeconnexion.setOpaque(true);
+        btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDeconnexion.addActionListener(e -> {
             new LoginFrame().setVisible(true);
-            this.dispose();
+            dispose();
         });
 
-        panelHeader.add(lblTitre, BorderLayout.WEST);
-        panelHeader.add(btnDeconnexion, BorderLayout.EAST);
-        add(panelHeader, BorderLayout.NORTH);
+        panel.add(lblTitre, BorderLayout.WEST);
+        panel.add(lblUtilisateur, BorderLayout.CENTER);
+        panel.add(btnDeconnexion, BorderLayout.EAST);
 
-        // --- SYSTÈME D'ONGLETS (Un seul onglet principal, et un pour l'historique) ---
-        JTabbedPane onglets = new JTabbedPane();
-        onglets.setFont(ThemeUtil.POLICE_BOUTON);
-
-        onglets.addTab("🚨 Interventions en cours", creerOngletInterventions());
-        onglets.addTab("📋 Historique des réparations", creerOngletHistorique());
-
-        add(onglets, BorderLayout.CENTER);
+        return panel;
     }
 
-    // =========================================================
-    // ONGLET 1 : INTERVENTIONS EN COURS (Le cœur du métier)
-    // =========================================================
-    private JPanel creerOngletInterventions() {
-        JPanel panel = new JPanel(new BorderLayout());
+    private JPanel creerPanelIcones() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 30, 30));
+        panel.setBackground(ThemeUtil.GRIS_FOND);
+        panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
 
-        // Zone de boutons (Action)
-        JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        // === BOUTON 1 : INTERVENTIONS EN COURS ===
+        JPanel btnInterventions = creerBoutonIcone("🚨", "INTERVENTIONS\nEN COURS", ThemeUtil.ROUGE_ERREUR);
+        btnInterventions.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                new InterventionsFrame(technicienConnecte).setVisible(true);
+                dispose();
+            }
+        });
+        panel.add(btnInterventions);
 
-        JButton btnRafraichir = new JButton("🔄 Rafraîchir la liste");
-        btnRafraichir.setBackground(ThemeUtil.BLEU_NUIT);
-        btnRafraichir.setForeground(Color.WHITE);
+        // === BOUTON 2 : HISTORIQUE ===
+        JPanel btnHistorique = creerBoutonIcone("📋", "HISTORIQUE DES\nRÉPARATIONS", new Color(52, 152, 219));
+        btnHistorique.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                new HistoriqueFrame(technicienConnecte).setVisible(true);
+                dispose();
+            }
+        });
+        panel.add(btnHistorique);
 
-        // LE BOUTON MAGIQUE DU TECHNICIEN
-        JButton btnTerminer = new JButton("✅ Réparation Terminée (Libérer la chambre)");
-        btnTerminer.setBackground(new Color(39, 174, 96)); // Vert validation
-        btnTerminer.setForeground(Color.WHITE);
-        btnTerminer.setFont(ThemeUtil.POLICE_BOUTON);
+        return panel;
+    }
 
-        panelActions.add(btnRafraichir);
-        panelActions.add(btnTerminer);
+    private JPanel creerBoutonIcone(String icone, String texte, Color couleur) {
+        JPanel btn = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(couleur);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+                super.paintComponent(g);
+            }
+        };
 
-        // Tableau des pannes en cours
-        String[] colonnes = {"ID Maintenance", "N° Chambre", "Description du problème", "Date Signalement"};
-        modeleInterventions = new DefaultTableModel(colonnes, 0);
-        tableInterventions = new JTable(modeleInterventions);
-        tableInterventions.setRowHeight(30); // Lignes un peu plus larges pour lire la description
+        btn.setBackground(couleur);
+        btn.setOpaque(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // ACTION : Terminer la maintenance
-        btnTerminer.addActionListener(e -> {
-            int ligneSelectionnee = tableInterventions.getSelectedRow();
-            if (ligneSelectionnee != -1) {
-                int idMaintenance = (int) modeleInterventions.getValueAt(ligneSelectionnee, 0);
-                String numChambre = modeleInterventions.getValueAt(ligneSelectionnee, 1).toString();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
 
-                int confirmation = JOptionPane.showConfirmDialog(
-                        this,
-                        "Confirmez-vous que les travaux sont terminés pour la chambre " + numChambre + " ?\nElle redeviendra DISPONIBLE pour les clients.",
-                        "Confirmation de réparation",
-                        JOptionPane.YES_NO_OPTION
-                );
+        // Icône
+        JLabel lblIcone = new JLabel(icone);
+        lblIcone.setFont(new Font("Arial", Font.PLAIN, 64));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        btn.add(lblIcone, gbc);
 
-                if (confirmation == JOptionPane.YES_OPTION) {
-                    // Appel au backend : change le statut de la maintenance ET de la chambre
-                    // boolean succes = maintenanceService.terminerMaintenance(idMaintenance);
+        // Texte
+        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
+        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTexte.setForeground(ThemeUtil.BLANC);
+        gbc.gridy = 1;
+        btn.add(lblTexte, gbc);
 
-                    // if(succes) {
-                    JOptionPane.showMessageDialog(this, "Chambre " + numChambre + " réparée et libérée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
-                    // chargerInterventions(); // Rafraîchit le tableau pour faire disparaître la ligne
-                    // } else { ... erreur ... }
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Veuillez sélectionner l'intervention que vous avez terminée.", "Attention", JOptionPane.WARNING_MESSAGE);
+        // Effet hover
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            private Color couleurOriginal = couleur;
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(assombrir(couleurOriginal, 0.2f));
+                btn.repaint();
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(couleurOriginal);
+                btn.repaint();
             }
         });
 
-        panel.add(panelActions, BorderLayout.NORTH);
-        panel.add(new JScrollPane(tableInterventions), BorderLayout.CENTER);
-
-        return panel;
+        return btn;
     }
 
-    // =========================================================
-    // ONGLET 2 : HISTORIQUE (Lecture seule)
-    // =========================================================
-    private JPanel creerOngletHistorique() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        JLabel lblInfo = new JLabel("Retrouvez ici toutes les interventions terminées (Archives).", SwingConstants.CENTER);
-        lblInfo.setFont(ThemeUtil.POLICE_NORMALE);
-
-        // Un simple tableau (vide pour le moment)
-        String[] colonnes = {"ID", "N° Chambre", "Problème", "Date Fin", "Coût éventuel"};
-        DefaultTableModel modeleHistorique = new DefaultTableModel(colonnes, 0);
-        JTable tableHistorique = new JTable(modeleHistorique);
-        tableHistorique.setEnabled(false); // Lecture seule
-
-        panel.add(lblInfo, BorderLayout.NORTH);
-        panel.add(new JScrollPane(tableHistorique), BorderLayout.CENTER);
-
-        return panel;
+    private Color assombrir(Color couleur, float facteur) {
+        return new Color(
+                (int) (couleur.getRed() * (1 - facteur)),
+                (int) (couleur.getGreen() * (1 - facteur)),
+                (int) (couleur.getBlue() * (1 - facteur))
+        );
     }
 }

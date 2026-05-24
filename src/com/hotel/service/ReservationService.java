@@ -15,7 +15,6 @@ import java.util.List;
 
 public class ReservationService {
 
-    // Ce service a besoin de communiquer avec 3 DAO différents !
     private ReservationDAO reservationDAO;
     private ReservationChambreDAO reservationChambreDAO;
     private FactureDAO factureDAO;
@@ -56,7 +55,7 @@ public class ReservationService {
         for (Chambre c : chambresReservees) {
             ReservationChambre rc = new ReservationChambre(idReservationGenere, c.getIdChambre(), arrivee, depart, c.getPrixUnitaire());
             reservationChambreDAO.affecterChambre(rc);
-            totalEstime += (c.getPrixUnitaire() * nuits); // Calcul local provisoire
+            totalEstime += (c.getPrixUnitaire() * nuits);
         }
 
         // 5. Étape C : Créer la facture initiale (EN_ATTENTE) pour ce client
@@ -67,7 +66,7 @@ public class ReservationService {
         factureInitiale.setStatutFacture(StatutFacture.EN_ATTENTE);
         factureDAO.creerFacture(factureInitiale);
 
-        return true; // Succès total du processus !
+        return true;
     }
 
     /**
@@ -77,11 +76,17 @@ public class ReservationService {
         if (idReservation <= 0) {
             throw new IllegalArgumentException("ID de réservation invalide.");
         }
-        // Utilisation de votre Enum StatutReservation
         return reservationDAO.modifierStatut(idReservation, StatutReservation.CONFIRMEE.name());
     }
 
     public List<Reservation> listerToutesLesReservations() {
         return reservationDAO.listerToutes();
+    }
+
+    public Reservation obtenirDetailsReservation(int idReservation) {
+        if (idReservation <= 0) {
+            throw new IllegalArgumentException("ID de réservation invalide.");
+        }
+        return reservationDAO.trouverParId(idReservation);
     }
 }

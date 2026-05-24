@@ -19,7 +19,6 @@ import java.util.List;
 
 public class FacturationService {
 
-    // Utilisation du nouveau nom de l'interface suite à votre refactoring
     private FactureDAO factureDAO;
     private ReservationServicesDAO reservationServicesDAO;
     private ReservationDAO reservationDAO;
@@ -29,7 +28,7 @@ public class FacturationService {
 
     public FacturationService() {
         this.factureDAO = new FactureDAOImpl();
-        this.reservationServicesDAO = new ReservationServicesDAOImpl(); // Mis à jour avec le "S"
+        this.reservationServicesDAO = new ReservationServicesDAOImpl();
         this.reservationDAO = new ReservationDAOImpl();
         this.reservationChambreDAO = new ReservationChambreDAOImpl();
         this.chambreDAO = new ChambreDAOImpl();
@@ -38,7 +37,6 @@ public class FacturationService {
 
     /**
      * Le client commande un extra (ex: Un repas au restaurant, Spa, Parking)
-     * Utilisation du modèle renommé "ReservationServices"
      */
     public boolean ajouterConsommation(ReservationServices extra) {
         if (!ValidationUtil.estQuantiteValide(extra.getQuantite())) {
@@ -57,13 +55,13 @@ public class FacturationService {
         // 2. Récupérer la facture pour mettre à jour son montant si nécessaire
         Facture facture = factureDAO.trouverParReservation(idReservation);
         if (facture != null) {
-            // Le DAO mettra à jour le montant_total en base de données si besoin
+            facture.setMontantTotal(totalFinal);
+            factureDAO.modifierStatut(facture.getIdFacture(), StatutFacture.EN_ATTENTE.name());
         }
 
         // 3. Libération de toutes les chambres associées à cette réservation
         List<ReservationChambre> chambresOccupees = reservationChambreDAO.listerParReservation(idReservation);
         for (ReservationChambre rc : chambresOccupees) {
-            // Chaque chambre redevient DISPONIBLE pour de futurs clients !
             chambreDAO.modifierStatut(rc.getIdChambre(), StatutChambre.DISPONIBLE.name());
         }
 
@@ -85,53 +83,43 @@ public class FacturationService {
     }
 
     /**
-     * Récupère la liste de tous les services supplémentaires (Spa, Restaurant) consommés par une réservation.
+     * Récupère la liste de tous les services supplémentaires consommés par une réservation.
      */
     public List<ReservationServices> obtenirDetailsConsommations(int idReservation) {
         if (idReservation <= 0) {
             throw new IllegalArgumentException("ID de réservation invalide.");
         }
-        return reservationServicesDAO.listerConsommationsParReservation(idReservation);
+        return reservationServicesDAO.listerParReservation(idReservation);
     }
 
     /**
-     * METHODE CORRIGÉE : Enregistre un paiement en respectant l'Enum ModePaiement.
-     * @param idFacture L'id de la facture concernée
-     * @param montantPaye La somme d'argent donnée par le client
-     * @param mode Le mode de paiement (Type fort : ModePaiement au lieu de String)
+     * Enregistre un paiement pour une facture
      */
-    public boolean payerFacture(int idFacture, double montantPaye, ModePaiement mode) {
-        // 1. Validation de sécurité
-        if (!ValidationUtil.estPrixValide(montantPaye) || montantPaye == 0) {
-            throw new IllegalArgumentException("Le montant du paiement doit être supérieur à 0.");
+    public boolean enregistrerPaiement(Paiement paiement) {
+        if (paiement.getMontantPaye() <= 0) {
+            throw new IllegalArgumentException("Le montant du paiement doit être positif.");
         }
-        if (mode == null) {
-            throw new IllegalArgumentException("Le mode de paiement est obligatoire.");
-        }
+        return paiementDAO.enregistrerPaiement(paiement);
+    }
 
-        // 2. Vérifier si la facture existe
-        Facture f = factureDAO.trouverParId(idFacture);
-        if (f == null) {
-            throw new IllegalArgumentException("Aucune facture trouvée avec l'ID : " + idFacture);
-        }
+    /**
+     * Obtient le total payé pour une facture
+     */
+    public double obtenirTotalPayePourFacture(int idFacture) {
+        return paiementDAO.obtenirTotalPayePourFacture(idFacture);
+    }
 
-        // 3. Création de l'objet Paiement en convertissant l'Enum en String pour le DAO (.name())
-        // ID à 0 car auto-incrémenté en BDD, date à null car gérée par le TIMESTAMP de MySQL
-        Paiement p = new Paiement(0, idFacture, montantPaye, null, mode);
+    /**
+     * Récupère une facture par son ID
+     */
+    public Facture obtenirFacture(int idFacture) {
+        return factureDAO.trouverParId(idFacture);
+    }
 
-        boolean succesPaiement = paiementDAO.enregistrerPaiement(p);
-
-        // 4. Si l'enregistrement a réussi, on vérifie si la facture est totalement soldée
-        if (succesPaiement) {
-            double totalDejaPaye = paiementDAO.obtenirTotalPayePourFacture(idFacture);
-
-            // Si la somme de tous les paiements atteint ou dépasse le montant total de la facture
-            if (totalDejaPaye >= f.getMontantTotal()) {
-                // On passe le statut de la facture à PAYEE
-                factureDAO.modifierStatut(idFacture, StatutFacture.PAYEE.name());
-            }
-        }
-
-        return succesPaiement;
+    /**
+     * Récupère la facture d'une réservation
+     */
+    public Facture obtenirFactureReservation(int idReservation) {
+        return factureDAO.trouverParReservation(idReservation);
     }
 }

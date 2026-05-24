@@ -22,7 +22,10 @@ public class ChambreDAOImpl implements ChambreDAO {
             ps.setDouble(3, chambre.getPrixUnitaire());
             ps.setString(4, chambre.getStatutChambre().name());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.ajouter : " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -37,7 +40,10 @@ public class ChambreDAOImpl implements ChambreDAO {
             ps.setString(4, chambre.getStatutChambre().name());
             ps.setInt(5, chambre.getIdChambre());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.modifier : " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -49,7 +55,10 @@ public class ChambreDAOImpl implements ChambreDAO {
             ps.setString(1, statut);
             ps.setInt(2, idChambre);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.modifierStatut : " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -59,9 +68,12 @@ public class ChambreDAOImpl implements ChambreDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idChambre);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return mapperChambre(rs);
-        } catch (SQLException e) { e.printStackTrace(); }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapperChambre(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.trouverParId : " + e.getMessage());
+        }
         return null;
     }
 
@@ -72,55 +84,76 @@ public class ChambreDAOImpl implements ChambreDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, numero);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return mapperChambre(rs);
-        } catch (SQLException e) { e.printStackTrace(); }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapperChambre(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.trouverParNumero : " + e.getMessage());
+        }
         return null;
     }
 
     @Override
     public List<Chambre> listerToutes() {
         List<Chambre> liste = new ArrayList<>();
-        String sql = "SELECT * FROM chambres";
+        String sql = "SELECT * FROM chambres ORDER BY numero";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) liste.add(mapperChambre(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.listerToutes : " + e.getMessage());
+        }
         return liste;
     }
 
     @Override
     public List<Chambre> listerParStatut(String statut) {
         List<Chambre> liste = new ArrayList<>();
-        String sql = "SELECT * FROM chambres WHERE statut = ?";
+        String sql = "SELECT * FROM chambres WHERE statut = ? ORDER BY numero";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, statut);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) liste.add(mapperChambre(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) liste.add(mapperChambre(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.listerParStatut : " + e.getMessage());
+        }
         return liste;
     }
 
     @Override
     public List<Chambre> listerChambresDisponibles(LocalDate arrivee, LocalDate depart, String categorie) {
         List<Chambre> liste = new ArrayList<>();
-        // Requête avancée : Vérifie que la chambre n'est pas déjà dans 'reservation_chambres' pour ces dates
-        String sql = "SELECT * FROM chambres c WHERE c.categorie = ? AND c.statut = 'DISPONIBLE' " +
-                "AND c.id_chambre NOT IN (SELECT rc.id_chambre FROM reservation_chambres rc " +
-                "JOIN reservations r ON rc.id_reservation = r.id_reservation " +
-                "WHERE r.statut_reservation != 'ANNULEE' AND (rc.date_arrivee < ? AND rc.date_depart > ?))";
+        String sql = "SELECT DISTINCT c.* FROM chambres c " +
+                "WHERE c.categorie = ? " +
+                "AND c.statut = 'DISPONIBLE' " +
+                "AND c.id_chambre NOT IN (" +
+                "  SELECT DISTINCT rc.id_chambre FROM reservation_chambres rc " +
+                "  INNER JOIN reservations r ON rc.id_reservation = r.id_reservation " +
+                "  WHERE r.statut_reservation != 'ANNULEE' " +
+                "  AND rc.date_arrivee < ? " +
+                "  AND rc.date_depart > ?" +
+                ") ORDER BY c.numero";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, categorie);
             ps.setDate(2, java.sql.Date.valueOf(depart));
             ps.setDate(3, java.sql.Date.valueOf(arrivee));
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) liste.add(mapperChambre(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    liste.add(mapperChambre(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ ChambreDAO.listerChambresDisponibles : " + e.getMessage());
+        }
         return liste;
     }
 

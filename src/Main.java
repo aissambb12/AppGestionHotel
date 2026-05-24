@@ -1,25 +1,25 @@
-package com.hotel;
-
 import com.hotel.vue.LoginFrame;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+
+import javax.swing.*;
 
 public class Main {
 
     public static void main(String[] args) {
-
-        // 1. Appliquer le design du système d'exploitation (Windows/Mac) pour que ce soit plus joli
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            System.err.println("Impossible d'appliquer le thème du système : " + e.getMessage());
-        }
-
-        // 2. Lancer l'interface graphique de manière sécurisée (Recommandé par Java)
+        // Configuration Swing sur Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            // Lancer UNIQUEMENT la fenêtre de connexion au démarrage
-            LoginFrame login = new LoginFrame();
-            login.setVisible(true);
+            try {
+                // Appliquer le Look & Feel natif du système
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+                // Créer et afficher la fenêtre de login
+                LoginFrame loginFrame = new LoginFrame();
+                loginFrame.setVisible(true);
+
+                System.out.println("✓ Application démarrée avec succès");
+            } catch (Exception e) {
+                System.err.println("❌ Erreur au démarrage : " + e.getMessage());
+                e.printStackTrace();
+            }
         });
     }
 }
