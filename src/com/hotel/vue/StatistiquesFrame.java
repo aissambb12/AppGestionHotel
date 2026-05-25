@@ -2,6 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
 import com.hotel.service.FacturationService;
+import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +17,8 @@ public class StatistiquesFrame extends JFrame {
         this.facturationService = new FacturationService();
         this.adminConnecte = admin;
 
-        setTitle("Hotel Manager - Statistiques");
-        setSize(700, 500);
+        setTitle("Hotel Manager - Statistiques & Chiffre d'Affaires");
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -27,11 +28,9 @@ public class StatistiquesFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === CONTENU ===
         JPanel panelContenu = creerPanelContenu();
         add(panelContenu, BorderLayout.CENTER);
     }
@@ -45,13 +44,19 @@ public class StatistiquesFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -64,7 +69,7 @@ public class StatistiquesFrame extends JFrame {
     private JPanel creerPanelContenu() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        panel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(15, 15, 15, 15);
@@ -74,27 +79,34 @@ public class StatistiquesFrame extends JFrame {
         // Titre
         JLabel lblTitre = new JLabel("Calcul du Chiffre d'Affaires");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        lblTitre.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         panel.add(lblTitre, gbc);
 
+        // Descriptif
+        JLabel lblDesc = new JLabel("Sélectionnez une période pour calculer le CA sur les factures PAYÉES");
+        lblDesc.setFont(ThemeUtil.POLICE_PETIT);
+        gbc.gridy = 1;
+        panel.add(lblDesc, gbc);
+
         // Date début
         gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        JLabel lblDebut = new JLabel("Du :");
+        gbc.gridy = 2;
+        JLabel lblDebut = new JLabel("Du (YYYY-MM-DD) :");
         lblDebut.setFont(ThemeUtil.POLICE_LABEL);
         panel.add(lblDebut, gbc);
 
-        JTextField txtDebut = new JTextField(LocalDate.now().toString());
+        JTextField txtDebut = new JTextField(LocalDate.now().minusMonths(1).toString());
         ThemeUtil.appliquerThemeTextField(txtDebut);
         gbc.gridx = 1;
         panel.add(txtDebut, gbc);
 
         // Date fin
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        JLabel lblFin = new JLabel("Au :");
+        gbc.gridy = 3;
+        JLabel lblFin = new JLabel("Au (YYYY-MM-DD) :");
         lblFin.setFont(ThemeUtil.POLICE_LABEL);
         panel.add(lblFin, gbc);
 
@@ -104,28 +116,63 @@ public class StatistiquesFrame extends JFrame {
         panel.add(txtFin, gbc);
 
         // Bouton Calculer
-        JButton btnCalculer = new JButton("📊 Calculer");
+        /**
+         * IMAGE À AJOUTER : (bleu) Icône calcul/statistiques (48x48px)
+         * Description: Icône d'un graphique ou d'une calculatrice
+         */
+        JButton btnCalculer = new JButton("📊 CALCULER CA");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnCalculer);
+        btnCalculer.setPreferredSize(new Dimension(150, 40));
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         gbc.gridwidth = 2;
         panel.add(btnCalculer, gbc);
 
         // Résultat
         JLabel lblResultat = new JLabel("Total : 0.00 MAD");
-        lblResultat.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblResultat.setFont(new Font("Segoe UI", Font.BOLD, 32));
         lblResultat.setForeground(ThemeUtil.DORE_LUXE);
-        gbc.gridy = 4;
+        lblResultat.setHorizontalAlignment(JLabel.CENTER);
+        gbc.gridy = 5;
+        gbc.insets = new Insets(40, 15, 15, 15);
         panel.add(lblResultat, gbc);
+
+        // Message info
+        JLabel lblInfo = new JLabel("Résultat agrégé des factures PAYÉES sur la période");
+        lblInfo.setFont(ThemeUtil.POLICE_PETIT);
+        lblInfo.setForeground(new Color(100, 100, 100));
+        lblInfo.setHorizontalAlignment(JLabel.CENTER);
+        gbc.gridy = 6;
+        gbc.insets = new Insets(15, 15, 15, 15);
+        panel.add(lblInfo, gbc);
 
         btnCalculer.addActionListener(e -> {
             try {
-                LocalDate debut = LocalDate.parse(txtDebut.getText());
-                LocalDate fin = LocalDate.parse(txtFin.getText());
-                double ca = facturationService.obtenirChiffreAffaires(debut, fin);
+                String debut = txtDebut.getText().trim();
+                String fin = txtFin.getText().trim();
+
+                if (ValidationUtil.estVide(debut) || ValidationUtil.estVide(fin)) {
+                    JOptionPane.showMessageDialog(this, "❌ Les deux dates sont obligatoires", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                LocalDate dateDebut = LocalDate.parse(debut);
+                LocalDate dateFin = LocalDate.parse(fin);
+
+                if (dateDebut.isAfter(dateFin)) {
+                    JOptionPane.showMessageDialog(this, "❌ La date de début doit être avant la date de fin", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                double ca = facturationService.obtenirChiffreAffaires(dateDebut, dateFin);
                 lblResultat.setText(String.format("Total : %.2f MAD", ca));
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "❌ Format de date invalide (YYYY-MM-DD)", "Erreur", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "❌ Format de date invalide\n\nFormat requis : YYYY-MM-DD\nExemple : 2026-01-15",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+                lblResultat.setText("Total : 0.00 MAD");
             }
         });
 

@@ -1,7 +1,6 @@
 package com.hotel.vue;
 
 import com.hotel.model.Reservation;
-import com.hotel.model.ReservationServices;
 import com.hotel.model.Utilisateur;
 import com.hotel.service.ReservationService;
 import com.hotel.service.FacturationService;
@@ -25,7 +24,7 @@ public class GestionReservationsFrame extends JFrame {
         this.adminConnecte = admin;
 
         setTitle("Hotel Manager - Gestion Réservations");
-        setSize(900, 600);
+        setSize(1100, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -36,16 +35,13 @@ public class GestionReservationsFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
         add(panelBoutons, BorderLayout.CENTER);
 
-        // === TABLE ===
-        String[] colonnes = {"ID Resa", "ID Client", "Date Création", "Statut"};
+        String[] colonnes = {"ID Resa", "ID Client", "Utilisateur", "Date Création", "Statut"};
         modeleReservations = new DefaultTableModel(colonnes, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -54,6 +50,7 @@ public class GestionReservationsFrame extends JFrame {
         };
         tableReservations = new JTable(modeleReservations);
         ThemeUtil.appliquerThemeTable(tableReservations);
+        tableReservations.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tableReservations);
         add(scrollPane, BorderLayout.SOUTH);
@@ -68,13 +65,19 @@ public class GestionReservationsFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -89,10 +92,18 @@ public class GestionReservationsFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        /**
+         * IMAGE À AJOUTER : (bleu) Icône détails/info (48x48px)
+         * Description: Icône d'une loupe ou d'une information
+         */
         JButton btnDetails = new JButton("🔍 Voir Détails");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnDetails);
         btnDetails.addActionListener(e -> afficherDetails());
 
+        /**
+         * IMAGE À AJOUTER : refresh.png (48x48px)
+         * Description: Icône d'une flèche circulaire
+         */
         JButton btnRafraichir = new JButton("🔄 Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
         btnRafraichir.addActionListener(e -> chargerDonnees());
@@ -105,14 +116,19 @@ public class GestionReservationsFrame extends JFrame {
 
     private void chargerDonnees() {
         modeleReservations.setRowCount(0);
-        List<Reservation> reservations = reservationService.listerToutesLesReservations();
-        for (Reservation r : reservations) {
-            modeleReservations.addRow(new Object[]{
-                    r.getIdReservation(),
-                    r.getIdClient(),
-                    r.getDateCreation(),
-                    r.getStatut()
-            });
+        try {
+            List<Reservation> reservations = reservationService.listerToutesLesReservations();
+            for (Reservation r : reservations) {
+                modeleReservations.addRow(new Object[]{
+                        r.getIdReservation(),
+                        r.getIdClient(),
+                        r.getIdUtilisateur(),
+                        r.getDateCreation(),
+                        r.getStatut()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 

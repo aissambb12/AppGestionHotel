@@ -4,6 +4,7 @@ import com.hotel.model.*;
 import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.service.*;
 import com.hotel.util.DatePickerUtil;
+import com.hotel.util.NavigationManager;
 import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
@@ -23,7 +24,6 @@ public class CreerReservationFrame extends JFrame {
     private ReservationService reservationService;
     private FacturationService facturationService;
 
-    // Services disponibles
     private List<ServiceSupplementaire> servicesDisponibles;
 
     // UI Components - CLIENT
@@ -33,13 +33,12 @@ public class CreerReservationFrame extends JFrame {
     private JTextField txtDateArrivee, txtDateDepart;
     private JComboBox<String> comboCategorie;
 
-    // UI Components - CHAMBRES SÉLECTIONNÉES
+    // UI Components - CHAMBRES
     private JPanel panelChambresSelectionnees;
     private List<Chambre> chambresSelectionnees = new ArrayList<>();
 
     // UI Components - EXTRAS
     private JPanel panelExtras;
-    private Map<Integer, JLabel> labelsQteExtras = new HashMap<>();
     private Map<Integer, Integer> selectedExtras = new HashMap<>();
 
     public CreerReservationFrame(Utilisateur receptionniste) {
@@ -49,10 +48,9 @@ public class CreerReservationFrame extends JFrame {
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
 
-        // Charger les services disponibles
         chargerServices();
 
-        setTitle("Hotel Manager - Créer Réservation Complète");
+        setTitle("Hotel Manager - Créer Réservation");
         setSize(1300, 900);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -63,30 +61,24 @@ public class CreerReservationFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === CONTENU PRINCIPAL - 3 COLONNES ===
         JPanel panelContenu = new JPanel(new GridLayout(1, 3, 15, 15));
         panelContenu.setBackground(ThemeUtil.GRIS_FOND);
         panelContenu.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Colonne 1 : Client et Réservation
         JPanel col1 = creerColonneClient();
         panelContenu.add(new JScrollPane(col1));
 
-        // Colonne 2 : Chambres
         JPanel col2 = creerColonneChambres();
         panelContenu.add(new JScrollPane(col2));
 
-        // Colonne 3 : Extras
         JPanel col3 = creerColonneExtras();
         panelContenu.add(new JScrollPane(col3));
 
         add(panelContenu, BorderLayout.CENTER);
 
-        // === BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
         add(panelBoutons, BorderLayout.SOUTH);
     }
@@ -100,13 +92,19 @@ public class CreerReservationFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche pour retour
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -116,7 +114,6 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    // ===== COLONNE 1 : CLIENT ET RÉSERVATION =====
     private JPanel creerColonneClient() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -127,14 +124,14 @@ public class CreerReservationFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // === SECTION CLIENT ===
-        JLabel lblSecClient = new JLabel("INFORMATIONS CLIENT");
+        JLabel lblSecClient = new JLabel("👥 CLIENT");
         lblSecClient.setFont(ThemeUtil.POLICE_TITRE_PETIT);
         lblSecClient.setForeground(ThemeUtil.BLEU_NUIT);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
         panel.add(lblSecClient, gbc);
 
-        // Champs client
         txtNom = new JTextField();
         txtPrenom = new JTextField();
         txtEmail = new JTextField();
@@ -178,7 +175,6 @@ public class CreerReservationFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(txtCin, gbc);
 
-        // === SECTION RÉSERVATION ===
         gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.gridx = 0;
@@ -186,12 +182,11 @@ public class CreerReservationFrame extends JFrame {
         panel.add(sep1, gbc);
 
         gbc.gridy = 7;
-        JLabel lblSecResa = new JLabel("INFORMATIONS RÉSERVATION");
+        JLabel lblSecResa = new JLabel("📅 RÉSERVATION");
         lblSecResa.setFont(ThemeUtil.POLICE_TITRE_PETIT);
         lblSecResa.setForeground(ThemeUtil.BLEU_NUIT);
         panel.add(lblSecResa, gbc);
 
-        // Dates
         gbc.gridy = 8;
         gbc.gridwidth = 1;
         gbc.gridx = 0;
@@ -225,7 +220,6 @@ public class CreerReservationFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(panelDepart, gbc);
 
-        // Catégorie
         gbc.gridy = 10;
         gbc.gridx = 0;
         panel.add(new JLabel("Catégorie :"), gbc);
@@ -234,8 +228,7 @@ public class CreerReservationFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(comboCategorie, gbc);
 
-        // Bouton chercher
-        JButton btnChercher = new JButton("🔍 Chercher Chambres");
+        JButton btnChercher = new JButton("🔍 CHERCHER CHAMBRES");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnChercher);
         btnChercher.addActionListener(e -> rechercherChambres());
         gbc.gridy = 11;
@@ -246,7 +239,6 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    // ===== COLONNE 2 : CHAMBRES =====
     private JPanel creerColonneChambres() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -257,7 +249,7 @@ public class CreerReservationFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        JLabel lblTitre = new JLabel("CHAMBRES DISPONIBLES");
+        JLabel lblTitre = new JLabel("🛏️ CHAMBRES DISPONIBLES");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
         lblTitre.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridx = 0;
@@ -265,12 +257,11 @@ public class CreerReservationFrame extends JFrame {
         gbc.gridwidth = 2;
         panel.add(lblTitre, gbc);
 
-        JLabel lblInfo = new JLabel("Cliquez 'Chercher Chambres'");
+        JLabel lblInfo = new JLabel("Cliquez 'CHERCHER CHAMBRES'");
         lblInfo.setFont(ThemeUtil.POLICE_PETIT);
         gbc.gridy = 1;
         panel.add(lblInfo, gbc);
 
-        // Panel pour les chambres
         panelChambresSelectionnees = new JPanel(new GridLayout(0, 1, 5, 5));
         panelChambresSelectionnees.setBackground(Color.WHITE);
         gbc.gridy = 2;
@@ -281,7 +272,6 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    // ===== COLONNE 3 : EXTRAS =====
     private JPanel creerColonneExtras() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -292,14 +282,13 @@ public class CreerReservationFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        JLabel lblTitre = new JLabel("SERVICES SUPPLÉMENTAIRES");
+        JLabel lblTitre = new JLabel("☕ SERVICES SUPPLÉMENTAIRES");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
         lblTitre.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(lblTitre, gbc);
 
-        // Panel pour les extras
         panelExtras = new JPanel(new GridLayout(0, 1, 5, 5));
         panelExtras.setBackground(Color.WHITE);
         creerPanelExtras();
@@ -313,23 +302,19 @@ public class CreerReservationFrame extends JFrame {
 
     private void creerPanelExtras() {
         panelExtras.removeAll();
-        labelsQteExtras.clear();
 
         if (servicesDisponibles != null && !servicesDisponibles.isEmpty()) {
             for (ServiceSupplementaire service : servicesDisponibles) {
                 JPanel panelExtra = new JPanel(new BorderLayout(5, 5));
                 panelExtra.setBackground(ThemeUtil.GRIS_FOND);
-                panelExtra.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
                 panelExtra.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(new Color(200, 200, 200)),
                         BorderFactory.createEmptyBorder(8, 8, 8, 8)
                 ));
 
-                // Nom du service
-                JLabel lblNom = new JLabel(service.getNomService() + " - " + String.format("%.2f", service.getPrixService()) + " MAD");
-                lblNom.setFont(ThemeUtil.POLICE_NORMALE);
+                JLabel lblNom = new JLabel(service.getNomService() + " - " + String.format("%.2f MAD", service.getPrixService()));
+                lblNom.setFont(ThemeUtil.POLICE_NORMAL);
 
-                // Contrôles quantité
                 JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
                 panelQte.setBackground(ThemeUtil.GRIS_FOND);
 
@@ -341,25 +326,25 @@ public class CreerReservationFrame extends JFrame {
                 lblQte.setFont(ThemeUtil.POLICE_BOUTON);
                 lblQte.setPreferredSize(new Dimension(30, 30));
                 lblQte.setHorizontalAlignment(JLabel.CENTER);
-                labelsQteExtras.put(service.getIdService(), lblQte);
 
                 JButton btnPlus = new JButton("+");
                 btnPlus.setPreferredSize(new Dimension(30, 30));
                 btnPlus.setFont(new Font("Arial", Font.BOLD, 16));
 
+                final int idService = service.getIdService();
                 btnPlus.addActionListener(e -> {
                     int qte = Integer.parseInt(lblQte.getText()) + 1;
                     lblQte.setText(String.valueOf(qte));
-                    selectedExtras.put(service.getIdService(), qte);
+                    selectedExtras.put(idService, qte);
                 });
 
                 btnMoins.addActionListener(e -> {
                     int qte = Math.max(0, Integer.parseInt(lblQte.getText()) - 1);
                     lblQte.setText(String.valueOf(qte));
                     if (qte == 0) {
-                        selectedExtras.remove(service.getIdService());
+                        selectedExtras.remove(idService);
                     } else {
-                        selectedExtras.put(service.getIdService(), qte);
+                        selectedExtras.put(idService, qte);
                     }
                 });
 
@@ -372,10 +357,6 @@ public class CreerReservationFrame extends JFrame {
 
                 panelExtras.add(panelExtra);
             }
-        } else {
-            JLabel lblAucun = new JLabel("Aucun service disponible");
-            lblAucun.setFont(ThemeUtil.POLICE_PETIT);
-            panelExtras.add(lblAucun);
         }
 
         panelExtras.revalidate();
@@ -387,11 +368,19 @@ public class CreerReservationFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        /**
+         * IMAGE À AJOUTER : save.png (48x48px)
+         * Description: Icône d'une disquette ou d'une sauvegarde verte
+         */
         JButton btnValider = new JButton("✓ CONFIRMER RÉSERVATION");
         ThemeUtil.appliquerThemeBoutonValider(btnValider);
-        btnValider.setPreferredSize(new Dimension(200, 40));
+        btnValider.setPreferredSize(new Dimension(220, 40));
         btnValider.addActionListener(e -> confirmerReservation());
 
+        /**
+         * IMAGE À AJOUTER : cancel.png (48x48px)
+         * Description: Icône d'une croix rouge
+         */
         JButton btnAnnuler = new JButton("✕ Annuler");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
         btnAnnuler.setPreferredSize(new Dimension(150, 40));
@@ -403,10 +392,8 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    // ===== MÉTHODES DE RECHERCHE =====
     private void rechercherChambres() {
         try {
-            // Validation des dates
             LocalDate arrivee = LocalDate.parse(txtDateArrivee.getText());
             LocalDate depart = LocalDate.parse(txtDateDepart.getText());
 
@@ -416,11 +403,8 @@ public class CreerReservationFrame extends JFrame {
             }
 
             String categorie = comboCategorie.getSelectedItem().toString();
-
-            // Récupérer les chambres disponibles
             List<Chambre> chambres = chambreService.rechercherChambresDisponibles(arrivee, depart, categorie);
 
-            // Afficher les chambres
             panelChambresSelectionnees.removeAll();
             chambresSelectionnees.clear();
 
@@ -435,7 +419,7 @@ public class CreerReservationFrame extends JFrame {
                                     " - " + chambre.getCategorie() +
                                     " (" + String.format("%.2f", chambre.getPrixUnitaire()) + " MAD/nuit)"
                     );
-                    chkChambre.setFont(ThemeUtil.POLICE_NORMALE);
+                    chkChambre.setFont(ThemeUtil.POLICE_NORMAL);
                     chkChambre.setBackground(Color.WHITE);
 
                     Chambre chambreFinal = chambre;
@@ -480,32 +464,35 @@ public class CreerReservationFrame extends JFrame {
         }
     }
 
-    // ===== CONFIRMATION RÉSERVATION =====
     private void confirmerReservation() {
         try {
-            // 1. Valider le client
+            // 1️⃣ VALIDATION CLIENT - ATOMIQUE
             if (!validerClient()) {
                 return;
             }
 
-            // 2. Récupérer ou créer le client
+            // 2️⃣ OBTENIR OU CRÉER CLIENT - ATOMIQUE
             Client client = obtenirOuCreerClient();
             if (client == null) {
-                JOptionPane.showMessageDialog(this, "❌ Erreur lors de la création du client", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // 3. Valider les chambres sélectionnées
+            // 3️⃣ VALIDATION CHAMBRES - ATOMIQUE
             if (chambresSelectionnees.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner au moins une chambre", "Validation", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // 4. Récupérer les dates
+            // 4️⃣ VALIDATION DATES - ATOMIQUE
             LocalDate arrivee = LocalDate.parse(txtDateArrivee.getText());
             LocalDate depart = LocalDate.parse(txtDateDepart.getText());
 
-            // 5. Créer la réservation
+            if (!ValidationUtil.sontDatesReservationValides(arrivee, depart)) {
+                JOptionPane.showMessageDialog(this, "❌ Les dates sont invalides", "Validation", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 5️⃣ CRÉER LA RÉSERVATION - ATOMIQUE
             Reservation resa = new Reservation();
             resa.setIdClient(client.getIdClient());
             resa.setIdUtilisateur(receptionnisteConnecte.getIdUtilisateur());
@@ -524,9 +511,7 @@ public class CreerReservationFrame extends JFrame {
                 return;
             }
 
-            // 6. Ajouter les extras
-            Facture facture = facturationService.obtenirFactureReservation(resa.getIdReservation());
-
+            // 6️⃣ AJOUTER LES EXTRAS - ATOMIQUE
             for (Map.Entry<Integer, Integer> extra : selectedExtras.entrySet()) {
                 if (extra.getValue() > 0) {
                     ReservationServices rs = new ReservationServices();
@@ -534,45 +519,47 @@ public class CreerReservationFrame extends JFrame {
                     rs.setIdService(extra.getKey());
                     rs.setQuantite(extra.getValue());
                     rs.setDateConsommation(LocalDate.now());
-                    facturationService.ajouterConsommation(rs);
+
+                    boolean extraAjoute = facturationService.ajouterConsommation(rs);
+                    if (!extraAjoute) {
+                        JOptionPane.showMessageDialog(this, "⚠️ Erreur lors de l'ajout d'un extra", "Avertissement", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
 
-            // 7. Afficher la facture
-            new FactureFrame(resa.getIdReservation(), facturationService).setVisible(true);
+            // 7️⃣ AFFICHER LA FACTURE
+            Facture facture = facturationService.obtenirFactureReservation(resa.getIdReservation());
+            if (facture != null) {
+                new FactureFrame(resa.getIdReservation(), facturationService).setVisible(true);
+            }
+
             dispose();
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "❌ Erreur critique : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
 
-    // ===== VALIDATION ET CRÉATION CLIENT =====
     private boolean validerClient() {
         if (ValidationUtil.estVide(txtNom.getText())) {
             JOptionPane.showMessageDialog(this, "❌ Nom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
-            txtNom.requestFocus();
             return false;
         }
         if (ValidationUtil.estVide(txtPrenom.getText())) {
             JOptionPane.showMessageDialog(this, "❌ Prénom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
-            txtPrenom.requestFocus();
             return false;
         }
         if (!ValidationUtil.estEmailValide(txtEmail.getText())) {
             JOptionPane.showMessageDialog(this, "❌ Email invalide", "Validation", JOptionPane.WARNING_MESSAGE);
-            txtEmail.requestFocus();
             return false;
         }
         if (!ValidationUtil.estTelephoneValide(txtTel.getText())) {
             JOptionPane.showMessageDialog(this, "❌ Téléphone invalide (10 chiffres)", "Validation", JOptionPane.WARNING_MESSAGE);
-            txtTel.requestFocus();
             return false;
         }
         if (!ValidationUtil.estCinValide(txtCin.getText())) {
             JOptionPane.showMessageDialog(this, "❌ CIN invalide", "Validation", JOptionPane.WARNING_MESSAGE);
-            txtCin.requestFocus();
             return false;
         }
         return true;
@@ -580,15 +567,13 @@ public class CreerReservationFrame extends JFrame {
 
     private Client obtenirOuCreerClient() {
         try {
-            // 1. Chercher si le client existe déjà par CIN
             String cin = txtCin.getText().trim().toUpperCase();
             Client existant = clientService.trouverClientParCin(cin);
 
             if (existant != null) {
-                return existant;  // Client trouvé, on le retourne
+                return existant;
             }
 
-            // 2. Le client n'existe pas, on le crée
             Client nouveau = new Client();
             nouveau.setNom(txtNom.getText().trim().toUpperCase());
             nouveau.setPrenom(txtPrenom.getText().trim());
@@ -596,11 +581,9 @@ public class CreerReservationFrame extends JFrame {
             nouveau.setTelephone(txtTel.getText().trim());
             nouveau.setCin(cin);
 
-            // 3. Enregistrer le nouveau client
             boolean succes = clientService.enregistrerClient(nouveau);
 
             if (succes) {
-                // 4. Récupérer et retourner le client créé avec son ID
                 Client clientCree = clientService.trouverClientParCin(cin);
                 if (clientCree != null) {
                     return clientCree;
@@ -611,12 +594,10 @@ public class CreerReservationFrame extends JFrame {
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur client : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
             return null;
         }
     }
 
-    // ===== CHARGEMENT SERVICES =====
     private void chargerServices() {
         try {
             com.hotel.dao.ServiceSupplementaireDAOImpl dao = new com.hotel.dao.ServiceSupplementaireDAOImpl();
@@ -625,7 +606,7 @@ public class CreerReservationFrame extends JFrame {
                 servicesDisponibles = new ArrayList<>();
             }
         } catch (Exception ex) {
-            System.err.println("Erreur lors du chargement des services : " + ex.getMessage());
+            System.err.println("Erreur chargement services : " + ex.getMessage());
             servicesDisponibles = new ArrayList<>();
         }
     }

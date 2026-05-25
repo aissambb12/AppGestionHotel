@@ -3,6 +3,7 @@ package com.hotel.vue;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.Role;
 import com.hotel.service.UtilisateurService;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,7 +23,7 @@ public class LoginFrame extends JFrame {
         this.utilisateurService = new UtilisateurService();
 
         setTitle("Hotel Manager - Connexion");
-        setSize(900, 550);
+        setSize(1100, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -49,35 +50,41 @@ public class LoginFrame extends JFrame {
     private JPanel creerPanelGauche() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setPreferredSize(new Dimension(350, 550));
+        panel.setPreferredSize(new Dimension(400, 600));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(20, 20, 20, 20);
+
+        // Logo
+        JLabel lblLogo = new JLabel("🏨");
+        lblLogo.setFont(new Font("Arial", Font.PLAIN, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(lblLogo, gbc);
 
         // Titre principal
         JLabel lblTitrePrincipal = new JLabel("GRAND HÔTEL");
         lblTitrePrincipal.setFont(new Font("Segoe UI", Font.BOLD, 36));
         lblTitrePrincipal.setForeground(ThemeUtil.DORE_LUXE);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         panel.add(lblTitrePrincipal, gbc);
 
         // Sous-titre
         JLabel lblSousTitre = new JLabel("Système de Gestion");
         lblSousTitre.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblSousTitre.setForeground(new Color(180, 180, 180));
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         panel.add(lblSousTitre, gbc);
 
         // Ligne décorative
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         JSeparator sep = new JSeparator();
         sep.setForeground(ThemeUtil.DORE_LUXE);
         panel.add(sep, gbc);
 
-        // Icône/Message de bienvenue
-        gbc.gridy = 3;
+        // Message de bienvenue
+        gbc.gridy = 4;
         gbc.fill = GridBagConstraints.NONE;
         JLabel lblWelcome = new JLabel("✓ Bienvenue");
         lblWelcome.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -112,7 +119,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(5, 0, 30, 0);
         panel.add(lblDesc, gbc);
 
-        // === LABEL ERREUR (caché par défaut) ===
+        // === LABEL ERREUR ===
         lblErreur = new JLabel();
         lblErreur.setForeground(new Color(220, 53, 69));
         lblErreur.setFont(new Font("Segoe UI", Font.PLAIN, 11));
@@ -121,7 +128,7 @@ public class LoginFrame extends JFrame {
         panel.add(lblErreur, gbc);
 
         // === EMAIL ===
-        JLabel lblEmail = new JLabel("Email professionnel");
+        JLabel lblEmail = new JLabel("📧 Email professionnel");
         lblEmail.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblEmail.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridy = 3;
@@ -140,7 +147,7 @@ public class LoginFrame extends JFrame {
         panel.add(txtEmail, gbc);
 
         // === MOT DE PASSE ===
-        JLabel lblMotDePasse = new JLabel("Mot de passe");
+        JLabel lblMotDePasse = new JLabel("🔑 Mot de passe");
         lblMotDePasse.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblMotDePasse.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridy = 5;
@@ -159,7 +166,7 @@ public class LoginFrame extends JFrame {
         panel.add(txtMotDePasse, gbc);
 
         // === BOUTON CONNEXION ===
-        btnConnexion = new JButton("Se connecter");
+        btnConnexion = new JButton("✓ Se connecter");
         btnConnexion.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnConnexion.setForeground(Color.WHITE);
         btnConnexion.setBackground(ThemeUtil.DORE_LUXE);
@@ -223,20 +230,18 @@ public class LoginFrame extends JFrame {
 
                 switch (utilisateurConnecte.getRole()) {
                     case ADMIN:
-                        new DashboardAdminFrame(utilisateurConnecte).setVisible(true);
+                        NavigationManager.naviguerVers(this, new DashboardAdminFrame(utilisateurConnecte));
                         break;
                     case RECEPTIONNISTE:
-                        new DashboardReceptionnisteFrame(utilisateurConnecte).setVisible(true);
+                        NavigationManager.naviguerVers(this, new DashboardReceptionnisteFrame(utilisateurConnecte));
                         break;
                     case MAINTENANCE:
-                        new DashboardMaintenanceFrame(utilisateurConnecte).setVisible(true);
+                        NavigationManager.naviguerVers(this, new DashboardMaintenanceFrame(utilisateurConnecte));
                         break;
                     default:
                         lblErreur.setText("⚠ Rôle non reconnu");
                         return;
                 }
-
-                this.dispose();
             } else {
                 lblErreur.setText("⚠ Email ou mot de passe incorrect");
                 txtMotDePasse.setText("");

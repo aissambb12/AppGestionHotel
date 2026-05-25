@@ -2,6 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
 import com.hotel.service.*;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,18 +11,10 @@ public class DashboardAdminFrame extends JFrame {
 
     private Utilisateur adminConnecte;
     private UtilisateurService utilisateurService;
-    private ChambreService chambreService;
-    private ReservationService reservationService;
-    private FacturationService facturationService;
-
-    private float zoomLevel = 1.0f;
 
     public DashboardAdminFrame(Utilisateur admin) {
         this.adminConnecte = admin;
         this.utilisateurService = new UtilisateurService();
-        this.chambreService = new ChambreService();
-        this.reservationService = new ReservationService();
-        this.facturationService = new FacturationService();
 
         setTitle("Hotel Manager - Administration");
         setSize(1000, 700);
@@ -39,7 +32,7 @@ public class DashboardAdminFrame extends JFrame {
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL PRINCIPAL AVEC ICÔNES ===
+        // === PANEL PRINCIPAL ===
         JPanel panelPrincipal = creerPanelIcones();
         add(panelPrincipal, BorderLayout.CENTER);
     }
@@ -57,20 +50,6 @@ public class DashboardAdminFrame extends JFrame {
         lblUtilisateur.setFont(ThemeUtil.POLICE_NORMALE);
         lblUtilisateur.setForeground(ThemeUtil.BLANC);
 
-        // Panel droite avec zoom et déconnexion
-        JPanel panelDroite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 10));
-        panelDroite.setBackground(ThemeUtil.BLEU_NUIT);
-
-        JButton btnZoomMoins = new JButton("🔍−");
-        btnZoomMoins.setFont(new Font("Arial", Font.BOLD, 12));
-        btnZoomMoins.setFocusPainted(false);
-        btnZoomMoins.addActionListener(e -> changerZoom(-0.1f));
-
-        JButton btnZoomPlus = new JButton("🔍+");
-        btnZoomPlus.setFont(new Font("Arial", Font.BOLD, 12));
-        btnZoomPlus.setFocusPainted(false);
-        btnZoomPlus.addActionListener(e -> changerZoom(0.1f));
-
         JButton btnDeconnexion = new JButton("🚪 Déconnexion");
         btnDeconnexion.setBackground(ThemeUtil.ROUGE_ERREUR);
         btnDeconnexion.setForeground(ThemeUtil.BLANC);
@@ -78,69 +57,61 @@ public class DashboardAdminFrame extends JFrame {
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
         btnDeconnexion.setContentAreaFilled(true);
-        btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnDeconnexion.setBorderPainted(true);
+        btnDeconnexion.setBorder(BorderFactory.createLineBorder(ThemeUtil.ROUGE_ERREUR, 1));
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDeconnexion.addActionListener(e -> {
-            new LoginFrame().setVisible(true);
-            dispose();
+            NavigationManager.naviguerVers(this, new LoginFrame());
         });
-
-        panelDroite.add(btnZoomMoins);
-        panelDroite.add(btnZoomPlus);
-        panelDroite.add(btnDeconnexion);
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(lblUtilisateur, BorderLayout.CENTER);
-        panel.add(panelDroite, BorderLayout.EAST);
+        panel.add(btnDeconnexion, BorderLayout.EAST);
 
         return panel;
     }
 
     private JPanel creerPanelIcones() {
         JPanel panel = new JPanel(new GridLayout(2, 2, 20, 20));
-        panel.setBackground(ThemeUtil.GRIS_FOND);
+        panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        // === BOUTON 1 : PERSONNEL ===
-        JPanel btnPersonnel = creerBoutonIcone("👥", "GESTION DU\nPERSONNEL", ThemeUtil.BLEU_NUIT);
+        // BOUTON 1 : PERSONNEL
+        JPanel btnPersonnel = creerBoutonIcone("👥 GESTION DU\nPERSONNEL", ThemeUtil.BLEU_NUIT);
         btnPersonnel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionPersonnelFrame(adminConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardAdminFrame.this, new GestionPersonnelFrame(adminConnecte));
             }
         });
         panel.add(btnPersonnel);
 
-        // === BOUTON 2 : CHAMBRES ===
-        JPanel btnChambres = creerBoutonIcone("🛏️", "PARC DE\nCHAMBRES", new Color(52, 152, 219));
+        // BOUTON 2 : CHAMBRES
+        JPanel btnChambres = creerBoutonIcone("🛏️ PARC DE\nCHAMBRES", new Color(52, 152, 219));
         btnChambres.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionChambresFrame(adminConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardAdminFrame.this, new GestionChambresFrame(adminConnecte));
             }
         });
         panel.add(btnChambres);
 
-        // === BOUTON 3 : RÉSERVATIONS ===
-        JPanel btnReservations = creerBoutonIcone("📋", "RÉSERVATIONS\nET EXTRAS", new Color(46, 204, 113));
+        // BOUTON 3 : RÉSERVATIONS
+        JPanel btnReservations = creerBoutonIcone("📋 RÉSERVATIONS\nET EXTRAS", new Color(46, 204, 113));
         btnReservations.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionReservationsFrame(adminConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardAdminFrame.this, new GestionReservationsFrame(adminConnecte));
             }
         });
         panel.add(btnReservations);
 
-        // === BOUTON 4 : STATISTIQUES ===
-        JPanel btnStats = creerBoutonIcone("📊", "CHIFFRE\nd'AFFAIRES", new Color(155, 89, 182));
+        // BOUTON 4 : STATISTIQUES
+        JPanel btnStats = creerBoutonIcone("📊 CHIFFRE\nd'AFFAIRES", new Color(155, 89, 182));
         btnStats.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new StatistiquesFrame(adminConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardAdminFrame.this, new StatistiquesFrame(adminConnecte));
             }
         });
         panel.add(btnStats);
@@ -148,7 +119,7 @@ public class DashboardAdminFrame extends JFrame {
         return panel;
     }
 
-    private JPanel creerBoutonIcone(String icone, String texte, Color couleur) {
+    private JPanel creerBoutonIcone(String texte, Color couleur) {
         JPanel btn = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -168,23 +139,15 @@ public class DashboardAdminFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Icône
-        JLabel lblIcone = new JLabel(icone);
-        Font fontIcone = new Font("Arial", Font.PLAIN, (int)(64 * zoomLevel));
-        lblIcone.setFont(fontIcone);
+        // Texte avec emojis
+        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
+        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTexte.setForeground(ThemeUtil.BLANC);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        btn.add(lblIcone, gbc);
-
-        // Texte
-        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
-        Font fontTexte = new Font("Segoe UI", Font.BOLD, (int)(16 * zoomLevel));
-        lblTexte.setFont(fontTexte);
-        lblTexte.setForeground(ThemeUtil.BLANC);
-        gbc.gridy = 1;
         btn.add(lblTexte, gbc);
 
-        // Effet hover
+        // Hover effect
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             private Color couleurOriginal = couleur;
 
@@ -210,14 +173,5 @@ public class DashboardAdminFrame extends JFrame {
                 (int) (couleur.getGreen() * (1 - facteur)),
                 (int) (couleur.getBlue() * (1 - facteur))
         );
-    }
-
-    private void changerZoom(float delta) {
-        zoomLevel += delta;
-        zoomLevel = Math.max(0.8f, Math.min(1.5f, zoomLevel));
-        this.setSize((int)(1000 * zoomLevel), (int)(700 * zoomLevel));
-        this.setLocationRelativeTo(null);
-        this.revalidate();
-        this.repaint();
     }
 }

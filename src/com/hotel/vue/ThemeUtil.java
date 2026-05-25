@@ -1,7 +1,6 @@
 package com.hotel.vue;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 
 public class ThemeUtil {
@@ -20,6 +19,7 @@ public class ThemeUtil {
     // === POLICES ===
     public static final Font POLICE_TITRE = new Font("Segoe UI", Font.BOLD, 24);
     public static final Font POLICE_TITRE_PETIT = new Font("Segoe UI", Font.BOLD, 18);
+    public static final Font POLICE_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
     public static final Font POLICE_NORMALE = new Font("Segoe UI", Font.PLAIN, 13);
     public static final Font POLICE_BOUTON = new Font("Segoe UI", Font.BOLD, 12);
     public static final Font POLICE_PETIT = new Font("Segoe UI", Font.PLAIN, 11);
@@ -27,19 +27,17 @@ public class ThemeUtil {
 
     private ThemeUtil() {}
 
-    // === BOUTONS PRINCIPAUX ===
+    // === BOUTONS - CORRECTIF TEXTE VISIBLE ===
     public static void appliquerThemeBoutonPrincipal(JButton bouton) {
         bouton.setBackground(DORE_LUXE);
         bouton.setForeground(BLANC);
         bouton.setFont(POLICE_BOUTON);
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
-        bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Remover le content area filled par défaut
         bouton.setContentAreaFilled(true);
+        bouton.setBorderPainted(true);
+        bouton.setBorder(BorderFactory.createLineBorder(DORE_LUXE, 1));
+        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     public static void appliquerThemeBoutonSecondaire(JButton bouton) {
@@ -48,10 +46,10 @@ public class ThemeUtil {
         bouton.setFont(POLICE_BOUTON);
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
-        bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         bouton.setContentAreaFilled(true);
+        bouton.setBorderPainted(true);
+        bouton.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     public static void appliquerThemeBoutonValider(JButton bouton) {
@@ -60,10 +58,10 @@ public class ThemeUtil {
         bouton.setFont(POLICE_BOUTON);
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
-        bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         bouton.setContentAreaFilled(true);
+        bouton.setBorderPainted(true);
+        bouton.setBorder(BorderFactory.createLineBorder(VERT_VALIDATION, 1));
+        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     public static void appliquerThemeBoutonSuppression(JButton bouton) {
@@ -72,26 +70,27 @@ public class ThemeUtil {
         bouton.setFont(POLICE_BOUTON);
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
-        bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         bouton.setContentAreaFilled(true);
+        bouton.setBorderPainted(true);
+        bouton.setBorder(BorderFactory.createLineBorder(ROUGE_ERREUR, 1));
+        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     // === CHAMPS DE TEXTE ===
     public static void appliquerThemeTextField(JTextField field) {
-        field.setFont(POLICE_NORMALE);
+        field.setFont(POLICE_NORMAL);
         field.setBackground(BLANC);
         field.setForeground(TEXTE_SOMBRE);
+        field.setCaretColor(BLEU_NUIT);
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
     }
 
-    // === JTABLE PERSONNALISÉE ===
+    // === JTABLE ===
     public static void appliquerThemeTable(JTable table) {
-        table.setFont(POLICE_NORMALE);
+        table.setFont(POLICE_NORMAL);
         table.setRowHeight(28);
         table.setGridColor(new Color(220, 220, 220));
         table.setSelectionBackground(DORE_LUXE);

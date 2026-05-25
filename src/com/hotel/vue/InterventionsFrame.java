@@ -21,7 +21,7 @@ public class InterventionsFrame extends JFrame {
         this.technicienConnecte = technicien;
         this.maintenanceService = new MaintenanceService();
 
-        setTitle("Hotel Manager - Interventions en cours");
+        setTitle("Hotel Manager - Interventions en Cours");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -33,15 +33,12 @@ public class InterventionsFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
         add(panelBoutons, BorderLayout.CENTER);
 
-        // === TABLE ===
         String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin"};
         modeleInterventions = new DefaultTableModel(colonnes, 0) {
             @Override
@@ -51,6 +48,7 @@ public class InterventionsFrame extends JFrame {
         };
         tableInterventions = new JTable(modeleInterventions);
         ThemeUtil.appliquerThemeTable(tableInterventions);
+        tableInterventions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tableInterventions);
         add(scrollPane, BorderLayout.SOUTH);
@@ -65,13 +63,19 @@ public class InterventionsFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -86,16 +90,26 @@ public class InterventionsFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JButton btnTerminer = new JButton("✅ Réparation Terminée");
+        /**
+         * IMAGE À AJOUTER : (vert) Icône validation (48x48px)
+         * Description: Icône d'une coche verte
+         */
+        JButton btnTerminer = new JButton("✅ RÉPARATION TERMINÉE");
         btnTerminer.setBackground(ThemeUtil.VERT_VALIDATION);
         btnTerminer.setForeground(ThemeUtil.BLANC);
         btnTerminer.setFont(ThemeUtil.POLICE_BOUTON);
         btnTerminer.setFocusPainted(false);
         btnTerminer.setOpaque(true);
-        btnTerminer.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnTerminer.setContentAreaFilled(true);
+        btnTerminer.setBorderPainted(true);
+        btnTerminer.setBorder(BorderFactory.createLineBorder(ThemeUtil.VERT_VALIDATION, 1));
         btnTerminer.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnTerminer.addActionListener(e -> terminerIntervention());
 
+        /**
+         * IMAGE À AJOUTER : refresh.png (48x48px)
+         * Description: Icône d'une flèche circulaire
+         */
         JButton btnRafraichir = new JButton("🔄 Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
         btnRafraichir.addActionListener(e -> chargerDonnees());
@@ -108,15 +122,19 @@ public class InterventionsFrame extends JFrame {
 
     private void chargerDonnees() {
         modeleInterventions.setRowCount(0);
-        List<Maintenance> maintenances = maintenanceService.listerMaintenancesEnCours();
-        for (Maintenance m : maintenances) {
-            modeleInterventions.addRow(new Object[]{
-                    m.getIdMaintenance(),
-                    m.getIdChambre(),
-                    m.getDescription(),
-                    m.getDateDebut(),
-                    m.getDateFin()
-            });
+        try {
+            List<Maintenance> maintenances = maintenanceService.listerMaintenancesEnCours();
+            for (Maintenance m : maintenances) {
+                modeleInterventions.addRow(new Object[]{
+                        m.getIdMaintenance(),
+                        m.getIdChambre(),
+                        m.getDescription(),
+                        m.getDateDebut(),
+                        m.getDateFin()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -133,15 +151,19 @@ public class InterventionsFrame extends JFrame {
 
             int confirmation = JOptionPane.showConfirmDialog(
                     this,
-                    "Confirmez-vous que la réparation de la chambre " + numChambre + " est terminée ?\nElle redeviendra DISPONIBLE.",
+                    "Confirmez-vous que la réparation de la chambre " + numChambre + " est terminée ?\n\nElle redeviendra DISPONIBLE.",
                     "Confirmation",
-                    JOptionPane.YES_NO_OPTION
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
             );
 
             if (confirmation == JOptionPane.YES_OPTION) {
                 boolean succes = maintenanceService.terminerMaintenance(idMaintenance);
                 if (succes) {
-                    JOptionPane.showMessageDialog(this, "✓ Chambre " + numChambre + " réparée et libérée", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this,
+                            "✓ Chambre " + numChambre + " réparée et libérée avec succès",
+                            "Succès",
+                            JOptionPane.INFORMATION_MESSAGE);
                     chargerDonnees();
                 } else {
                     JOptionPane.showMessageDialog(this, "❌ Erreur lors de la terminaison", "Erreur", JOptionPane.ERROR_MESSAGE);

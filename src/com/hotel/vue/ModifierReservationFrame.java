@@ -2,9 +2,9 @@ package com.hotel.vue;
 
 import com.hotel.model.*;
 import com.hotel.service.*;
+import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ public class ModifierReservationFrame extends JFrame {
     private Utilisateur receptionnisteConnecte;
     private ReservationService reservationService;
     private FacturationService facturationService;
-    private ServiceSupplementaireDAOImpl serviceDAO;
+    private com.hotel.dao.ServiceSupplementaireDAOImpl serviceDAO;
 
     private JTextField txtIdReservation;
     private JPanel panelExtras;
@@ -27,10 +27,10 @@ public class ModifierReservationFrame extends JFrame {
         this.receptionnisteConnecte = receptionniste;
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
-        this.serviceDAO = new ServiceSupplementaireDAOImpl();
+        this.serviceDAO = new com.hotel.dao.ServiceSupplementaireDAOImpl();
 
         setTitle("Hotel Manager - Modifier Réservation");
-        setSize(900, 700);
+        setSize(900, 750);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -40,64 +40,13 @@ public class ModifierReservationFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === CONTENU ===
-        JPanel panelContenu = new JPanel(new GridBagLayout());
-        panelContenu.setBackground(Color.WHITE);
-        panelContenu.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        // Recherche réservation
-        JLabel lblId = new JLabel("ID Réservation :");
-        lblId.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0; gbc.gridy = 0;
-        panelContenu.add(lblId, gbc);
-
-        txtIdReservation = new JTextField();
-        ThemeUtil.appliquerThemeTextField(txtIdReservation);
-        gbc.gridx = 1;
-        panelContenu.add(txtIdReservation, gbc);
-
-        JButton btnChercher = new JButton("🔍 Charger");
-        ThemeUtil.appliquerThemeBoutonPrincipal(btnChercher);
-        btnChercher.addActionListener(e -> chargerReservation());
-        gbc.gridx = 2;
-        panelContenu.add(btnChercher, gbc);
-
-        // Extras
-        JLabel lblExtras = new JLabel("AJOUTER EXTRAS");
-        lblExtras.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
-        panelContenu.add(lblExtras, gbc);
-
-        panelExtras = new JPanel(new GridLayout(0, 1, 5, 5));
-        panelExtras.setBackground(Color.WHITE);
-        gbc.gridy = 2; gbc.weighty = 0.8;
-        panelContenu.add(panelExtras, gbc);
-
-        // === BOUTONS ===
-        JPanel panelBoutons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        panelBoutons.setBackground(Color.WHITE);
-
-        JButton btnSauvegarder = new JButton("✓ Sauvegarder");
-        ThemeUtil.appliquerThemeBoutonValider(btnSauvegarder);
-        btnSauvegarder.addActionListener(e -> sauvegarder());
-
-        JButton btnRetour = new JButton("← Retour");
-        ThemeUtil.appliquerThemeBoutonSecondaire(btnRetour);
-        btnRetour.addActionListener(e -> dispose());
-
-        panelBoutons.add(btnSauvegarder);
-        panelBoutons.add(btnRetour);
-
+        JPanel panelContenu = creerPanelContenu();
         add(new JScrollPane(panelContenu), BorderLayout.CENTER);
+
+        JPanel panelBoutons = creerPanelBoutons();
         add(panelBoutons, BorderLayout.SOUTH);
     }
 
@@ -110,18 +59,104 @@ public class ModifierReservationFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);
+
+        return panel;
+    }
+
+    private JPanel creerPanelContenu() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Recherche réservation
+        JLabel lblId = new JLabel("ID Réservation :");
+        lblId.setFont(ThemeUtil.POLICE_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(lblId, gbc);
+
+        txtIdReservation = new JTextField();
+        ThemeUtil.appliquerThemeTextField(txtIdReservation);
+        gbc.gridx = 1;
+        panel.add(txtIdReservation, gbc);
+
+        /**
+         * IMAGE À AJOUTER : refresh.png (48x48px)
+         * Description: Icône d'une flèche circulaire
+         */
+        JButton btnChercher = new JButton("🔍 Charger");
+        ThemeUtil.appliquerThemeBoutonPrincipal(btnChercher);
+        btnChercher.addActionListener(e -> chargerReservation());
+        gbc.gridx = 2;
+        panel.add(btnChercher, gbc);
+
+        // Extras
+        JLabel lblExtras = new JLabel("☕ AJOUTER SERVICES SUPPLÉMENTAIRES");
+        lblExtras.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        lblExtras.setForeground(ThemeUtil.BLEU_NUIT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 3;
+        panel.add(lblExtras, gbc);
+
+        panelExtras = new JPanel(new GridLayout(0, 1, 5, 5));
+        panelExtras.setBackground(Color.WHITE);
+        gbc.gridy = 2;
+        gbc.weighty = 0.8;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(new JScrollPane(panelExtras), gbc);
+
+        return panel;
+    }
+
+    private JPanel creerPanelBoutons() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        /**
+         * IMAGE À AJOUTER : save.png (48x48px)
+         * Description: Icône de sauvegarde verte
+         */
+        JButton btnSauvegarder = new JButton("✓ SAUVEGARDER");
+        ThemeUtil.appliquerThemeBoutonValider(btnSauvegarder);
+        btnSauvegarder.setPreferredSize(new Dimension(150, 40));
+        btnSauvegarder.addActionListener(e -> sauvegarder());
+
+        /**
+         * IMAGE À AJOUTER : cancel.png (48x48px)
+         * Description: Icône d'une croix rouge
+         */
+        JButton btnRetour = new JButton("✕ Annuler");
+        ThemeUtil.appliquerThemeBoutonSecondaire(btnRetour);
+        btnRetour.setPreferredSize(new Dimension(150, 40));
+        btnRetour.addActionListener(e -> dispose());
+
+        panel.add(btnSauvegarder);
+        panel.add(btnRetour);
 
         return panel;
     }
@@ -138,6 +173,8 @@ public class ModifierReservationFrame extends JFrame {
             }
 
             creerPanelExtras();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "❌ ID invalide (nombre requis)", "Validation", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
@@ -152,32 +189,46 @@ public class ModifierReservationFrame extends JFrame {
         for (ServiceSupplementaire service : services) {
             JPanel panelExtra = new JPanel(new BorderLayout());
             panelExtra.setBackground(ThemeUtil.GRIS_FOND);
-            panelExtra.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+            panelExtra.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)
+            ));
 
-            JLabel lblNom = new JLabel(service.getNomService() + " (" + service.getPrixService() + " MAD)");
-            lblNom.setFont(ThemeUtil.POLICE_NORMALE);
+            JLabel lblNom = new JLabel(service.getNomService() + " - " + String.format("%.2f MAD", service.getPrixService()));
+            lblNom.setFont(ThemeUtil.POLICE_NORMAL);
 
-            JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
             panelQte.setBackground(ThemeUtil.GRIS_FOND);
 
-            JButton btnMoins = new JButton("-");
-            JLabel lblQte = new JLabel("0");
-            JButton btnPlus = new JButton("+");
-
+            JButton btnMoins = new JButton("−");
             btnMoins.setPreferredSize(new Dimension(30, 30));
-            btnPlus.setPreferredSize(new Dimension(30, 30));
+            btnMoins.setFont(new Font("Arial", Font.BOLD, 16));
+
+            JLabel lblQte = new JLabel("0");
             lblQte.setFont(ThemeUtil.POLICE_BOUTON);
+            lblQte.setPreferredSize(new Dimension(30, 30));
+            lblQte.setHorizontalAlignment(JLabel.CENTER);
+
+            JButton btnPlus = new JButton("+");
+            btnPlus.setPreferredSize(new Dimension(30, 30));
+            btnPlus.setFont(new Font("Arial", Font.BOLD, 16));
+
+            final int idService = service.getIdService();
 
             btnPlus.addActionListener(e -> {
                 int qte = Integer.parseInt(lblQte.getText()) + 1;
                 lblQte.setText(String.valueOf(qte));
-                selectedExtras.put(service.getIdService(), qte);
+                selectedExtras.put(idService, qte);
             });
 
             btnMoins.addActionListener(e -> {
                 int qte = Math.max(0, Integer.parseInt(lblQte.getText()) - 1);
                 lblQte.setText(String.valueOf(qte));
-                selectedExtras.put(service.getIdService(), qte);
+                if (qte == 0) {
+                    selectedExtras.remove(idService);
+                } else {
+                    selectedExtras.put(idService, qte);
+                }
             });
 
             panelQte.add(btnMoins);
@@ -209,13 +260,12 @@ public class ModifierReservationFrame extends JFrame {
                 }
             }
 
-            JOptionPane.showMessageDialog(this, "✓ Extras ajoutés avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "✓ Services ajoutés avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "❌ ID invalide", "Validation", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private static class ServiceSupplementaireDAOImpl extends com.hotel.dao.ServiceSupplementaireDAOImpl {
     }
 }

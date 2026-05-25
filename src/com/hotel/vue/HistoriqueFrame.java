@@ -20,7 +20,7 @@ public class HistoriqueFrame extends JFrame {
         this.technicienConnecte = technicien;
         this.maintenanceService = new MaintenanceService();
 
-        setTitle("Hotel Manager - Historique Maintenance");
+        setTitle("Hotel Manager - Historique Réparations");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -32,15 +32,12 @@ public class HistoriqueFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
         add(panelBoutons, BorderLayout.CENTER);
 
-        // === TABLE ===
         String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin", "Statut"};
         modeleHistorique = new DefaultTableModel(colonnes, 0) {
             @Override
@@ -50,6 +47,7 @@ public class HistoriqueFrame extends JFrame {
         };
         tableHistorique = new JTable(modeleHistorique);
         ThemeUtil.appliquerThemeTable(tableHistorique);
+        tableHistorique.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tableHistorique);
         add(scrollPane, BorderLayout.SOUTH);
@@ -64,13 +62,19 @@ public class HistoriqueFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
+        /**
+         * IMAGE À AJOUTER : back.png (48x48px)
+         * Description: Icône d'une flèche gauche
+         */
         JButton btnRetour = new JButton("← Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -85,6 +89,10 @@ public class HistoriqueFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        /**
+         * IMAGE À AJOUTER : refresh.png (48x48px)
+         * Description: Icône d'une flèche circulaire
+         */
         JButton btnRafraichir = new JButton("🔄 Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
         btnRafraichir.addActionListener(e -> chargerDonnees());

@@ -1,6 +1,7 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +29,7 @@ public class DashboardReceptionnisteFrame extends JFrame {
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL PRINCIPAL AVEC ICÔNES ===
+        // === PANEL PRINCIPAL ===
         JPanel panelPrincipal = creerPanelIcones();
         add(panelPrincipal, BorderLayout.CENTER);
     }
@@ -52,13 +53,11 @@ public class DashboardReceptionnisteFrame extends JFrame {
         btnDeconnexion.setFont(ThemeUtil.POLICE_BOUTON);
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
-        btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnDeconnexion.setContentAreaFilled(true);
+        btnDeconnexion.setBorderPainted(true);
+        btnDeconnexion.setBorder(BorderFactory.createLineBorder(ThemeUtil.ROUGE_ERREUR, 1));
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnDeconnexion.addActionListener(e -> {
-            new LoginFrame().setVisible(true);
-            dispose();
-        });
+        btnDeconnexion.addActionListener(e -> NavigationManager.naviguerVers(this, new LoginFrame()));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(lblUtilisateur, BorderLayout.CENTER);
@@ -72,47 +71,44 @@ public class DashboardReceptionnisteFrame extends JFrame {
         panel.setBackground(ThemeUtil.GRIS_FOND);
         panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
 
-        // === BOUTON 1 : CRÉER RÉSERVATION (COMPLET) ===
-        JPanel btnCreer = creerBoutonIcone(
-                "📝",
-                "CRÉER\nRÉSERVATION",
-                ThemeUtil.BLEU_NUIT
-        );
+        // BOUTON 1 : CRÉER RÉSERVATION
+        /**
+         * IMAGE À AJOUTER : reservations.png (64x64px)
+         * Description: Icône d'un calendrier avec stylo pour symboliser la création de réservation
+         */
+        JPanel btnCreer = creerBoutonIcone("📝 CRÉER\nRÉSERVATION", ThemeUtil.BLEU_NUIT);
         btnCreer.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new CreerReservationFrame(receptionnisteConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new CreerReservationFrame(receptionnisteConnecte));
             }
         });
         panel.add(btnCreer);
 
-        // === BOUTON 2 : MODIFIER RÉSERVATION ===
-        JPanel btnModifier = creerBoutonIcone(
-                "✏️",
-                "MODIFIER\nRÉSERVATION",
-                new Color(52, 152, 219)
-        );
+        // BOUTON 2 : MODIFIER RÉSERVATION
+        /**
+         * IMAGE À AJOUTER : edit.png (64x64px)
+         * Description: Icône d'un crayon pour symboliser la modification
+         */
+        JPanel btnModifier = creerBoutonIcone("✏️ MODIFIER\nRÉSERVATION", new Color(52, 152, 219));
         btnModifier.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new ModifierReservationFrame(receptionnisteConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new ModifierReservationFrame(receptionnisteConnecte));
             }
         });
         panel.add(btnModifier);
 
-        // === BOUTON 3 : CHECK-OUT & FACTURE ===
-        JPanel btnCheckout = creerBoutonIcone(
-                "💳",
-                "CHECK-OUT &\nFACTURE",
-                new Color(46, 204, 113)
-        );
+        // BOUTON 3 : CHECK-OUT & FACTURE
+        /**
+         * IMAGE À AJOUTER : checkin.png (64x64px)
+         * Description: Icône de clé d'hôtel ou porte d'accès
+         */
+        JPanel btnCheckout = creerBoutonIcone("💳 CHECK-OUT &\nFACTURE", new Color(46, 204, 113));
         btnCheckout.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new CheckoutFrame(receptionnisteConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new CheckoutFrame(receptionnisteConnecte));
             }
         });
         panel.add(btnCheckout);
@@ -120,7 +116,7 @@ public class DashboardReceptionnisteFrame extends JFrame {
         return panel;
     }
 
-    private JPanel creerBoutonIcone(String icone, String texte, Color couleur) {
+    private JPanel creerBoutonIcone(String texte, Color couleur) {
         JPanel btn = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -140,21 +136,13 @@ public class DashboardReceptionnisteFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Icône
-        JLabel lblIcone = new JLabel(icone);
-        lblIcone.setFont(new Font("Arial", Font.PLAIN, 64));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        btn.add(lblIcone, gbc);
-
-        // Texte
         JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
         lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTexte.setForeground(ThemeUtil.BLANC);
-        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         btn.add(lblTexte, gbc);
 
-        // Effet hover
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             private Color couleurOriginal = couleur;
 

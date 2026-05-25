@@ -1,6 +1,7 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +29,7 @@ public class DashboardMaintenanceFrame extends JFrame {
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL PRINCIPAL AVEC ICÔNES ===
+        // === PANEL PRINCIPAL ===
         JPanel panelPrincipal = creerPanelIcones();
         add(panelPrincipal, BorderLayout.CENTER);
     }
@@ -52,13 +53,11 @@ public class DashboardMaintenanceFrame extends JFrame {
         btnDeconnexion.setFont(ThemeUtil.POLICE_BOUTON);
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
-        btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnDeconnexion.setContentAreaFilled(true);
+        btnDeconnexion.setBorderPainted(true);
+        btnDeconnexion.setBorder(BorderFactory.createLineBorder(ThemeUtil.ROUGE_ERREUR, 1));
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnDeconnexion.addActionListener(e -> {
-            new LoginFrame().setVisible(true);
-            dispose();
-        });
+        btnDeconnexion.addActionListener(e -> NavigationManager.naviguerVers(this, new LoginFrame()));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(lblUtilisateur, BorderLayout.CENTER);
@@ -72,24 +71,30 @@ public class DashboardMaintenanceFrame extends JFrame {
         panel.setBackground(ThemeUtil.GRIS_FOND);
         panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
 
-        // === BOUTON 1 : INTERVENTIONS EN COURS ===
-        JPanel btnInterventions = creerBoutonIcone("🚨", "INTERVENTIONS\nEN COURS", ThemeUtil.ROUGE_ERREUR);
+        // BOUTON 1 : INTERVENTIONS EN COURS
+        /**
+         * IMAGE À AJOUTER : interventions.png (64x64px)
+         * Description: Icône d'une alerte rouge ou d'une clé à molette urgente
+         */
+        JPanel btnInterventions = creerBoutonIcone("🚨 INTERVENTIONS\nEN COURS", ThemeUtil.ROUGE_ERREUR);
         btnInterventions.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new InterventionsFrame(technicienConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardMaintenanceFrame.this, new InterventionsFrame(technicienConnecte));
             }
         });
         panel.add(btnInterventions);
 
-        // === BOUTON 2 : HISTORIQUE ===
-        JPanel btnHistorique = creerBoutonIcone("📋", "HISTORIQUE DES\nRÉPARATIONS", new Color(52, 152, 219));
+        // BOUTON 2 : HISTORIQUE
+        /**
+         * IMAGE À AJOUTER : historique.png (64x64px)
+         * Description: Icône d'une horloge ou d'un historique/archives
+         */
+        JPanel btnHistorique = creerBoutonIcone("📋 HISTORIQUE DES\nRÉPARATIONS", new Color(52, 152, 219));
         btnHistorique.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new HistoriqueFrame(technicienConnecte).setVisible(true);
-                dispose();
+                NavigationManager.naviguerVers(DashboardMaintenanceFrame.this, new HistoriqueFrame(technicienConnecte));
             }
         });
         panel.add(btnHistorique);
@@ -97,7 +102,7 @@ public class DashboardMaintenanceFrame extends JFrame {
         return panel;
     }
 
-    private JPanel creerBoutonIcone(String icone, String texte, Color couleur) {
+    private JPanel creerBoutonIcone(String texte, Color couleur) {
         JPanel btn = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -117,21 +122,13 @@ public class DashboardMaintenanceFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Icône
-        JLabel lblIcone = new JLabel(icone);
-        lblIcone.setFont(new Font("Arial", Font.PLAIN, 64));
+        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
+        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTexte.setForeground(ThemeUtil.BLANC);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        btn.add(lblIcone, gbc);
-
-        // Texte
-        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
-        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTexte.setForeground(ThemeUtil.BLANC);
-        gbc.gridy = 1;
         btn.add(lblTexte, gbc);
 
-        // Effet hover
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             private Color couleurOriginal = couleur;
 

@@ -4,6 +4,8 @@ import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.Role;
 import com.hotel.model.enumeration.StatutUtilisateur;
 import com.hotel.service.UtilisateurService;
+import com.hotel.util.NavigationManager;
+import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -22,7 +24,7 @@ public class GestionPersonnelFrame extends JFrame {
         this.utilisateurService = new UtilisateurService();
 
         setTitle("Hotel Manager - Gestion Personnel");
-        setSize(1000, 700);
+        setSize(1100, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -51,6 +53,7 @@ public class GestionPersonnelFrame extends JFrame {
         };
         tablePersonnel = new JTable(modelePersonnel);
         ThemeUtil.appliquerThemeTable(tablePersonnel);
+        tablePersonnel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tablePersonnel);
         add(scrollPane, BorderLayout.SOUTH);
@@ -71,7 +74,9 @@ public class GestionPersonnelFrame extends JFrame {
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
         btnRetour.setFocusPainted(false);
         btnRetour.setOpaque(true);
-        btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnRetour.setContentAreaFilled(true);
+        btnRetour.setBorderPainted(true);
+        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRetour.addActionListener(e -> dispose());
 
@@ -86,18 +91,34 @@ public class GestionPersonnelFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        /**
+         * IMAGE À AJOUTER : add.png (48x48px)
+         * Description: Icône d'un plus (+) vert pour l'ajout
+         */
         JButton btnAjouter = new JButton("➕ Ajouter Employé");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouter);
         btnAjouter.addActionListener(e -> afficherDialogueAjoutEmploye());
 
+        /**
+         * IMAGE À AJOUTER : (vert) Icône de validation (32x32px)
+         * Description: Icône de validation/activation (coche verte)
+         */
         JButton btnActiver = new JButton("✅ Activer");
         ThemeUtil.appliquerThemeBoutonValider(btnActiver);
         btnActiver.addActionListener(e -> changerStatut(true));
 
+        /**
+         * IMAGE À AJOUTER : delete.png (48x48px)
+         * Description: Icône d'une croix rouge pour désactivation
+         */
         JButton btnDesactiver = new JButton("❌ Désactiver");
         ThemeUtil.appliquerThemeBoutonSuppression(btnDesactiver);
         btnDesactiver.addActionListener(e -> changerStatut(false));
 
+        /**
+         * IMAGE À AJOUTER : refresh.png (48x48px)
+         * Description: Icône d'une flèche circulaire pour rafraîchissement
+         */
         JButton btnRafraichir = new JButton("🔄 Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
         btnRafraichir.addActionListener(e -> chargerDonnees());
@@ -112,16 +133,20 @@ public class GestionPersonnelFrame extends JFrame {
 
     private void chargerDonnees() {
         modelePersonnel.setRowCount(0);
-        List<Utilisateur> employes = utilisateurService.listerTousLesEmployes();
-        for (Utilisateur u : employes) {
-            modelePersonnel.addRow(new Object[]{
-                    u.getIdUtilisateur(),
-                    u.getNom(),
-                    u.getPrenom(),
-                    u.getEmail(),
-                    u.getRole(),
-                    u.getStatut()
-            });
+        try {
+            List<Utilisateur> employes = utilisateurService.listerTousLesEmployes();
+            for (Utilisateur u : employes) {
+                modelePersonnel.addRow(new Object[]{
+                        u.getIdUtilisateur(),
+                        u.getNom(),
+                        u.getPrenom(),
+                        u.getEmail(),
+                        u.getRole(),
+                        u.getStatut()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -136,10 +161,10 @@ public class GestionPersonnelFrame extends JFrame {
         try {
             if (activer) {
                 utilisateurService.activerEmploye(idUtilisateur);
-                JOptionPane.showMessageDialog(this, "✓ Employé activé", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "✓ Employé activé avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 utilisateurService.desactiverEmploye(idUtilisateur);
-                JOptionPane.showMessageDialog(this, "✓ Employé désactivé", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "✓ Employé désactivé avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
             }
             chargerDonnees();
         } catch (Exception ex) {
@@ -148,8 +173,8 @@ public class GestionPersonnelFrame extends JFrame {
     }
 
     private void afficherDialogueAjoutEmploye() {
-        JDialog dialog = new JDialog(this, "Créer un Employé", true);
-        dialog.setSize(500, 450);
+        JDialog dialog = new JDialog(this, "📝 Créer un Employé", true);
+        dialog.setSize(550, 500);
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -180,7 +205,7 @@ public class GestionPersonnelFrame extends JFrame {
         ThemeUtil.appliquerThemeTextField(txtNom);
         ThemeUtil.appliquerThemeTextField(txtPrenom);
         ThemeUtil.appliquerThemeTextField(txtEmail);
-        txtMotDePasse.setFont(ThemeUtil.POLICE_NORMALE);
+        txtMotDePasse.setFont(ThemeUtil.POLICE_NORMAL);
         txtMotDePasse.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(8, 10, 8, 10)
@@ -202,7 +227,7 @@ public class GestionPersonnelFrame extends JFrame {
         ajouterChamp(panel, gbc, "Rôle :", comboRole);
 
         // Boutons
-        JButton btnValider = new JButton("✓ Enregistrer");
+        JButton btnValider = new JButton("✓ ENREGISTRER");
         ThemeUtil.appliquerThemeBoutonValider(btnValider);
         gbc.gridy = 6;
         gbc.gridx = 0;
@@ -216,24 +241,32 @@ public class GestionPersonnelFrame extends JFrame {
 
         btnValider.addActionListener(e -> {
             try {
-                if (txtNom.getText().trim().isEmpty() || txtPrenom.getText().trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(dialog, "❌ Nom et Prénom obligatoires", "Validation", JOptionPane.WARNING_MESSAGE);
+                // Validation
+                if (ValidationUtil.estVide(txtNom.getText())) {
+                    JOptionPane.showMessageDialog(dialog, "❌ Nom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-
-                if (!txtEmail.getText().contains("@")) {
+                if (ValidationUtil.estVide(txtPrenom.getText())) {
+                    JOptionPane.showMessageDialog(dialog, "❌ Prénom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.estEmailValide(txtEmail.getText())) {
                     JOptionPane.showMessageDialog(dialog, "❌ Email invalide", "Validation", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-
-                if (txtMotDePasse.getPassword().length < 4) {
+                if (!ValidationUtil.estMotDePasseValide(new String(txtMotDePasse.getPassword()))) {
                     JOptionPane.showMessageDialog(dialog, "❌ Mot de passe minimum 4 caractères", "Validation", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
+                // Formatage : NOM en MAJUSCULE, Prénom avec 1ère lettre majuscule
+                String nom = txtNom.getText().trim().toUpperCase();
+                String prenom = txtPrenom.getText().trim();
+                prenom = prenom.substring(0, 1).toUpperCase() + prenom.substring(1).toLowerCase();
+
                 Utilisateur nouvelUtilisateur = new Utilisateur();
-                nouvelUtilisateur.setNom(txtNom.getText().trim());
-                nouvelUtilisateur.setPrenom(txtPrenom.getText().trim());
+                nouvelUtilisateur.setNom(nom);
+                nouvelUtilisateur.setPrenom(prenom);
                 nouvelUtilisateur.setEmail(txtEmail.getText().trim());
                 nouvelUtilisateur.setMotDEPasse(new String(txtMotDePasse.getPassword()));
                 nouvelUtilisateur.setRole((Role) comboRole.getSelectedItem());
