@@ -3,7 +3,7 @@ package com.hotel.vue;
 import com.hotel.model.Utilisateur;
 
 import javax.swing.*;
-        import java.awt.*;
+import java.awt.*;
 
 public class DashboardReceptionnisteFrame extends JFrame {
 
@@ -38,7 +38,7 @@ public class DashboardReceptionnisteFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("🛎️ RÉCEPTION");
+        JLabel lblTitre = new JLabel("🛎️ RÉCEPTION - ACCUEIL");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
@@ -53,6 +53,7 @@ public class DashboardReceptionnisteFrame extends JFrame {
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
         btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnDeconnexion.setContentAreaFilled(true);
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDeconnexion.addActionListener(e -> {
             new LoginFrame().setVisible(true);
@@ -67,42 +68,54 @@ public class DashboardReceptionnisteFrame extends JFrame {
     }
 
     private JPanel creerPanelIcones() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 20, 20));
+        JPanel panel = new JPanel(new GridLayout(1, 3, 30, 30));
         panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
 
-        // === BOUTON 1 : CLIENTS ===
-        JPanel btnClients = creerBoutonIcone("👥", "GESTION DES\nCLIENTS", ThemeUtil.BLEU_NUIT);
-        btnClients.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionClientsFrame(receptionnisteConnecte).setVisible(true);
-                dispose();
-            }
-        });
-        panel.add(btnClients);
-
-        // === BOUTON 2 : RÉSERVATIONS ===
-        JPanel btnReservations = creerBoutonIcone("📝", "CRÉER UNE\nRÉSERVATION", new Color(52, 152, 219));
-        btnReservations.addMouseListener(new java.awt.event.MouseAdapter() {
+        // === BOUTON 1 : CRÉER RÉSERVATION (COMPLET) ===
+        JPanel btnCreer = creerBoutonIcone(
+                "📝",
+                "CRÉER\nRÉSERVATION",
+                ThemeUtil.BLEU_NUIT
+        );
+        btnCreer.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 new CreerReservationFrame(receptionnisteConnecte).setVisible(true);
                 dispose();
             }
         });
-        panel.add(btnReservations);
+        panel.add(btnCreer);
 
-        // === BOUTON 3 : CHECK-IN/OUT ===
-        JPanel btnCheckInOut = creerBoutonIcone("🔑", "CHECK-IN &\nCHECK-OUT", new Color(46, 204, 113));
-        btnCheckInOut.addMouseListener(new java.awt.event.MouseAdapter() {
+        // === BOUTON 2 : MODIFIER RÉSERVATION ===
+        JPanel btnModifier = creerBoutonIcone(
+                "✏️",
+                "MODIFIER\nRÉSERVATION",
+                new Color(52, 152, 219)
+        );
+        btnModifier.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionCheckFrame(receptionnisteConnecte).setVisible(true);
+                new ModifierReservationFrame(receptionnisteConnecte).setVisible(true);
                 dispose();
             }
         });
-        panel.add(btnCheckInOut);
+        panel.add(btnModifier);
+
+        // === BOUTON 3 : CHECK-OUT & FACTURE ===
+        JPanel btnCheckout = creerBoutonIcone(
+                "💳",
+                "CHECK-OUT &\nFACTURE",
+                new Color(46, 204, 113)
+        );
+        btnCheckout.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                new CheckoutFrame(receptionnisteConnecte).setVisible(true);
+                dispose();
+            }
+        });
+        panel.add(btnCheckout);
 
         return panel;
     }

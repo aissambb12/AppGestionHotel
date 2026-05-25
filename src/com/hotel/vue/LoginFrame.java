@@ -165,8 +165,10 @@ public class LoginFrame extends JFrame {
         btnConnexion.setBackground(ThemeUtil.DORE_LUXE);
         btnConnexion.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
         btnConnexion.setFocusPainted(false);
-        btnConnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnConnexion.setOpaque(true);
+        btnConnexion.setContentAreaFilled(true);
+        btnConnexion.setBorderPainted(false);
+        btnConnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnConnexion.addActionListener(e -> gererConnexion());
 
         gbc.gridy = 7;

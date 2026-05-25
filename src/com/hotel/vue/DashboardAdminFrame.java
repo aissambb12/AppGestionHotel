@@ -1,14 +1,10 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
-import com.hotel.service.UtilisateurService;
-import com.hotel.service.ChambreService;
-import com.hotel.service.ReservationService;
-import com.hotel.service.FacturationService;
-import com.hotel.service.MaintenanceService;
+import com.hotel.service.*;
 
 import javax.swing.*;
-        import java.awt.*;
+import java.awt.*;
 
 public class DashboardAdminFrame extends JFrame {
 
@@ -17,7 +13,8 @@ public class DashboardAdminFrame extends JFrame {
     private ChambreService chambreService;
     private ReservationService reservationService;
     private FacturationService facturationService;
-    private MaintenanceService maintenanceService;
+
+    private float zoomLevel = 1.0f;
 
     public DashboardAdminFrame(Utilisateur admin) {
         this.adminConnecte = admin;
@@ -25,7 +22,6 @@ public class DashboardAdminFrame extends JFrame {
         this.chambreService = new ChambreService();
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
-        this.maintenanceService = new MaintenanceService();
 
         setTitle("Hotel Manager - Administration");
         setSize(1000, 700);
@@ -61,12 +57,27 @@ public class DashboardAdminFrame extends JFrame {
         lblUtilisateur.setFont(ThemeUtil.POLICE_NORMALE);
         lblUtilisateur.setForeground(ThemeUtil.BLANC);
 
+        // Panel droite avec zoom et déconnexion
+        JPanel panelDroite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 10));
+        panelDroite.setBackground(ThemeUtil.BLEU_NUIT);
+
+        JButton btnZoomMoins = new JButton("🔍−");
+        btnZoomMoins.setFont(new Font("Arial", Font.BOLD, 12));
+        btnZoomMoins.setFocusPainted(false);
+        btnZoomMoins.addActionListener(e -> changerZoom(-0.1f));
+
+        JButton btnZoomPlus = new JButton("🔍+");
+        btnZoomPlus.setFont(new Font("Arial", Font.BOLD, 12));
+        btnZoomPlus.setFocusPainted(false);
+        btnZoomPlus.addActionListener(e -> changerZoom(0.1f));
+
         JButton btnDeconnexion = new JButton("🚪 Déconnexion");
         btnDeconnexion.setBackground(ThemeUtil.ROUGE_ERREUR);
         btnDeconnexion.setForeground(ThemeUtil.BLANC);
         btnDeconnexion.setFont(ThemeUtil.POLICE_BOUTON);
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
+        btnDeconnexion.setContentAreaFilled(true);
         btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDeconnexion.addActionListener(e -> {
@@ -74,9 +85,13 @@ public class DashboardAdminFrame extends JFrame {
             dispose();
         });
 
+        panelDroite.add(btnZoomMoins);
+        panelDroite.add(btnZoomPlus);
+        panelDroite.add(btnDeconnexion);
+
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(lblUtilisateur, BorderLayout.CENTER);
-        panel.add(btnDeconnexion, BorderLayout.EAST);
+        panel.add(panelDroite, BorderLayout.EAST);
 
         return panel;
     }
@@ -102,7 +117,7 @@ public class DashboardAdminFrame extends JFrame {
         btnChambres.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionChambresFrame().setVisible(true);
+                new GestionChambresFrame(adminConnecte).setVisible(true);
                 dispose();
             }
         });
@@ -113,7 +128,7 @@ public class DashboardAdminFrame extends JFrame {
         btnReservations.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new GestionReservationsFrame().setVisible(true);
+                new GestionReservationsFrame(adminConnecte).setVisible(true);
                 dispose();
             }
         });
@@ -124,7 +139,7 @@ public class DashboardAdminFrame extends JFrame {
         btnStats.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new StatistiquesFrame().setVisible(true);
+                new StatistiquesFrame(adminConnecte).setVisible(true);
                 dispose();
             }
         });
@@ -155,14 +170,16 @@ public class DashboardAdminFrame extends JFrame {
 
         // Icône
         JLabel lblIcone = new JLabel(icone);
-        lblIcone.setFont(new Font("Arial", Font.PLAIN, 64));
+        Font fontIcone = new Font("Arial", Font.PLAIN, (int)(64 * zoomLevel));
+        lblIcone.setFont(fontIcone);
         gbc.gridx = 0;
         gbc.gridy = 0;
         btn.add(lblIcone, gbc);
 
         // Texte
         JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
-        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        Font fontTexte = new Font("Segoe UI", Font.BOLD, (int)(16 * zoomLevel));
+        lblTexte.setFont(fontTexte);
         lblTexte.setForeground(ThemeUtil.BLANC);
         gbc.gridy = 1;
         btn.add(lblTexte, gbc);
@@ -193,5 +210,14 @@ public class DashboardAdminFrame extends JFrame {
                 (int) (couleur.getGreen() * (1 - facteur)),
                 (int) (couleur.getBlue() * (1 - facteur))
         );
+    }
+
+    private void changerZoom(float delta) {
+        zoomLevel += delta;
+        zoomLevel = Math.max(0.8f, Math.min(1.5f, zoomLevel));
+        this.setSize((int)(1000 * zoomLevel), (int)(700 * zoomLevel));
+        this.setLocationRelativeTo(null);
+        this.revalidate();
+        this.repaint();
     }
 }

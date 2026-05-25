@@ -2,6 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.Maintenance;
 import com.hotel.model.Utilisateur;
+import com.hotel.model.enumeration.StatutMaintenance;
 import com.hotel.service.MaintenanceService;
 
 import javax.swing.*;
@@ -38,10 +39,10 @@ public class InterventionsFrame extends JFrame {
 
         // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(panelBoutons, BorderLayout.CENTER);
 
         // === TABLE ===
-        String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début"};
+        String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin"};
         modeleInterventions = new DefaultTableModel(colonnes, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -52,7 +53,7 @@ public class InterventionsFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tableInterventions);
 
         JScrollPane scrollPane = new JScrollPane(tableInterventions);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.SOUTH);
     }
 
     private JPanel creerHeader() {
@@ -72,10 +73,7 @@ public class InterventionsFrame extends JFrame {
         btnRetour.setOpaque(true);
         btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> {
-            new DashboardMaintenanceFrame(technicienConnecte).setVisible(true);
-            dispose();
-        });
+        btnRetour.addActionListener(e -> dispose());
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);
@@ -116,7 +114,8 @@ public class InterventionsFrame extends JFrame {
                     m.getIdMaintenance(),
                     m.getIdChambre(),
                     m.getDescription(),
-                    m.getDateDebut()
+                    m.getDateDebut(),
+                    m.getDateFin()
             });
         }
     }
@@ -144,6 +143,8 @@ public class InterventionsFrame extends JFrame {
                 if (succes) {
                     JOptionPane.showMessageDialog(this, "✓ Chambre " + numChambre + " réparée et libérée", "Succès", JOptionPane.INFORMATION_MESSAGE);
                     chargerDonnees();
+                } else {
+                    JOptionPane.showMessageDialog(this, "❌ Erreur lors de la terminaison", "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } catch (Exception ex) {

@@ -3,7 +3,7 @@ package com.hotel.vue;
 import com.hotel.model.Utilisateur;
 
 import javax.swing.*;
-        import java.awt.*;
+import java.awt.*;
 
 public class DashboardMaintenanceFrame extends JFrame {
 
@@ -53,6 +53,7 @@ public class DashboardMaintenanceFrame extends JFrame {
         btnDeconnexion.setFocusPainted(false);
         btnDeconnexion.setOpaque(true);
         btnDeconnexion.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btnDeconnexion.setContentAreaFilled(true);
         btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDeconnexion.addActionListener(e -> {
             new LoginFrame().setVisible(true);

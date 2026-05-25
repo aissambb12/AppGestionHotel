@@ -1,7 +1,7 @@
 package com.hotel.vue;
 
+import com.hotel.model.Utilisateur;
 import com.hotel.service.FacturationService;
-import com.hotel.util.DateUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,9 +10,11 @@ import java.time.LocalDate;
 public class StatistiquesFrame extends JFrame {
 
     private FacturationService facturationService;
+    private Utilisateur adminConnecte;
 
-    public StatistiquesFrame() {
+    public StatistiquesFrame(Utilisateur admin) {
         this.facturationService = new FacturationService();
+        this.adminConnecte = admin;
 
         setTitle("Hotel Manager - Statistiques");
         setSize(700, 500);
@@ -123,7 +125,7 @@ public class StatistiquesFrame extends JFrame {
                 double ca = facturationService.obtenirChiffreAffaires(debut, fin);
                 lblResultat.setText(String.format("Total : %.2f MAD", ca));
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Format de date invalide (YYYY-MM-DD)", "Erreur", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "❌ Format de date invalide (YYYY-MM-DD)", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });
 

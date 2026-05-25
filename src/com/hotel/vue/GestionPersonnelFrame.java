@@ -1,6 +1,8 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
+import com.hotel.model.enumeration.Role;
+import com.hotel.model.enumeration.StatutUtilisateur;
 import com.hotel.service.UtilisateurService;
 
 import javax.swing.*;
@@ -20,7 +22,7 @@ public class GestionPersonnelFrame extends JFrame {
         this.utilisateurService = new UtilisateurService();
 
         setTitle("Hotel Manager - Gestion Personnel");
-        setSize(900, 600);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -37,10 +39,10 @@ public class GestionPersonnelFrame extends JFrame {
 
         // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(panelBoutons, BorderLayout.CENTER);
 
         // === TABLE ===
-        String[] colonnes = {"ID", "Nom", "Email", "Rôle", "Statut"};
+        String[] colonnes = {"ID", "Nom", "Prénom", "Email", "Rôle", "Statut"};
         modelePersonnel = new DefaultTableModel(colonnes, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -51,7 +53,7 @@ public class GestionPersonnelFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tablePersonnel);
 
         JScrollPane scrollPane = new JScrollPane(tablePersonnel);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.SOUTH);
     }
 
     private JPanel creerHeader() {
@@ -71,10 +73,7 @@ public class GestionPersonnelFrame extends JFrame {
         btnRetour.setOpaque(true);
         btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> {
-            new DashboardAdminFrame(adminConnecte).setVisible(true);
-            dispose();
-        });
+        btnRetour.addActionListener(e -> dispose());
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);
@@ -87,9 +86,9 @@ public class GestionPersonnelFrame extends JFrame {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JButton btnAjouter = new JButton("➕ Ajouter");
+        JButton btnAjouter = new JButton("➕ Ajouter Employé");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouter);
-        btnAjouter.addActionListener(e -> ajouterEmploye());
+        btnAjouter.addActionListener(e -> afficherDialogueAjoutEmploye());
 
         JButton btnActiver = new JButton("✅ Activer");
         ThemeUtil.appliquerThemeBoutonValider(btnActiver);
@@ -117,7 +116,8 @@ public class GestionPersonnelFrame extends JFrame {
         for (Utilisateur u : employes) {
             modelePersonnel.addRow(new Object[]{
                     u.getIdUtilisateur(),
-                    u.getNom() + " " + u.getPrenom(),
+                    u.getNom(),
+                    u.getPrenom(),
                     u.getEmail(),
                     u.getRole(),
                     u.getStatut()
@@ -128,7 +128,7 @@ public class GestionPersonnelFrame extends JFrame {
     private void changerStatut(boolean activer) {
         int ligne = tablePersonnel.getSelectedRow();
         if (ligne == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner un employé");
+            JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner un employé", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -136,18 +136,135 @@ public class GestionPersonnelFrame extends JFrame {
         try {
             if (activer) {
                 utilisateurService.activerEmploye(idUtilisateur);
-                JOptionPane.showMessageDialog(this, "Employé activé");
+                JOptionPane.showMessageDialog(this, "✓ Employé activé", "Succès", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 utilisateurService.desactiverEmploye(idUtilisateur);
-                JOptionPane.showMessageDialog(this, "Employé désactivé");
+                JOptionPane.showMessageDialog(this, "✓ Employé désactivé", "Succès", JOptionPane.INFORMATION_MESSAGE);
             }
             chargerDonnees();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void ajouterEmploye() {
-        JOptionPane.showMessageDialog(this, "Fonction à implémenter");
+    private void afficherDialogueAjoutEmploye() {
+        JDialog dialog = new JDialog(this, "Créer un Employé", true);
+        dialog.setSize(500, 450);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(ThemeUtil.GRIS_FOND);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Titre
+        JLabel lblTitre = new JLabel("Nouvel Employé");
+        lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(lblTitre, gbc);
+
+        // Champs
+        gbc.gridwidth = 1;
+        JTextField txtNom = new JTextField();
+        JTextField txtPrenom = new JTextField();
+        JTextField txtEmail = new JTextField();
+        JPasswordField txtMotDePasse = new JPasswordField();
+        JComboBox<Role> comboRole = new JComboBox<>(Role.values());
+
+        ThemeUtil.appliquerThemeTextField(txtNom);
+        ThemeUtil.appliquerThemeTextField(txtPrenom);
+        ThemeUtil.appliquerThemeTextField(txtEmail);
+        txtMotDePasse.setFont(ThemeUtil.POLICE_NORMALE);
+        txtMotDePasse.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+
+        gbc.gridy = 1;
+        ajouterChamp(panel, gbc, "Nom :", txtNom);
+
+        gbc.gridy = 2;
+        ajouterChamp(panel, gbc, "Prénom :", txtPrenom);
+
+        gbc.gridy = 3;
+        ajouterChamp(panel, gbc, "Email :", txtEmail);
+
+        gbc.gridy = 4;
+        ajouterChamp(panel, gbc, "Mot de passe :", txtMotDePasse);
+
+        gbc.gridy = 5;
+        ajouterChamp(panel, gbc, "Rôle :", comboRole);
+
+        // Boutons
+        JButton btnValider = new JButton("✓ Enregistrer");
+        ThemeUtil.appliquerThemeBoutonValider(btnValider);
+        gbc.gridy = 6;
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        panel.add(btnValider, gbc);
+
+        JButton btnAnnuler = new JButton("✕ Annuler");
+        ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        gbc.gridx = 1;
+        panel.add(btnAnnuler, gbc);
+
+        btnValider.addActionListener(e -> {
+            try {
+                if (txtNom.getText().trim().isEmpty() || txtPrenom.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "❌ Nom et Prénom obligatoires", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (!txtEmail.getText().contains("@")) {
+                    JOptionPane.showMessageDialog(dialog, "❌ Email invalide", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (txtMotDePasse.getPassword().length < 4) {
+                    JOptionPane.showMessageDialog(dialog, "❌ Mot de passe minimum 4 caractères", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                Utilisateur nouvelUtilisateur = new Utilisateur();
+                nouvelUtilisateur.setNom(txtNom.getText().trim());
+                nouvelUtilisateur.setPrenom(txtPrenom.getText().trim());
+                nouvelUtilisateur.setEmail(txtEmail.getText().trim());
+                nouvelUtilisateur.setMotDEPasse(new String(txtMotDePasse.getPassword()));
+                nouvelUtilisateur.setRole((Role) comboRole.getSelectedItem());
+                nouvelUtilisateur.setStatut(StatutUtilisateur.ACTIF);
+
+                boolean succes = utilisateurService.inscrireEmploye(nouvelUtilisateur);
+                if (succes) {
+                    JOptionPane.showMessageDialog(dialog, "✓ Employé créé avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    chargerDonnees();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "❌ Erreur lors de la création", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnAnnuler.addActionListener(e -> dialog.dispose());
+
+        dialog.add(panel);
+        dialog.setVisible(true);
+    }
+
+    private void ajouterChamp(JPanel panel, GridBagConstraints gbc, String label, JComponent field) {
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(ThemeUtil.POLICE_LABEL);
+        gbc.gridx = 0;
+        panel.add(lbl, gbc);
+
+        gbc.gridx = 1;
+        panel.add(field, gbc);
     }
 }

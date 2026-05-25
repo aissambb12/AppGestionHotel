@@ -43,14 +43,10 @@ public class ClientService {
     }
 
     public boolean modifierClient(Client client) {
-        // On pourrait ajouter des vérifications ici aussi pour voir si le nouveau CIN
-        // n'appartient pas déjà à un AUTRE client.
         return clientDAO.modifier(client);
     }
 
     public boolean supprimerClient(int idClient) {
-        // Note : Cela échouera naturellement si le client a des réservations (grâce à MySQL RESTRICT)
-        // L'interface graphique devra attraper l'exception ou le retour false pour afficher un message à l'utilisateur.
         return clientDAO.supprimer(idClient);
     }
 
@@ -58,16 +54,26 @@ public class ClientService {
         return clientDAO.trouverParId(idClient);
     }
 
+    /**
+     * Récupère un client par son CIN
+     */
+    public Client trouverClientParCin(String cin) {
+        if (cin == null || cin.trim().isEmpty()) {
+            return null;
+        }
+        return clientDAO.trouverParCin(cin.trim().toUpperCase());
+    }
+
     public List<Client> obtenirTousLesClients() {
         return clientDAO.listerTous();
     }
 
     /**
-     * Recherche un client de manière intelligente (utilisé par la barre de recherche Swing)
+     * Recherche un client de manière intelligente
      */
     public List<Client> rechercherClients(String motCle) {
         if (motCle == null || motCle.trim().isEmpty()) {
-            return clientDAO.listerTous(); // Si la barre de recherche est vide, on retourne tout
+            return clientDAO.listerTous();
         }
         return clientDAO.rechercherParMotCle(motCle.trim());
     }

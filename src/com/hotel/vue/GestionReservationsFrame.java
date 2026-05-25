@@ -2,6 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.Reservation;
 import com.hotel.model.ReservationServices;
+import com.hotel.model.Utilisateur;
 import com.hotel.service.ReservationService;
 import com.hotel.service.FacturationService;
 
@@ -16,10 +17,12 @@ public class GestionReservationsFrame extends JFrame {
     private FacturationService facturationService;
     private DefaultTableModel modeleReservations;
     private JTable tableReservations;
+    private Utilisateur adminConnecte;
 
-    public GestionReservationsFrame() {
+    public GestionReservationsFrame(Utilisateur admin) {
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
+        this.adminConnecte = admin;
 
         setTitle("Hotel Manager - Gestion Réservations");
         setSize(900, 600);
@@ -39,7 +42,7 @@ public class GestionReservationsFrame extends JFrame {
 
         // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(panelBoutons, BorderLayout.CENTER);
 
         // === TABLE ===
         String[] colonnes = {"ID Resa", "ID Client", "Date Création", "Statut"};
@@ -53,7 +56,7 @@ public class GestionReservationsFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tableReservations);
 
         JScrollPane scrollPane = new JScrollPane(tableReservations);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.SOUTH);
     }
 
     private JPanel creerHeader() {
@@ -116,27 +119,11 @@ public class GestionReservationsFrame extends JFrame {
     private void afficherDetails() {
         int ligne = tableReservations.getSelectedRow();
         if (ligne == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une réservation");
+            JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner une réservation", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int idResa = (Integer) modeleReservations.getValueAt(ligne, 0);
-        List<ReservationServices> extras = facturationService.obtenirDetailsConsommations(idResa);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Détails Réservation N°").append(idResa).append("\n\n");
-
-        if (extras != null && !extras.isEmpty()) {
-            sb.append("Services consommés :\n");
-            for (ReservationServices rs : extras) {
-                sb.append("  • Service ").append(rs.getIdService())
-                        .append(" - Qté: ").append(rs.getQuantite())
-                        .append(" - Date: ").append(rs.getDateConsommation()).append("\n");
-            }
-        } else {
-            sb.append("Aucun service supplémentaire");
-        }
-
-        JOptionPane.showMessageDialog(this, sb.toString());
+        new DetailsReservationFrame(idResa, facturationService).setVisible(true);
     }
 }

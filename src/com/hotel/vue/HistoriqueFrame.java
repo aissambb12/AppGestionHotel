@@ -1,11 +1,13 @@
 package com.hotel.vue;
 
+import com.hotel.model.Maintenance;
 import com.hotel.model.Utilisateur;
 import com.hotel.service.MaintenanceService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 public class HistoriqueFrame extends JFrame {
 
@@ -36,7 +38,7 @@ public class HistoriqueFrame extends JFrame {
 
         // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(panelBoutons, BorderLayout.CENTER);
 
         // === TABLE ===
         String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin", "Statut"};
@@ -50,7 +52,7 @@ public class HistoriqueFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tableHistorique);
 
         JScrollPane scrollPane = new JScrollPane(tableHistorique);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.SOUTH);
     }
 
     private JPanel creerHeader() {
@@ -70,10 +72,7 @@ public class HistoriqueFrame extends JFrame {
         btnRetour.setOpaque(true);
         btnRetour.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> {
-            new DashboardMaintenanceFrame(technicienConnecte).setVisible(true);
-            dispose();
-        });
+        btnRetour.addActionListener(e -> dispose());
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);
@@ -98,9 +97,17 @@ public class HistoriqueFrame extends JFrame {
     private void chargerDonnees() {
         modeleHistorique.setRowCount(0);
         try {
-            // À adapter selon la méthode disponible dans MaintenanceDAO
-            // Pour l'instant, on affiche un message
-            JOptionPane.showMessageDialog(this, "Historique à récupérer depuis la base de données", "Info", JOptionPane.INFORMATION_MESSAGE);
+            List<Maintenance> maintenances = maintenanceService.listerMaintenancesEnCours();
+            for (Maintenance m : maintenances) {
+                modeleHistorique.addRow(new Object[]{
+                        m.getIdMaintenance(),
+                        m.getIdChambre(),
+                        m.getDescription(),
+                        m.getDateDebut(),
+                        m.getDateFin(),
+                        m.getStatutMaintenance()
+                });
+            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }

@@ -21,13 +21,13 @@ public class ThemeUtil {
     public static final Font POLICE_TITRE = new Font("Segoe UI", Font.BOLD, 24);
     public static final Font POLICE_TITRE_PETIT = new Font("Segoe UI", Font.BOLD, 18);
     public static final Font POLICE_NORMALE = new Font("Segoe UI", Font.PLAIN, 13);
-    public static final Font POLICE_BOUTON = new Font("Segoe UI", Font.BOLD, 13);
+    public static final Font POLICE_BOUTON = new Font("Segoe UI", Font.BOLD, 12);
     public static final Font POLICE_PETIT = new Font("Segoe UI", Font.PLAIN, 11);
     public static final Font POLICE_LABEL = new Font("Segoe UI", Font.BOLD, 12);
 
     private ThemeUtil() {}
 
-    // === BOUTONS ===
+    // === BOUTONS PRINCIPAUX ===
     public static void appliquerThemeBoutonPrincipal(JButton bouton) {
         bouton.setBackground(DORE_LUXE);
         bouton.setForeground(BLANC);
@@ -35,8 +35,11 @@ public class ThemeUtil {
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
         bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Remover le content area filled par défaut
+        bouton.setContentAreaFilled(true);
     }
 
     public static void appliquerThemeBoutonSecondaire(JButton bouton) {
@@ -46,8 +49,9 @@ public class ThemeUtil {
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
         bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        bouton.setContentAreaFilled(true);
     }
 
     public static void appliquerThemeBoutonValider(JButton bouton) {
@@ -57,8 +61,9 @@ public class ThemeUtil {
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
         bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        bouton.setContentAreaFilled(true);
     }
 
     public static void appliquerThemeBoutonSuppression(JButton bouton) {
@@ -68,8 +73,9 @@ public class ThemeUtil {
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
         bouton.setBorderPainted(false);
-        bouton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        bouton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        bouton.setContentAreaFilled(true);
     }
 
     // === CHAMPS DE TEXTE ===
@@ -83,20 +89,6 @@ public class ThemeUtil {
         ));
     }
 
-    // === PANEL HEADER ===
-    public static JPanel creerHeaderPanel(String titre) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel(titre);
-        lblTitre.setFont(POLICE_TITRE);
-        lblTitre.setForeground(DORE_LUXE);
-
-        panel.add(lblTitre, BorderLayout.WEST);
-        return panel;
-    }
-
     // === JTABLE PERSONNALISÉE ===
     public static void appliquerThemeTable(JTable table) {
         table.setFont(POLICE_NORMALE);
@@ -104,6 +96,8 @@ public class ThemeUtil {
         table.setGridColor(new Color(220, 220, 220));
         table.setSelectionBackground(DORE_LUXE);
         table.setSelectionForeground(BLANC);
+        table.setForeground(TEXTE_SOMBRE);
+        table.setBackground(BLANC);
         table.getTableHeader().setFont(POLICE_LABEL);
         table.getTableHeader().setBackground(BLEU_NUIT);
         table.getTableHeader().setForeground(BLANC);

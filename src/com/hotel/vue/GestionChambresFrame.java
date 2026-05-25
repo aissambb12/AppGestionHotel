@@ -1,6 +1,7 @@
 package com.hotel.vue;
 
 import com.hotel.model.Chambre;
+import com.hotel.model.Utilisateur;
 import com.hotel.service.ChambreService;
 
 import javax.swing.*;
@@ -13,9 +14,11 @@ public class GestionChambresFrame extends JFrame {
     private ChambreService chambreService;
     private DefaultTableModel modeleChambres;
     private JTable tableChambres;
+    private Utilisateur adminConnecte;
 
-    public GestionChambresFrame() {
+    public GestionChambresFrame(Utilisateur admin) {
         this.chambreService = new ChambreService();
+        this.adminConnecte = admin;
 
         setTitle("Hotel Manager - Gestion Chambres");
         setSize(900, 600);
@@ -35,7 +38,7 @@ public class GestionChambresFrame extends JFrame {
 
         // === PANEL BOUTONS ===
         JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(panelBoutons, BorderLayout.CENTER);
 
         // === TABLE ===
         String[] colonnes = {"ID", "Numéro", "Catégorie", "Prix/Nuit", "Statut"};
@@ -49,7 +52,7 @@ public class GestionChambresFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tableChambres);
 
         JScrollPane scrollPane = new JScrollPane(tableChambres);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.SOUTH);
     }
 
     private JPanel creerHeader() {
@@ -128,34 +131,34 @@ public class GestionChambresFrame extends JFrame {
     private void changerStatutMaintenance() {
         int ligne = tableChambres.getSelectedRow();
         if (ligne == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une chambre");
+            JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner une chambre", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int idChambre = (Integer) modeleChambres.getValueAt(ligne, 0);
         try {
             chambreService.modifierStatutChambre(idChambre, "MAINTENANCE");
-            JOptionPane.showMessageDialog(this, "Chambre en maintenance");
+            JOptionPane.showMessageDialog(this, "✓ Chambre en maintenance", "Succès", JOptionPane.INFORMATION_MESSAGE);
             chargerDonnees();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void changerStatutDisponible() {
         int ligne = tableChambres.getSelectedRow();
         if (ligne == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une chambre");
+            JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner une chambre", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int idChambre = (Integer) modeleChambres.getValueAt(ligne, 0);
         try {
             chambreService.modifierStatutChambre(idChambre, "DISPONIBLE");
-            JOptionPane.showMessageDialog(this, "Chambre disponible");
+            JOptionPane.showMessageDialog(this, "✓ Chambre disponible", "Succès", JOptionPane.INFORMATION_MESSAGE);
             chargerDonnees();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
