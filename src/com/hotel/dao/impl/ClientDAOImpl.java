@@ -12,11 +12,12 @@ import java.util.List;
 
 public class ClientDAOImpl implements ClientDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean ajouter(Client client) {
         String sql = "INSERT INTO clients (nom, prenom, cin, email, telephone) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, client.getNom());
             ps.setString(2, client.getPrenom());
@@ -34,8 +35,7 @@ public class ClientDAOImpl implements ClientDAO {
     @Override
     public boolean modifier(Client client) {
         String sql = "UPDATE clients SET nom=?, prenom=?, cin=?, email=?, telephone=? WHERE id_client=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, client.getNom());
             ps.setString(2, client.getPrenom());
@@ -54,8 +54,7 @@ public class ClientDAOImpl implements ClientDAO {
     @Override
     public boolean supprimer(int idClient) {
         String sql = "DELETE FROM clients WHERE id_client=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idClient);
             return ps.executeUpdate() > 0;
@@ -68,8 +67,7 @@ public class ClientDAOImpl implements ClientDAO {
     @Override
     public Client trouverParId(int idClient) {
         String sql = "SELECT * FROM clients WHERE id_client = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idClient);
             try (ResultSet rs = ps.executeQuery()) {
@@ -86,8 +84,7 @@ public class ClientDAOImpl implements ClientDAO {
     @Override
     public Client trouverParCin(String cin) {
         String sql = "SELECT * FROM clients WHERE cin = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cin);
             try (ResultSet rs = ps.executeQuery()) {
@@ -105,8 +102,7 @@ public class ClientDAOImpl implements ClientDAO {
     public List<Client> listerTous() {
         List<Client> liste = new ArrayList<>();
         String sql = "SELECT * FROM clients ORDER BY nom, prenom";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -123,8 +119,7 @@ public class ClientDAOImpl implements ClientDAO {
         List<Client> liste = new ArrayList<>();
         // Recherche dans le nom, prénom ou CIN
         String sql = "SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? OR cin LIKE ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             String recherche = "%" + motCle + "%"; // Le '%' permet de chercher n'importe où dans la chaîne
             ps.setString(1, recherche);

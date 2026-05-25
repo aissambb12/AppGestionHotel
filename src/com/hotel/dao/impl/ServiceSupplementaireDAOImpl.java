@@ -10,10 +10,12 @@ import java.util.List;
 
 public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean ajouter(ServiceSupplementaire s) {
         String sql = "INSERT INTO services_supplementaires (nom_service, type_service, prix_service) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getNomService());
             ps.setString(2, s.getTypeService().name());
             ps.setDouble(3, s.getPrixService());
@@ -24,7 +26,7 @@ public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
     @Override
     public boolean modifier(ServiceSupplementaire s) {
         String sql = "UPDATE services_supplementaires SET nom_service=?, type_service=?, prix_service=? WHERE id_service=?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getNomService());
             ps.setString(2, s.getTypeService().name());
             ps.setDouble(3, s.getPrixService());
@@ -36,7 +38,7 @@ public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
     @Override
     public boolean supprimer(int idService) {
         String sql = "DELETE FROM services_supplementaires WHERE id_service=?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idService); return ps.executeUpdate() > 0;
         } catch (SQLException e) { return false; }
     }
@@ -44,7 +46,7 @@ public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
     @Override
     public ServiceSupplementaire trouverParId(int idService) {
         String sql = "SELECT * FROM services_supplementaires WHERE id_service = ?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idService);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return mapperService(rs);
@@ -55,7 +57,7 @@ public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
     @Override
     public List<ServiceSupplementaire> listerTous() {
         List<ServiceSupplementaire> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT * FROM services_supplementaires"); ResultSet rs = ps.executeQuery()) {
+        try ( PreparedStatement ps = conn.prepareStatement("SELECT * FROM services_supplementaires"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) liste.add(mapperService(rs));
         } catch (SQLException e) { e.printStackTrace(); }
         return liste;
@@ -64,7 +66,7 @@ public class ServiceSupplementaireDAOImpl implements ServiceSupplementaireDAO {
     @Override
     public List<ServiceSupplementaire> listerParType(String type) {
         List<ServiceSupplementaire> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT * FROM services_supplementaires WHERE type_service=?")) {
+        try ( PreparedStatement ps = conn.prepareStatement("SELECT * FROM services_supplementaires WHERE type_service=?")) {
             ps.setString(1, type); ResultSet rs = ps.executeQuery();
             while (rs.next()) liste.add(mapperService(rs));
         } catch (SQLException e) { e.printStackTrace(); }

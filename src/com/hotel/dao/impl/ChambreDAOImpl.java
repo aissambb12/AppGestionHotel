@@ -11,11 +11,13 @@ import java.util.List;
 
 public class ChambreDAOImpl implements ChambreDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
+
     @Override
     public boolean ajouter(Chambre chambre) {
         String sql = "INSERT INTO chambres (numero, categorie, prix_unitaire, statut) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, chambre.getNumero());
             ps.setString(2, chambre.getCategorie());
@@ -31,8 +33,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     @Override
     public boolean modifier(Chambre chambre) {
         String sql = "UPDATE chambres SET numero=?, categorie=?, prix_unitaire=?, statut=? WHERE id_chambre=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, chambre.getNumero());
             ps.setString(2, chambre.getCategorie());
@@ -49,8 +50,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     @Override
     public boolean modifierStatut(int idChambre, String statut) {
         String sql = "UPDATE chambres SET statut=? WHERE id_chambre=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, statut);
             ps.setInt(2, idChambre);
@@ -64,8 +64,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     @Override
     public Chambre trouverParId(int idChambre) {
         String sql = "SELECT * FROM chambres WHERE id_chambre = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idChambre);
             try (ResultSet rs = ps.executeQuery()) {
@@ -80,8 +79,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     @Override
     public Chambre trouverParNumero(String numero) {
         String sql = "SELECT * FROM chambres WHERE numero = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, numero);
             try (ResultSet rs = ps.executeQuery()) {
@@ -97,8 +95,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     public List<Chambre> listerToutes() {
         List<Chambre> liste = new ArrayList<>();
         String sql = "SELECT * FROM chambres ORDER BY numero";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) liste.add(mapperChambre(rs));
@@ -112,8 +109,7 @@ public class ChambreDAOImpl implements ChambreDAO {
     public List<Chambre> listerParStatut(String statut) {
         List<Chambre> liste = new ArrayList<>();
         String sql = "SELECT * FROM chambres WHERE statut = ? ORDER BY numero";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, statut);
             try (ResultSet rs = ps.executeQuery()) {
@@ -139,8 +135,7 @@ public class ChambreDAOImpl implements ChambreDAO {
                 "  AND rc.date_depart > ?" +
                 ") ORDER BY c.numero";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, categorie);
             ps.setDate(2, java.sql.Date.valueOf(depart));

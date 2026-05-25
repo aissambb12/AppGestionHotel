@@ -11,11 +11,12 @@ import java.util.List;
 
 public class FactureDAOImpl implements FactureDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean creerFacture(Facture f) {
         String sql = "INSERT INTO factures (id_reservation, montant_total, statut_facture) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, f.getIdReservation());
             ps.setDouble(2, f.getMontantTotal());
@@ -30,8 +31,7 @@ public class FactureDAOImpl implements FactureDAO {
     @Override
     public boolean modifierStatut(int idFacture, String statut) {
         String sql = "UPDATE factures SET statut_facture=? WHERE id_facture=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, statut);
             ps.setInt(2, idFacture);
@@ -45,8 +45,7 @@ public class FactureDAOImpl implements FactureDAO {
     @Override
     public Facture trouverParId(int idFacture) {
         String sql = "SELECT * FROM factures WHERE id_facture = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idFacture);
             try (ResultSet rs = ps.executeQuery()) {
@@ -62,8 +61,7 @@ public class FactureDAOImpl implements FactureDAO {
     public double calculerChiffreAffaires(LocalDate dateDebut, LocalDate dateFin) {
         String sql = "SELECT SUM(montant_total) as total FROM factures WHERE statut_facture = 'PAYEE' AND DATE(date_facture) BETWEEN ? AND ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setDate(1, java.sql.Date.valueOf(dateDebut));
             ps.setDate(2, java.sql.Date.valueOf(dateFin));
@@ -83,8 +81,7 @@ public class FactureDAOImpl implements FactureDAO {
     @Override
     public Facture trouverParReservation(int idReservation) {
         String sql = "SELECT * FROM factures WHERE id_reservation = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReservation);
             try (ResultSet rs = ps.executeQuery()) {
@@ -100,8 +97,7 @@ public class FactureDAOImpl implements FactureDAO {
     public List<Facture> listerToutes() {
         List<Facture> liste = new ArrayList<>();
         String sql = "SELECT * FROM factures ORDER BY date_facture DESC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) liste.add(mapperFacture(rs));
@@ -117,8 +113,7 @@ public class FactureDAOImpl implements FactureDAO {
                 "FROM reservation_chambres rc " +
                 "WHERE rc.id_reservation = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReservation);
 

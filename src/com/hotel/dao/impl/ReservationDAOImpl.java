@@ -10,12 +10,13 @@ import java.util.List;
 
 public class ReservationDAOImpl implements ReservationDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public int ajouter(Reservation r) {
         // Clé générée par MySQL est retournée
         String sql = "INSERT INTO reservations (id_client, id_utilisateur, statut_reservation) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, r.getIdClient());
             ps.setInt(2, r.getIdUtilisateur());
             ps.setString(3, r.getStatut().name());
@@ -35,8 +36,7 @@ public class ReservationDAOImpl implements ReservationDAO {
     @Override
     public boolean modifierStatut(int idReservation, String statut) {
         String sql = "UPDATE reservations SET statut_reservation = ? WHERE id_reservation = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, statut);
             ps.setInt(2, idReservation);
             return ps.executeUpdate() > 0;
@@ -46,8 +46,7 @@ public class ReservationDAOImpl implements ReservationDAO {
     @Override
     public Reservation trouverParId(int idReservation) {
         String sql = "SELECT * FROM reservations WHERE id_reservation = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idReservation);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return mapperReservation(rs);
@@ -68,8 +67,7 @@ public class ReservationDAOImpl implements ReservationDAO {
     public List<Reservation> listerParStatut(String statut) {
         List<Reservation> liste = new ArrayList<>();
         String sql = "SELECT * FROM reservations WHERE statut_reservation = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, statut);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) liste.add(mapperReservation(rs));
@@ -79,8 +77,7 @@ public class ReservationDAOImpl implements ReservationDAO {
 
     private List<Reservation> executerSelect(String sql) {
         List<Reservation> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) liste.add(mapperReservation(rs));
         } catch (SQLException e) { e.printStackTrace(); }
@@ -89,8 +86,7 @@ public class ReservationDAOImpl implements ReservationDAO {
 
     private List<Reservation> executerSelectParam(String sql, int param) {
         List<Reservation> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, param);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) liste.add(mapperReservation(rs));

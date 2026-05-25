@@ -1,5 +1,6 @@
 package com.hotel.dao;
 
+import com.hotel.dao.UtilisateurDAO;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.Role;
 import com.hotel.model.enumeration.StatutUtilisateur;
@@ -14,10 +15,12 @@ import java.util.List;
 
 public class UtilisateurDAOImpl implements UtilisateurDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean ajouter(Utilisateur utilisateur) {
         String sql = "INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role, statut) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, utilisateur.getNom());
@@ -37,7 +40,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public boolean modifier(Utilisateur utilisateur) {
         String sql = "UPDATE utilisateurs SET nom=?, prenom=?, email=?, role=? WHERE id_utilisateur=?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, utilisateur.getNom());
@@ -56,7 +59,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public boolean modifierStatut(int idUtilisateur, String statut) {
         String sql = "UPDATE utilisateurs SET statut=? WHERE id_utilisateur=?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, statut);
@@ -72,7 +75,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public Utilisateur trouverParId(int idUtilisateur) {
         String sql = "SELECT * FROM utilisateurs WHERE id_utilisateur = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idUtilisateur);
@@ -90,7 +93,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public Utilisateur trouverParEmail(String email) {
         String sql = "SELECT * FROM utilisateurs WHERE email = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, email);
@@ -108,7 +111,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public Utilisateur authentifier(String email, String motDePasse) {
         String sql = "SELECT * FROM utilisateurs WHERE email = ? AND mot_de_passe = ? AND statut = 'ACTIF'";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, email);
@@ -128,7 +131,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     public List<Utilisateur> listerTous() {
         List<Utilisateur> liste = new ArrayList<>();
         String sql = "SELECT * FROM utilisateurs";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 

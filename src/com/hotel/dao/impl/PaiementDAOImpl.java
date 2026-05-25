@@ -10,11 +10,12 @@ import java.util.List;
 
 public class PaiementDAOImpl implements PaiementDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean enregistrerPaiement(Paiement p) {
         String sql = "INSERT INTO paiements (id_facture, montant_paye, mode_paiement) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, p.getIdFacture());
             ps.setDouble(2, p.getMontantPaye());
@@ -27,8 +28,7 @@ public class PaiementDAOImpl implements PaiementDAO {
     public List<Paiement> listerParFacture(int idFacture) {
         List<Paiement> liste = new ArrayList<>();
         String sql = "SELECT * FROM paiements WHERE id_facture = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idFacture); ResultSet rs = ps.executeQuery();
             while (rs.next()) liste.add(new Paiement(
@@ -45,8 +45,7 @@ public class PaiementDAOImpl implements PaiementDAO {
     @Override
     public double obtenirTotalPayePourFacture(int idFacture) {
         String sql = "SELECT SUM(montant_paye) FROM paiements WHERE id_facture = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idFacture);
             ResultSet rs = ps.executeQuery();

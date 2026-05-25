@@ -9,6 +9,7 @@ import com.hotel.util.ValidationUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,17 +22,25 @@ public class CreerReservationFrame extends JFrame {
     private ChambreService chambreService;
     private ReservationService reservationService;
     private FacturationService facturationService;
-    private ServiceSupplementaire[] servicesDisponibles;
 
-    // UI Components
+    // Services disponibles
+    private List<ServiceSupplementaire> servicesDisponibles;
+
+    // UI Components - CLIENT
     private JTextField txtNom, txtPrenom, txtEmail, txtTel, txtCin;
+
+    // UI Components - RÉSERVATION
     private JTextField txtDateArrivee, txtDateDepart;
     private JComboBox<String> comboCategorie;
-    private JLabel lblChambresDisponibles;
-    private JPanel panelChambres;
-    private JPanel panelExtras;
-    private Map<Integer, Integer> selectedExtras = new HashMap<>();
+
+    // UI Components - CHAMBRES SÉLECTIONNÉES
+    private JPanel panelChambresSelectionnees;
     private List<Chambre> chambresSelectionnees = new ArrayList<>();
+
+    // UI Components - EXTRAS
+    private JPanel panelExtras;
+    private Map<Integer, JLabel> labelsQteExtras = new HashMap<>();
+    private Map<Integer, Integer> selectedExtras = new HashMap<>();
 
     public CreerReservationFrame(Utilisateur receptionniste) {
         this.receptionnisteConnecte = receptionniste;
@@ -39,10 +48,12 @@ public class CreerReservationFrame extends JFrame {
         this.chambreService = new ChambreService();
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
-        this.servicesDisponibles = chargerServices();
+
+        // Charger les services disponibles
+        chargerServices();
 
         setTitle("Hotel Manager - Créer Réservation Complète");
-        setSize(1200, 900);
+        setSize(1300, 900);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -56,18 +67,22 @@ public class CreerReservationFrame extends JFrame {
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === CONTENU PRINCIPAL ===
-        JPanel panelContenu = new JPanel(new GridLayout(1, 2, 10, 10));
+        // === CONTENU PRINCIPAL - 3 COLONNES ===
+        JPanel panelContenu = new JPanel(new GridLayout(1, 3, 15, 15));
         panelContenu.setBackground(ThemeUtil.GRIS_FOND);
-        panelContenu.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panelContenu.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Panel gauche - Saisie client et réservation
-        JPanel panelGauche = creerPanelGauche();
-        panelContenu.add(new JScrollPane(panelGauche));
+        // Colonne 1 : Client et Réservation
+        JPanel col1 = creerColonneClient();
+        panelContenu.add(new JScrollPane(col1));
 
-        // Panel droite - Sélection chambres et extras
-        JPanel panelDroite = creerPanelDroite();
-        panelContenu.add(new JScrollPane(panelDroite));
+        // Colonne 2 : Chambres
+        JPanel col2 = creerColonneChambres();
+        panelContenu.add(new JScrollPane(col2));
+
+        // Colonne 3 : Extras
+        JPanel col3 = creerColonneExtras();
+        panelContenu.add(new JScrollPane(col3));
 
         add(panelContenu, BorderLayout.CENTER);
 
@@ -101,22 +116,25 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    private JPanel creerPanelGauche() {
+    // ===== COLONNE 1 : CLIENT ET RÉSERVATION =====
+    private JPanel creerColonneClient() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
         // === SECTION CLIENT ===
         JLabel lblSecClient = new JLabel("INFORMATIONS CLIENT");
         lblSecClient.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        lblSecClient.setForeground(ThemeUtil.BLEU_NUIT);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         panel.add(lblSecClient, gbc);
 
+        // Champs client
         txtNom = new JTextField();
         txtPrenom = new JTextField();
         txtEmail = new JTextField();
@@ -131,130 +149,203 @@ public class CreerReservationFrame extends JFrame {
 
         gbc.gridwidth = 1;
         gbc.gridy = 1;
-        ajouterChamp(panel, gbc, "Nom :", txtNom);
+        gbc.gridx = 0;
+        panel.add(new JLabel("Nom :"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtNom, gbc);
 
         gbc.gridy = 2;
-        ajouterChamp(panel, gbc, "Prénom :", txtPrenom);
+        gbc.gridx = 0;
+        panel.add(new JLabel("Prénom :"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtPrenom, gbc);
 
         gbc.gridy = 3;
-        ajouterChamp(panel, gbc, "Email :", txtEmail);
+        gbc.gridx = 0;
+        panel.add(new JLabel("Email :"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtEmail, gbc);
 
         gbc.gridy = 4;
-        ajouterChamp(panel, gbc, "Tél :", txtTel);
+        gbc.gridx = 0;
+        panel.add(new JLabel("Tél :"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtTel, gbc);
 
         gbc.gridy = 5;
-        ajouterChamp(panel, gbc, "CIN :", txtCin);
+        gbc.gridx = 0;
+        panel.add(new JLabel("CIN :"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtCin, gbc);
 
         // === SECTION RÉSERVATION ===
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        JSeparator sep1 = new JSeparator();
+        panel.add(sep1, gbc);
+
+        gbc.gridy = 7;
         JLabel lblSecResa = new JLabel("INFORMATIONS RÉSERVATION");
         lblSecResa.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        gbc.gridy = 6; gbc.gridwidth = 2;
+        lblSecResa.setForeground(ThemeUtil.BLEU_NUIT);
         panel.add(lblSecResa, gbc);
 
-        txtDateArrivee = new JTextField("2026-06-01");
-        txtDateDepart = new JTextField("2026-06-05");
-        comboCategorie = new JComboBox<>(new String[]{"SIMPLE", "DOUBLE", "SUITE"});
-
-        ThemeUtil.appliquerThemeTextField(txtDateArrivee);
-        ThemeUtil.appliquerThemeTextField(txtDateDepart);
-
+        // Dates
+        gbc.gridy = 8;
         gbc.gridwidth = 1;
-        gbc.gridy = 7;
-        ajouterChamp(panel, gbc, "Arrivée :", txtDateArrivee);
+        gbc.gridx = 0;
+        panel.add(new JLabel("Arrivée :"), gbc);
 
+        JPanel panelArrivee = new JPanel(new BorderLayout(5, 0));
+        panelArrivee.setBackground(Color.WHITE);
+        txtDateArrivee = new JTextField(LocalDate.now().toString());
+        ThemeUtil.appliquerThemeTextField(txtDateArrivee);
         JButton btnCalArrivee = new JButton("📅");
-        btnCalArrivee.setFont(new Font("Arial", Font.PLAIN, 14));
-        btnCalArrivee.setPreferredSize(new Dimension(40, 40));
-        btnCalArrivee.addActionListener(e -> afficherCalendrier(txtDateArrivee, LocalDate.parse(txtDateArrivee.getText())));
-        gbc.gridx = 1; gbc.gridy = 7;
-        panel.add(btnCalArrivee, gbc);
+        btnCalArrivee.setPreferredSize(new Dimension(35, 35));
+        btnCalArrivee.addActionListener(e -> afficherCalendrier(txtDateArrivee));
+        panelArrivee.add(txtDateArrivee, BorderLayout.CENTER);
+        panelArrivee.add(btnCalArrivee, BorderLayout.EAST);
+        gbc.gridx = 1;
+        panel.add(panelArrivee, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 8;
-        ajouterChamp(panel, gbc, "Départ :", txtDateDepart);
+        gbc.gridy = 9;
+        gbc.gridx = 0;
+        panel.add(new JLabel("Départ :"), gbc);
 
+        JPanel panelDepart = new JPanel(new BorderLayout(5, 0));
+        panelDepart.setBackground(Color.WHITE);
+        txtDateDepart = new JTextField(LocalDate.now().plusDays(1).toString());
+        ThemeUtil.appliquerThemeTextField(txtDateDepart);
         JButton btnCalDepart = new JButton("📅");
-        btnCalDepart.setFont(new Font("Arial", Font.PLAIN, 14));
-        btnCalDepart.setPreferredSize(new Dimension(40, 40));
-        btnCalDepart.addActionListener(e -> afficherCalendrier(txtDateDepart, LocalDate.parse(txtDateDepart.getText())));
-        gbc.gridx = 1; gbc.gridy = 8;
-        panel.add(btnCalDepart, gbc);
+        btnCalDepart.setPreferredSize(new Dimension(35, 35));
+        btnCalDepart.addActionListener(e -> afficherCalendrier(txtDateDepart));
+        panelDepart.add(txtDateDepart, BorderLayout.CENTER);
+        panelDepart.add(btnCalDepart, BorderLayout.EAST);
+        gbc.gridx = 1;
+        panel.add(panelDepart, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 9;
-        ajouterChamp(panel, gbc, "Catégorie :", comboCategorie);
+        // Catégorie
+        gbc.gridy = 10;
+        gbc.gridx = 0;
+        panel.add(new JLabel("Catégorie :"), gbc);
 
-        // Bouton chercher chambres
+        comboCategorie = new JComboBox<>(new String[]{"SIMPLE", "DOUBLE", "SUITE"});
+        gbc.gridx = 1;
+        panel.add(comboCategorie, gbc);
+
+        // Bouton chercher
         JButton btnChercher = new JButton("🔍 Chercher Chambres");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnChercher);
         btnChercher.addActionListener(e -> rechercherChambres());
-        gbc.gridy = 10; gbc.gridwidth = 2;
+        gbc.gridy = 11;
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
         panel.add(btnChercher, gbc);
 
         return panel;
     }
 
-    private JPanel creerPanelDroite() {
+    // ===== COLONNE 2 : CHAMBRES =====
+    private JPanel creerColonneChambres() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // === CHAMBRES ===
-        JLabel lblChambres = new JLabel("CHAMBRES DISPONIBLES");
-        lblChambres.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        panel.add(lblChambres, gbc);
+        JLabel lblTitre = new JLabel("CHAMBRES DISPONIBLES");
+        lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        lblTitre.setForeground(ThemeUtil.BLEU_NUIT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(lblTitre, gbc);
 
-        lblChambresDisponibles = new JLabel("Cliquez sur 'Chercher Chambres'");
-        lblChambresDisponibles.setFont(ThemeUtil.POLICE_PETIT);
+        JLabel lblInfo = new JLabel("Cliquez 'Chercher Chambres'");
+        lblInfo.setFont(ThemeUtil.POLICE_PETIT);
         gbc.gridy = 1;
-        panel.add(lblChambresDisponibles, gbc);
+        panel.add(lblInfo, gbc);
 
-        panelChambres = new JPanel(new GridLayout(0, 1, 5, 5));
-        panelChambres.setBackground(Color.WHITE);
-        gbc.gridy = 2; gbc.weighty = 0.5;
-        panel.add(panelChambres, gbc);
+        // Panel pour les chambres
+        panelChambresSelectionnees = new JPanel(new GridLayout(0, 1, 5, 5));
+        panelChambresSelectionnees.setBackground(Color.WHITE);
+        gbc.gridy = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(new JScrollPane(panelChambresSelectionnees), gbc);
 
-        // === EXTRAS ===
-        JLabel lblExtras = new JLabel("SERVICES SUPPLÉMENTAIRES");
-        lblExtras.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        gbc.gridy = 3; gbc.weighty = 0.0;
-        panel.add(lblExtras, gbc);
+        return panel;
+    }
 
+    // ===== COLONNE 3 : EXTRAS =====
+    private JPanel creerColonneExtras() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        JLabel lblTitre = new JLabel("SERVICES SUPPLÉMENTAIRES");
+        lblTitre.setFont(ThemeUtil.POLICE_TITRE_PETIT);
+        lblTitre.setForeground(ThemeUtil.BLEU_NUIT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(lblTitre, gbc);
+
+        // Panel pour les extras
         panelExtras = new JPanel(new GridLayout(0, 1, 5, 5));
         panelExtras.setBackground(Color.WHITE);
         creerPanelExtras();
-        gbc.gridy = 4; gbc.weighty = 0.5;
-        panel.add(panelExtras, gbc);
+        gbc.gridy = 1;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(new JScrollPane(panelExtras), gbc);
 
         return panel;
     }
 
     private void creerPanelExtras() {
         panelExtras.removeAll();
+        labelsQteExtras.clear();
 
-        for (ServiceSupplementaire service : servicesDisponibles) {
-            if (service != null) {
-                JPanel panelExtra = new JPanel(new BorderLayout());
+        if (servicesDisponibles != null && !servicesDisponibles.isEmpty()) {
+            for (ServiceSupplementaire service : servicesDisponibles) {
+                JPanel panelExtra = new JPanel(new BorderLayout(5, 5));
                 panelExtra.setBackground(ThemeUtil.GRIS_FOND);
                 panelExtra.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+                panelExtra.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                        BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                ));
 
-                JLabel lblNom = new JLabel(service.getNomService() + " (" + service.getPrixService() + " MAD)");
+                // Nom du service
+                JLabel lblNom = new JLabel(service.getNomService() + " - " + String.format("%.2f", service.getPrixService()) + " MAD");
                 lblNom.setFont(ThemeUtil.POLICE_NORMALE);
 
-                JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                // Contrôles quantité
+                JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
                 panelQte.setBackground(ThemeUtil.GRIS_FOND);
 
-                JButton btnMoins = new JButton("-");
-                JLabel lblQte = new JLabel("0");
-                JButton btnPlus = new JButton("+");
-
+                JButton btnMoins = new JButton("−");
                 btnMoins.setPreferredSize(new Dimension(30, 30));
-                btnPlus.setPreferredSize(new Dimension(30, 30));
+                btnMoins.setFont(new Font("Arial", Font.BOLD, 16));
+
+                JLabel lblQte = new JLabel("0");
                 lblQte.setFont(ThemeUtil.POLICE_BOUTON);
+                lblQte.setPreferredSize(new Dimension(30, 30));
+                lblQte.setHorizontalAlignment(JLabel.CENTER);
+                labelsQteExtras.put(service.getIdService(), lblQte);
+
+                JButton btnPlus = new JButton("+");
+                btnPlus.setPreferredSize(new Dimension(30, 30));
+                btnPlus.setFont(new Font("Arial", Font.BOLD, 16));
 
                 btnPlus.addActionListener(e -> {
                     int qte = Integer.parseInt(lblQte.getText()) + 1;
@@ -265,7 +356,11 @@ public class CreerReservationFrame extends JFrame {
                 btnMoins.addActionListener(e -> {
                     int qte = Math.max(0, Integer.parseInt(lblQte.getText()) - 1);
                     lblQte.setText(String.valueOf(qte));
-                    selectedExtras.put(service.getIdService(), qte);
+                    if (qte == 0) {
+                        selectedExtras.remove(service.getIdService());
+                    } else {
+                        selectedExtras.put(service.getIdService(), qte);
+                    }
                 });
 
                 panelQte.add(btnMoins);
@@ -277,6 +372,10 @@ public class CreerReservationFrame extends JFrame {
 
                 panelExtras.add(panelExtra);
             }
+        } else {
+            JLabel lblAucun = new JLabel("Aucun service disponible");
+            lblAucun.setFont(ThemeUtil.POLICE_PETIT);
+            panelExtras.add(lblAucun);
         }
 
         panelExtras.revalidate();
@@ -290,10 +389,12 @@ public class CreerReservationFrame extends JFrame {
 
         JButton btnValider = new JButton("✓ CONFIRMER RÉSERVATION");
         ThemeUtil.appliquerThemeBoutonValider(btnValider);
+        btnValider.setPreferredSize(new Dimension(200, 40));
         btnValider.addActionListener(e -> confirmerReservation());
 
         JButton btnAnnuler = new JButton("✕ Annuler");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        btnAnnuler.setPreferredSize(new Dimension(150, 40));
         btnAnnuler.addActionListener(e -> dispose());
 
         panel.add(btnValider);
@@ -302,91 +403,128 @@ public class CreerReservationFrame extends JFrame {
         return panel;
     }
 
-    private void ajouterChamp(JPanel panel, GridBagConstraints gbc, String label, JComponent field) {
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        panel.add(lbl, gbc);
-
-        gbc.gridx = 1;
-        panel.add(field, gbc);
-    }
-
+    // ===== MÉTHODES DE RECHERCHE =====
     private void rechercherChambres() {
         try {
+            // Validation des dates
             LocalDate arrivee = LocalDate.parse(txtDateArrivee.getText());
             LocalDate depart = LocalDate.parse(txtDateDepart.getText());
-            String categorie = comboCategorie.getSelectedItem().toString();
 
             if (!ValidationUtil.sontDatesReservationValides(arrivee, depart)) {
                 JOptionPane.showMessageDialog(this, "❌ La date de départ doit être après l'arrivée", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
+            String categorie = comboCategorie.getSelectedItem().toString();
+
+            // Récupérer les chambres disponibles
             List<Chambre> chambres = chambreService.rechercherChambresDisponibles(arrivee, depart, categorie);
 
-            panelChambres.removeAll();
+            // Afficher les chambres
+            panelChambresSelectionnees.removeAll();
+            chambresSelectionnees.clear();
 
             if (chambres.isEmpty()) {
-                JLabel lblPas = new JLabel("❌ Aucune chambre disponible pour cette catégorie");
+                JLabel lblPas = new JLabel("❌ Aucune chambre disponible");
                 lblPas.setFont(ThemeUtil.POLICE_PETIT);
-                panelChambres.add(lblPas);
+                panelChambresSelectionnees.add(lblPas);
             } else {
                 for (Chambre chambre : chambres) {
-                    JCheckBox chkChambre = new JCheckBox("Chambre " + chambre.getNumero() + " - " + chambre.getCategorie() + " (" + String.format("%.2f", chambre.getPrixUnitaire()) + " MAD/nuit)");
+                    JCheckBox chkChambre = new JCheckBox(
+                            "Chambre " + chambre.getNumero() +
+                                    " - " + chambre.getCategorie() +
+                                    " (" + String.format("%.2f", chambre.getPrixUnitaire()) + " MAD/nuit)"
+                    );
                     chkChambre.setFont(ThemeUtil.POLICE_NORMALE);
+                    chkChambre.setBackground(Color.WHITE);
+
+                    Chambre chambreFinal = chambre;
                     chkChambre.addActionListener(e -> {
                         if (chkChambre.isSelected()) {
-                            chambresSelectionnees.add(chambre);
+                            if (!chambresSelectionnees.contains(chambreFinal)) {
+                                chambresSelectionnees.add(chambreFinal);
+                            }
                         } else {
-                            chambresSelectionnees.remove(chambre);
+                            chambresSelectionnees.remove(chambreFinal);
                         }
                     });
-                    panelChambres.add(chkChambre);
+
+                    panelChambresSelectionnees.add(chkChambre);
                 }
             }
 
-            lblChambresDisponibles.setText("✓ " + chambres.size() + " chambre(s) disponible(s)");
-            panelChambres.revalidate();
-            panelChambres.repaint();
+            panelChambresSelectionnees.revalidate();
+            panelChambresSelectionnees.repaint();
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    private void afficherCalendrier(JTextField field) {
+        try {
+            LocalDate dateActuelle = LocalDate.parse(field.getText());
+            JDialog dialog = new JDialog(this, "Sélectionner une date", true);
+            dialog.setSize(350, 400);
+            dialog.setLocationRelativeTo(this);
+
+            JPanel panelCal = DatePickerUtil.creerCalendrier(dateActuelle, selectedDate -> {
+                field.setText(selectedDate.toString());
+                dialog.dispose();
+            });
+
+            dialog.add(panelCal);
+            dialog.setVisible(true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "❌ Date invalide", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // ===== CONFIRMATION RÉSERVATION =====
     private void confirmerReservation() {
         try {
-            // 1. Validation client
-            if (!validerClient()) return;
+            // 1. Valider le client
+            if (!validerClient()) {
+                return;
+            }
 
-            // 2. Créer ou récupérer client
+            // 2. Récupérer ou créer le client
             Client client = obtenirOuCreerClient();
-            if (client == null) return;
+            if (client == null) {
+                JOptionPane.showMessageDialog(this, "❌ Erreur lors de la création du client", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            // 3. Validation chambres
+            // 3. Valider les chambres sélectionnées
             if (chambresSelectionnees.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner au moins une chambre", "Validation", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // 4. Créer la réservation
+            // 4. Récupérer les dates
             LocalDate arrivee = LocalDate.parse(txtDateArrivee.getText());
             LocalDate depart = LocalDate.parse(txtDateDepart.getText());
 
+            // 5. Créer la réservation
             Reservation resa = new Reservation();
             resa.setIdClient(client.getIdClient());
             resa.setIdUtilisateur(receptionnisteConnecte.getIdUtilisateur());
+            resa.setDateCreation(LocalDateTime.now());
             resa.setStatut(StatutReservation.CONFIRMEE);
 
-            boolean succes = reservationService.creerNouvelleReservation(resa, new ArrayList<>(chambresSelectionnees), arrivee, depart);
+            boolean succes = reservationService.creerNouvelleReservation(
+                    resa,
+                    new ArrayList<>(chambresSelectionnees),
+                    arrivee,
+                    depart
+            );
 
             if (!succes) {
                 JOptionPane.showMessageDialog(this, "❌ Erreur lors de la création de la réservation", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // 5. Ajouter les extras
+            // 6. Ajouter les extras
             Facture facture = facturationService.obtenirFactureReservation(resa.getIdReservation());
 
             for (Map.Entry<Integer, Integer> extra : selectedExtras.entrySet()) {
@@ -400,30 +538,41 @@ public class CreerReservationFrame extends JFrame {
                 }
             }
 
-            // 6. Afficher la facture
+            // 7. Afficher la facture
             new FactureFrame(resa.getIdReservation(), facturationService).setVisible(true);
             dispose();
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
+    // ===== VALIDATION ET CRÉATION CLIENT =====
     private boolean validerClient() {
-        if (ValidationUtil.estVide(txtNom.getText()) || ValidationUtil.estVide(txtPrenom.getText())) {
-            JOptionPane.showMessageDialog(this, "❌ Nom et Prénom obligatoires", "Validation", JOptionPane.WARNING_MESSAGE);
+        if (ValidationUtil.estVide(txtNom.getText())) {
+            JOptionPane.showMessageDialog(this, "❌ Nom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
+            txtNom.requestFocus();
+            return false;
+        }
+        if (ValidationUtil.estVide(txtPrenom.getText())) {
+            JOptionPane.showMessageDialog(this, "❌ Prénom obligatoire", "Validation", JOptionPane.WARNING_MESSAGE);
+            txtPrenom.requestFocus();
             return false;
         }
         if (!ValidationUtil.estEmailValide(txtEmail.getText())) {
             JOptionPane.showMessageDialog(this, "❌ Email invalide", "Validation", JOptionPane.WARNING_MESSAGE);
+            txtEmail.requestFocus();
             return false;
         }
         if (!ValidationUtil.estTelephoneValide(txtTel.getText())) {
-            JOptionPane.showMessageDialog(this, "❌ Téléphone invalide", "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "❌ Téléphone invalide (10 chiffres)", "Validation", JOptionPane.WARNING_MESSAGE);
+            txtTel.requestFocus();
             return false;
         }
         if (!ValidationUtil.estCinValide(txtCin.getText())) {
             JOptionPane.showMessageDialog(this, "❌ CIN invalide", "Validation", JOptionPane.WARNING_MESSAGE);
+            txtCin.requestFocus();
             return false;
         }
         return true;
@@ -452,38 +601,32 @@ public class CreerReservationFrame extends JFrame {
 
             if (succes) {
                 // 4. Récupérer et retourner le client créé avec son ID
-                return clientService.trouverClientParCin(cin);
-            } else {
-                JOptionPane.showMessageDialog(this, "❌ Erreur lors de la création du client", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return null;
+                Client clientCree = clientService.trouverClientParCin(cin);
+                if (clientCree != null) {
+                    return clientCree;
+                }
             }
+
+            return null;
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "❌ Erreur client : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
             return null;
         }
     }
 
-    private void afficherCalendrier(JTextField field, LocalDate date) {
-        JDialog dialog = new JDialog(this, "Sélectionner une date", true);
-        dialog.setSize(350, 400);
-        dialog.setLocationRelativeTo(this);
-
-        JPanel panelCal = DatePickerUtil.creerCalendrier(date, selectedDate -> {
-            field.setText(selectedDate.toString());
-            dialog.dispose();
-        });
-
-        dialog.add(panelCal);
-        dialog.setVisible(true);
-    }
-
-    private ServiceSupplementaire[] chargerServices() {
-        ServiceSupplementaireDAOImpl dao = new ServiceSupplementaireDAOImpl();
-        List<ServiceSupplementaire> services = dao.listerTous();
-        return services.toArray(new ServiceSupplementaire[0]);
-    }
-
-    private static class ServiceSupplementaireDAOImpl extends com.hotel.dao.ServiceSupplementaireDAOImpl {
+    // ===== CHARGEMENT SERVICES =====
+    private void chargerServices() {
+        try {
+            com.hotel.dao.ServiceSupplementaireDAOImpl dao = new com.hotel.dao.ServiceSupplementaireDAOImpl();
+            servicesDisponibles = dao.listerTous();
+            if (servicesDisponibles == null) {
+                servicesDisponibles = new ArrayList<>();
+            }
+        } catch (Exception ex) {
+            System.err.println("Erreur lors du chargement des services : " + ex.getMessage());
+            servicesDisponibles = new ArrayList<>();
+        }
     }
 }

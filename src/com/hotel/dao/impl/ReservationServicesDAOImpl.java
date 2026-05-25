@@ -9,11 +9,12 @@ import java.util.List;
 
 public class ReservationServicesDAOImpl implements ReservationServicesDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean enregistrerConsommation(ReservationServices rs) {
         String sql = "INSERT INTO reservation_services (id_reservation, id_service, quantite, date_consommation) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, rs.getIdReservation());
             ps.setInt(2, rs.getIdService());
@@ -31,8 +32,7 @@ public class ReservationServicesDAOImpl implements ReservationServicesDAO {
         List<ReservationServices> liste = new ArrayList<>();
         String sql = "SELECT * FROM reservation_services WHERE id_reservation = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReservation);
 
@@ -58,8 +58,7 @@ public class ReservationServicesDAOImpl implements ReservationServicesDAO {
     @Override
     public boolean supprimerConsommation(int idConsommation) {
         String sql = "DELETE FROM reservation_services WHERE id_consommation=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idConsommation);
             return ps.executeUpdate() > 0;
@@ -72,8 +71,7 @@ public class ReservationServicesDAOImpl implements ReservationServicesDAO {
     public List<ReservationServices> listerParReservation(int idReservation) {
         List<ReservationServices> liste = new ArrayList<>();
         String sql = "SELECT * FROM reservation_services WHERE id_reservation = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReservation);
             ResultSet rs = ps.executeQuery();

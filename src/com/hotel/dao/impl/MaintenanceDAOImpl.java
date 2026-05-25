@@ -10,11 +10,12 @@ import java.util.List;
 
 public class MaintenanceDAOImpl implements MaintenanceDAO {
 
+    Connection conn = DatabaseConnection.getConnection();
+
     @Override
     public boolean planifier(Maintenance m) {
         String sql = "INSERT INTO maintenances (id_chambre, date_debut, date_fin, description, statut_maintenance) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, m.getIdChambre());
             ps.setDate(2, Date.valueOf(m.getDateDebut()));
             ps.setDate(3, Date.valueOf(m.getDateFin()));
@@ -27,8 +28,7 @@ public class MaintenanceDAOImpl implements MaintenanceDAO {
     @Override
     public boolean terminerMaintenance(int idMaintenance, String statut) {
         String sql = "UPDATE maintenances SET statut_maintenance = ? WHERE id_maintenance = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, statut);
             ps.setInt(2, idMaintenance);
             return ps.executeUpdate() > 0;
@@ -38,8 +38,7 @@ public class MaintenanceDAOImpl implements MaintenanceDAO {
     @Override
     public Maintenance trouverParId(int idMaintenance) {
         String sql = "SELECT * FROM maintenances WHERE id_maintenance = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idMaintenance);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return mapperMaintenance(rs);
@@ -57,8 +56,7 @@ public class MaintenanceDAOImpl implements MaintenanceDAO {
     public List<Maintenance> listerParChambre(int idChambre) {
         String sql = "SELECT * FROM maintenances WHERE id_chambre = ?";
         List<Maintenance> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idChambre);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) liste.add(mapperMaintenance(rs));
@@ -68,8 +66,7 @@ public class MaintenanceDAOImpl implements MaintenanceDAO {
 
     private List<Maintenance> executerSelect(String sql) {
         List<Maintenance> liste = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) liste.add(mapperMaintenance(rs));
         } catch (SQLException e) { e.printStackTrace(); }
