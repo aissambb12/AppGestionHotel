@@ -2,7 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.ReservationServices;
 import com.hotel.service.FacturationService;
-import com.hotel.dao.ReservationChambreDAOImpl;
+import com.hotel.dao.impl.ReservationChambreDAOImpl;
 import com.hotel.model.ReservationChambre;
 
 import javax.swing.*;

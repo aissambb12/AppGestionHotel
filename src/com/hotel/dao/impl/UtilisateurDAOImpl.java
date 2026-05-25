@@ -1,4 +1,4 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
 import com.hotel.dao.UtilisateurDAO;
 import com.hotel.model.Utilisateur;

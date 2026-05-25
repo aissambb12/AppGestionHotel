@@ -1,7 +1,7 @@
 package com.hotel.service;
 
 import com.hotel.dao.UtilisateurDAO;
-import com.hotel.dao.UtilisateurDAOImpl;
+import com.hotel.dao.impl.UtilisateurDAOImpl;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.StatutUtilisateur;
 

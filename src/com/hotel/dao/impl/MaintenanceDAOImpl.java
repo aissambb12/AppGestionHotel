@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.MaintenanceDAO;
 import com.hotel.model.Maintenance;
 import com.hotel.model.enumeration.StatutMaintenance;
 import com.hotel.util.DatabaseConnection;

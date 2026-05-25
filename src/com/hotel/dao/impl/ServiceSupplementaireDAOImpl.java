@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.ServiceSupplementaireDAO;
 import com.hotel.model.ServiceSupplementaire;
 import com.hotel.model.enumeration.TypeService;
 import com.hotel.util.DatabaseConnection;

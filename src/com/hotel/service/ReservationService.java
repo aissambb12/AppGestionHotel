@@ -1,9 +1,9 @@
 package com.hotel.service;
 
 import com.hotel.dao.*;
-import com.hotel.dao.FactureDAOImpl;
-import com.hotel.dao.ReservationChambreDAOImpl;
-import com.hotel.dao.ReservationDAOImpl;
+import com.hotel.dao.impl.FactureDAOImpl;
+import com.hotel.dao.impl.ReservationChambreDAOImpl;
+import com.hotel.dao.impl.ReservationDAOImpl;
 import com.hotel.model.*;
 import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.model.enumeration.StatutReservation;

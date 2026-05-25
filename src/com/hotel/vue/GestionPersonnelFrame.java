@@ -78,7 +78,8 @@ public class GestionPersonnelFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> dispose());
+        btnRetour.addActionListener(e ->
+                NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);

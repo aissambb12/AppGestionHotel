@@ -1,7 +1,7 @@
 package com.hotel.service;
 
 import com.hotel.dao.ClientDAO;
-import com.hotel.dao.ClientDAOImpl;
+import com.hotel.dao.impl.ClientDAOImpl;
 import com.hotel.model.Client;
 
 import java.util.List;

@@ -1,6 +1,9 @@
 package com.hotel.vue;
 
+import com.hotel.util.IconLoader;
+
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class ThemeUtil {
@@ -27,7 +30,7 @@ public class ThemeUtil {
 
     private ThemeUtil() {}
 
-    // === BOUTONS - CORRECTIF TEXTE VISIBLE ===
+    // === BOUTONS ===
     public static void appliquerThemeBoutonPrincipal(JButton bouton) {
         bouton.setBackground(DORE_LUXE);
         bouton.setForeground(BLANC);
@@ -36,7 +39,10 @@ public class ThemeUtil {
         bouton.setOpaque(true);
         bouton.setContentAreaFilled(true);
         bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createLineBorder(DORE_LUXE, 1));
+        bouton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(DORE_LUXE, 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
@@ -48,7 +54,10 @@ public class ThemeUtil {
         bouton.setOpaque(true);
         bouton.setContentAreaFilled(true);
         bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+        bouton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
@@ -60,7 +69,10 @@ public class ThemeUtil {
         bouton.setOpaque(true);
         bouton.setContentAreaFilled(true);
         bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createLineBorder(VERT_VALIDATION, 1));
+        bouton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(VERT_VALIDATION, 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
@@ -72,7 +84,10 @@ public class ThemeUtil {
         bouton.setOpaque(true);
         bouton.setContentAreaFilled(true);
         bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createLineBorder(ROUGE_ERREUR, 1));
+        bouton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ROUGE_ERREUR, 1),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
@@ -97,9 +112,43 @@ public class ThemeUtil {
         table.setSelectionForeground(BLANC);
         table.setForeground(TEXTE_SOMBRE);
         table.setBackground(BLANC);
+        table.setShowVerticalLines(false);
         table.getTableHeader().setFont(POLICE_LABEL);
         table.getTableHeader().setBackground(BLEU_NUIT);
         table.getTableHeader().setForeground(BLANC);
         table.getTableHeader().setBorder(BorderFactory.createLineBorder(BLEU_NUIT));
+        table.getTableHeader().setReorderingAllowed(false);
+    }
+
+    // === HELPERS UI ===
+    /**
+     * Bordure "carte" : ligne fine + padding intérieur.
+     */
+    public static Border bordureCarte() {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        );
+    }
+
+    /**
+     * Petit titre de section pour les formulaires.
+     */
+    public static JLabel creerTitreSection(String texte) {
+        JLabel lbl = new JLabel(texte);
+        lbl.setFont(POLICE_TITRE_PETIT);
+        lbl.setForeground(BLEU_NUIT);
+        lbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        return lbl;
+    }
+
+    /**
+     * Applique le logo de l'application comme iconImage de la JFrame (si disponible).
+     */
+    public static void appliquerIconeFenetre(JFrame frame) {
+        ImageIcon logo = IconLoader.charger("app_logo", 64);
+        if (logo != null) {
+            frame.setIconImage(logo.getImage());
+        }
     }
 }

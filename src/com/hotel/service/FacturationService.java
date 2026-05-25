@@ -1,12 +1,12 @@
 package com.hotel.service;
 
 import com.hotel.dao.*;
-import com.hotel.dao.ChambreDAOImpl;
-import com.hotel.dao.FactureDAOImpl;
-import com.hotel.dao.PaiementDAOImpl;
-import com.hotel.dao.ReservationChambreDAOImpl;
-import com.hotel.dao.ReservationDAOImpl;
-import com.hotel.dao.ReservationServicesDAOImpl;
+import com.hotel.dao.impl.ChambreDAOImpl;
+import com.hotel.dao.impl.FactureDAOImpl;
+import com.hotel.dao.impl.PaiementDAOImpl;
+import com.hotel.dao.impl.ReservationChambreDAOImpl;
+import com.hotel.dao.impl.ReservationDAOImpl;
+import com.hotel.dao.impl.ReservationServicesDAOImpl;
 import com.hotel.model.*;
 import com.hotel.model.enumeration.ModePaiement;
 import com.hotel.model.enumeration.StatutChambre;

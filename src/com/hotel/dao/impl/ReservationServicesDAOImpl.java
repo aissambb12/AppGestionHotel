@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.ReservationServicesDAO;
 import com.hotel.model.ReservationServices;
 import com.hotel.util.DatabaseConnection;
 

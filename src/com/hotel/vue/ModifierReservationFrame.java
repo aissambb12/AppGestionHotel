@@ -2,6 +2,8 @@ package com.hotel.vue;
 
 import com.hotel.model.*;
 import com.hotel.service.*;
+import com.hotel.dao.impl.ServiceSupplementaireDAOImpl;
+import com.hotel.util.NavigationManager;
 import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
@@ -16,7 +18,7 @@ public class ModifierReservationFrame extends JFrame {
     private Utilisateur receptionnisteConnecte;
     private ReservationService reservationService;
     private FacturationService facturationService;
-    private com.hotel.dao.ServiceSupplementaireDAOImpl serviceDAO;
+    private ServiceSupplementaireDAOImpl serviceDAO;
 
     private JTextField txtIdReservation;
     private JPanel panelExtras;
@@ -27,7 +29,7 @@ public class ModifierReservationFrame extends JFrame {
         this.receptionnisteConnecte = receptionniste;
         this.reservationService = new ReservationService();
         this.facturationService = new FacturationService();
-        this.serviceDAO = new com.hotel.dao.ServiceSupplementaireDAOImpl();
+        this.serviceDAO = new ServiceSupplementaireDAOImpl();
 
         setTitle("Hotel Manager - Modifier Réservation");
         setSize(900, 750);
@@ -73,7 +75,8 @@ public class ModifierReservationFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> dispose());
+        btnRetour.addActionListener(e ->
+                NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte)));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);

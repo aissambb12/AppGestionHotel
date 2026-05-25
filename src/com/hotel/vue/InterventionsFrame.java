@@ -4,6 +4,7 @@ import com.hotel.model.Maintenance;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.StatutMaintenance;
 import com.hotel.service.MaintenanceService;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -77,7 +78,8 @@ public class InterventionsFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> dispose());
+        btnRetour.addActionListener(e ->
+                NavigationManager.retourVers(this, new DashboardMaintenanceFrame(technicienConnecte)));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);

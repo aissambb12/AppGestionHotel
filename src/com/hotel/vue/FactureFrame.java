@@ -1,5 +1,6 @@
 package com.hotel.vue;
 
+import com.hotel.dao.impl.ServiceSupplementaireDAOImpl;
 import com.hotel.model.*;
 import com.hotel.model.enumeration.ModePaiement;
 import com.hotel.model.enumeration.StatutFacture;
@@ -313,7 +314,7 @@ public class FactureFrame extends JFrame {
 
     private ServiceSupplementaire chargerService(int idService) {
         try {
-            return new com.hotel.dao.ServiceSupplementaireDAOImpl().trouverParId(idService);
+            return new ServiceSupplementaireDAOImpl().trouverParId(idService);
         } catch (Exception ex) {
             return null;
         }

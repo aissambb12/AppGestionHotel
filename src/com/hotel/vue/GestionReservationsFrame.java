@@ -4,6 +4,7 @@ import com.hotel.model.Reservation;
 import com.hotel.model.Utilisateur;
 import com.hotel.service.ReservationService;
 import com.hotel.service.FacturationService;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -79,7 +80,8 @@ public class GestionReservationsFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> dispose());
+        btnRetour.addActionListener(e ->
+                NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);

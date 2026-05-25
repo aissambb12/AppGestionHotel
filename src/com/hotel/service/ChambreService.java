@@ -1,7 +1,7 @@
 package com.hotel.service;
 
 import com.hotel.dao.ChambreDAO;
-import com.hotel.dao.ChambreDAOImpl;
+import com.hotel.dao.impl.ChambreDAOImpl;
 import com.hotel.model.Chambre;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.util.ValidationUtil;

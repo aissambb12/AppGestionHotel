@@ -1,9 +1,9 @@
 package com.hotel.service;
 
-import com.hotel.dao.ChambreDAOImpl;
+import com.hotel.dao.impl.ChambreDAOImpl;
 import com.hotel.dao.ChambreDAO;
 import com.hotel.dao.MaintenanceDAO;
-import com.hotel.dao.MaintenanceDAOImpl;
+import com.hotel.dao.impl.MaintenanceDAOImpl;
 import com.hotel.model.Maintenance;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.model.enumeration.StatutMaintenance;

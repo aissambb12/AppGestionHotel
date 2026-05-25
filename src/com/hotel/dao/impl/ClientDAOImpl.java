@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.ClientDAO;
 import com.hotel.model.Client;
 import com.hotel.util.DatabaseConnection;
 

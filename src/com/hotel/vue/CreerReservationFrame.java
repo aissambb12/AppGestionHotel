@@ -6,6 +6,7 @@ import com.hotel.service.*;
 import com.hotel.util.DatePickerUtil;
 import com.hotel.util.NavigationManager;
 import com.hotel.util.ValidationUtil;
+import com.hotel.dao.impl.ServiceSupplementaireDAOImpl;
 
 import javax.swing.*;
 import java.awt.*;
@@ -106,7 +107,8 @@ public class CreerReservationFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e -> dispose());
+        btnRetour.addActionListener(e ->
+                NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte)));
 
         panel.add(lblTitre, BorderLayout.WEST);
         panel.add(btnRetour, BorderLayout.EAST);
@@ -600,7 +602,7 @@ public class CreerReservationFrame extends JFrame {
 
     private void chargerServices() {
         try {
-            com.hotel.dao.ServiceSupplementaireDAOImpl dao = new com.hotel.dao.ServiceSupplementaireDAOImpl();
+            ServiceSupplementaireDAOImpl dao = new ServiceSupplementaireDAOImpl();
             servicesDisponibles = dao.listerTous();
             if (servicesDisponibles == null) {
                 servicesDisponibles = new ArrayList<>();

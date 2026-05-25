@@ -10,11 +10,11 @@ public class Client {
 
     public Client() {}
 
-    public Client(int idClient, String cin, String nom, String prenom, String email, String telephone) {
+    public Client(int idClient, String nom, String prenom, String cin, String email, String telephone) {
         this.idClient = idClient;
-        this.cin = cin;
         this.nom = nom;
         this.prenom = prenom;
+        this.cin = cin;
         this.email = email;
         this.telephone = telephone;
     }

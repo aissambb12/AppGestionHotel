@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.FactureDAO;
 import com.hotel.model.Facture;
 import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.util.DatabaseConnection;

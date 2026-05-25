@@ -1,5 +1,7 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+
+import com.hotel.dao.ChambreDAO;
 import com.hotel.model.Chambre;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.util.DatabaseConnection;

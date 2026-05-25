@@ -1,5 +1,6 @@
-package com.hotel.dao;
+package com.hotel.dao.impl;
 
+import com.hotel.dao.PaiementDAO;
 import com.hotel.model.Paiement;
 import com.hotel.model.enumeration.ModePaiement;
 import com.hotel.util.DatabaseConnection;

@@ -1,6 +1,7 @@
 package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
@@ -18,20 +19,15 @@ public class DashboardReceptionnisteFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
+        ThemeUtil.appliquerIconeFenetre(this);
 
         initialiserComposants();
     }
 
     private void initialiserComposants() {
         setLayout(new BorderLayout());
-
-        // === EN-TÊTE ===
-        JPanel panelHeader = creerHeader();
-        add(panelHeader, BorderLayout.NORTH);
-
-        // === PANEL PRINCIPAL ===
-        JPanel panelPrincipal = creerPanelIcones();
-        add(panelPrincipal, BorderLayout.CENTER);
+        add(creerHeader(), BorderLayout.NORTH);
+        add(creerPanelIcones(), BorderLayout.CENTER);
     }
 
     private JPanel creerHeader() {
@@ -39,134 +35,105 @@ public class DashboardReceptionnisteFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("🛎️ RÉCEPTION - ACCUEIL");
+        JLabel lblTitre = new JLabel("RÉCEPTION - ACCUEIL");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
+        ImageIcon ic = IconLoader.charger("icon_reservations", 24);
+        if (ic != null) { lblTitre.setIcon(ic); lblTitre.setIconTextGap(10); }
 
-        JLabel lblUtilisateur = new JLabel("👤 " + receptionnisteConnecte.getNom());
-        lblUtilisateur.setFont(ThemeUtil.POLICE_NORMALE);
-        lblUtilisateur.setForeground(ThemeUtil.BLANC);
+        JPanel panelDroite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        panelDroite.setOpaque(false);
 
-        JButton btnDeconnexion = new JButton("🚪 Déconnexion");
-        btnDeconnexion.setBackground(ThemeUtil.ROUGE_ERREUR);
-        btnDeconnexion.setForeground(ThemeUtil.BLANC);
-        btnDeconnexion.setFont(ThemeUtil.POLICE_BOUTON);
-        btnDeconnexion.setFocusPainted(false);
-        btnDeconnexion.setOpaque(true);
-        btnDeconnexion.setContentAreaFilled(true);
-        btnDeconnexion.setBorderPainted(true);
-        btnDeconnexion.setBorder(BorderFactory.createLineBorder(ThemeUtil.ROUGE_ERREUR, 1));
-        btnDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        JLabel lblUser = new JLabel(receptionnisteConnecte.getNom() + " " + receptionnisteConnecte.getPrenom());
+        lblUser.setFont(ThemeUtil.POLICE_NORMALE);
+        lblUser.setForeground(ThemeUtil.BLANC);
+        ImageIcon icUser = IconLoader.charger("icon_user", 18);
+        if (icUser != null) { lblUser.setIcon(icUser); lblUser.setIconTextGap(6); }
+
+        JButton btnDeconnexion = new JButton("Déconnexion");
+        ThemeUtil.appliquerThemeBoutonSuppression(btnDeconnexion);
+        IconLoader.appliquerIcone(btnDeconnexion, "icon_logout");
         btnDeconnexion.addActionListener(e -> NavigationManager.naviguerVers(this, new LoginFrame()));
 
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(lblUtilisateur, BorderLayout.CENTER);
-        panel.add(btnDeconnexion, BorderLayout.EAST);
+        panelDroite.add(lblUser);
+        panelDroite.add(btnDeconnexion);
 
+        panel.add(lblTitre, BorderLayout.WEST);
+        panel.add(panelDroite, BorderLayout.EAST);
         return panel;
     }
 
     private JPanel creerPanelIcones() {
-        JPanel panel = new JPanel(new GridLayout(1, 3, 30, 30));
+        JPanel panel = new JPanel(new GridLayout(2, 2, 25, 25));
         panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
+        panel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
-        // BOUTON 1 : CRÉER RÉSERVATION
-        /**
-         * IMAGE À AJOUTER : reservations.png (64x64px)
-         * Description: Icône d'un calendrier avec stylo pour symboliser la création de réservation
-         */
-        JPanel btnCreer = creerBoutonIcone("📝 CRÉER\nRÉSERVATION", ThemeUtil.BLEU_NUIT);
-        btnCreer.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new CreerReservationFrame(receptionnisteConnecte));
-            }
-        });
-        panel.add(btnCreer);
+        panel.add(creerCarteAction("CRÉER\nRÉSERVATION", "icon_reservations", ThemeUtil.BLEU_NUIT,
+                () -> NavigationManager.naviguerVers(this, new CreerReservationFrame(receptionnisteConnecte))));
 
-        // BOUTON 2 : MODIFIER RÉSERVATION
-        /**
-         * IMAGE À AJOUTER : edit.png (64x64px)
-         * Description: Icône d'un crayon pour symboliser la modification
-         */
-        JPanel btnModifier = creerBoutonIcone("✏️ MODIFIER\nRÉSERVATION", new Color(52, 152, 219));
-        btnModifier.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new ModifierReservationFrame(receptionnisteConnecte));
-            }
-        });
-        panel.add(btnModifier);
+        panel.add(creerCarteAction("MODIFIER\nRÉSERVATION", "icon_edit", new Color(52, 152, 219),
+                () -> NavigationManager.naviguerVers(this, new ModifierReservationFrame(receptionnisteConnecte))));
 
-        // BOUTON 3 : CHECK-OUT & FACTURE
-        /**
-         * IMAGE À AJOUTER : checkin.png (64x64px)
-         * Description: Icône de clé d'hôtel ou porte d'accès
-         */
-        JPanel btnCheckout = creerBoutonIcone("💳 CHECK-OUT &\nFACTURE", new Color(46, 204, 113));
-        btnCheckout.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                NavigationManager.naviguerVers(DashboardReceptionnisteFrame.this, new CheckoutFrame(receptionnisteConnecte));
-            }
-        });
-        panel.add(btnCheckout);
+        panel.add(creerCarteAction("CHECK-OUT &\nFACTURE", "icon_facture", new Color(46, 204, 113),
+                () -> NavigationManager.naviguerVers(this, new CheckoutFrame(receptionnisteConnecte))));
+
+        panel.add(creerCarteAction("GESTION\nCLIENTS", "icon_clients", new Color(155, 89, 182),
+                () -> NavigationManager.naviguerVers(this, new GestionClientsFrame(receptionnisteConnecte))));
 
         return panel;
     }
 
-    private JPanel creerBoutonIcone(String texte, Color couleur) {
+    private JPanel creerCarteAction(String texte, String nomIcone, Color couleur, Runnable action) {
         JPanel btn = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(couleur);
+                g2.setColor(getBackground());
                 g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
                 super.paintComponent(g);
             }
         };
-
         btn.setBackground(couleur);
         btn.setOpaque(false);
         btn.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 12, 0);
 
+        ImageIcon ic = IconLoader.charger(nomIcone, 56);
+        if (ic != null) {
+            btn.add(new JLabel(ic), gbc);
+            gbc.gridy = 1;
+        }
         JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
         lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTexte.setForeground(ThemeUtil.BLANC);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
         btn.add(lblTexte, gbc);
 
+        final Color couleurOrigin = couleur;
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            private Color couleurOriginal = couleur;
-
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btn.setBackground(assombrir(couleurOriginal, 0.2f));
-                btn.repaint();
+            @Override public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(assombrir(couleurOrigin, 0.2f)); btn.repaint();
             }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btn.setBackground(couleurOriginal);
-                btn.repaint();
+            @Override public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(couleurOrigin); btn.repaint();
+            }
+            @Override public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (action != null) action.run();
             }
         });
-
         return btn;
     }
 
-    private Color assombrir(Color couleur, float facteur) {
+    private Color assombrir(Color c, float f) {
         return new Color(
-                (int) (couleur.getRed() * (1 - facteur)),
-                (int) (couleur.getGreen() * (1 - facteur)),
-                (int) (couleur.getBlue() * (1 - facteur))
+                (int) (c.getRed()   * (1 - f)),
+                (int) (c.getGreen() * (1 - f)),
+                (int) (c.getBlue()  * (1 - f))
         );
     }
 }
