@@ -1,10 +1,10 @@
 package com.hotel.vue;
 
+import com.hotel.dao.impl.ServiceSupplementaireDAOImpl;
 import com.hotel.model.*;
 import com.hotel.service.*;
-import com.hotel.dao.impl.ServiceSupplementaireDAOImpl;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
-import com.hotel.util.ValidationUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +23,7 @@ public class ModifierReservationFrame extends JFrame {
     private JTextField txtIdReservation;
     private JPanel panelExtras;
     private Map<Integer, Integer> selectedExtras = new HashMap<>();
-    private Facture factureActuelle;
+    private JLabel lblInfoResa;
 
     public ModifierReservationFrame(Utilisateur receptionniste) {
         this.receptionnisteConnecte = receptionniste;
@@ -35,6 +35,7 @@ public class ModifierReservationFrame extends JFrame {
         setSize(900, 750);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        ThemeUtil.appliquerIconeFenetre(this);
 
         initialiserComposants();
     }
@@ -42,46 +43,15 @@ public class ModifierReservationFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        JPanel panelHeader = creerHeader();
-        add(panelHeader, BorderLayout.NORTH);
+        JButton btnRetour = ThemeUtil.creerBoutonRetour(e -> retourDashboard());
+        add(ThemeUtil.creerHeaderApp("MODIFIER RÉSERVATION", "icon_edit", btnRetour), BorderLayout.NORTH);
 
-        JPanel panelContenu = creerPanelContenu();
-        add(new JScrollPane(panelContenu), BorderLayout.CENTER);
-
-        JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.SOUTH);
+        add(new JScrollPane(creerPanelContenu()), BorderLayout.CENTER);
+        add(creerPanelBoutons(), BorderLayout.SOUTH);
     }
 
-    private JPanel creerHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel("✏️ MODIFIER RÉSERVATION");
-        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
-        lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-
-        /**
-         * IMAGE À AJOUTER : back.png (48x48px)
-         * Description: Icône d'une flèche gauche
-         */
-        JButton btnRetour = new JButton("← Retour");
-        btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
-        btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
-        btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
-        btnRetour.setFocusPainted(false);
-        btnRetour.setOpaque(true);
-        btnRetour.setContentAreaFilled(true);
-        btnRetour.setBorderPainted(true);
-        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-        btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e ->
-                NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte)));
-
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(btnRetour, BorderLayout.EAST);
-
-        return panel;
+    private void retourDashboard() {
+        NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte));
     }
 
     private JPanel creerPanelContenu() {
@@ -94,11 +64,9 @@ public class ModifierReservationFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // Recherche réservation
         JLabel lblId = new JLabel("ID Réservation :");
         lblId.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         panel.add(lblId, gbc);
 
         txtIdReservation = new JTextField();
@@ -106,80 +74,107 @@ public class ModifierReservationFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(txtIdReservation, gbc);
 
-        /**
-         * IMAGE À AJOUTER : refresh.png (48x48px)
-         * Description: Icône d'une flèche circulaire
-         */
-        JButton btnChercher = new JButton("🔍 Charger");
+        JButton btnChercher = new JButton("Charger");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnChercher);
+        IconLoader.appliquerIcone(btnChercher, "icon_search");
         btnChercher.addActionListener(e -> chargerReservation());
         gbc.gridx = 2;
         panel.add(btnChercher, gbc);
 
-        // Extras
-        JLabel lblExtras = new JLabel("☕ AJOUTER SERVICES SUPPLÉMENTAIRES");
-        lblExtras.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        lblExtras.setForeground(ThemeUtil.BLEU_NUIT);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 3;
-        panel.add(lblExtras, gbc);
+        lblInfoResa = new JLabel(" ");
+        lblInfoResa.setFont(ThemeUtil.POLICE_NORMAL);
+        lblInfoResa.setForeground(ThemeUtil.BLEU_NUIT);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
+        panel.add(lblInfoResa, gbc);
 
-        panelExtras = new JPanel(new GridLayout(0, 1, 5, 5));
-        panelExtras.setBackground(Color.WHITE);
         gbc.gridy = 2;
-        gbc.weighty = 0.8;
-        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(ThemeUtil.creerTitreSection("AJOUTER DES SERVICES SUPPLÉMENTAIRES"), gbc);
+
+        panelExtras = new JPanel();
+        panelExtras.setLayout(new BoxLayout(panelExtras, BoxLayout.Y_AXIS));
+        panelExtras.setBackground(Color.WHITE);
+
+        gbc.gridy = 3; gbc.weighty = 0.8; gbc.fill = GridBagConstraints.BOTH;
         panel.add(new JScrollPane(panelExtras), gbc);
 
         return panel;
     }
 
     private JPanel creerPanelBoutons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 12));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        /**
-         * IMAGE À AJOUTER : save.png (48x48px)
-         * Description: Icône de sauvegarde verte
-         */
-        JButton btnSauvegarder = new JButton("✓ SAUVEGARDER");
+        JButton btnSauvegarder = new JButton("Sauvegarder les modifications");
         ThemeUtil.appliquerThemeBoutonValider(btnSauvegarder);
-        btnSauvegarder.setPreferredSize(new Dimension(150, 40));
+        IconLoader.appliquerIcone(btnSauvegarder, "icon_check");
+        btnSauvegarder.setPreferredSize(new Dimension(240, 42));
         btnSauvegarder.addActionListener(e -> sauvegarder());
 
-        /**
-         * IMAGE À AJOUTER : cancel.png (48x48px)
-         * Description: Icône d'une croix rouge
-         */
-        JButton btnRetour = new JButton("✕ Annuler");
-        ThemeUtil.appliquerThemeBoutonSecondaire(btnRetour);
-        btnRetour.setPreferredSize(new Dimension(150, 40));
-        btnRetour.addActionListener(e -> dispose());
+        JButton btnAnnuler = new JButton("Annuler");
+        ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        btnAnnuler.setPreferredSize(new Dimension(150, 42));
+        btnAnnuler.addActionListener(e -> retourDashboard());
 
         panel.add(btnSauvegarder);
-        panel.add(btnRetour);
-
+        panel.add(btnAnnuler);
         return panel;
     }
 
     private void chargerReservation() {
         try {
-            int idResa = Integer.parseInt(txtIdReservation.getText());
+            int idResa = Integer.parseInt(txtIdReservation.getText().trim());
             Reservation resa = reservationService.obtenirDetailsReservation(idResa);
-            this.factureActuelle = facturationService.obtenirFactureReservation(idResa);
+
+            // Vider la zone d'extras à chaque chargement
+            panelExtras.removeAll();
+            selectedExtras.clear();
+            panelExtras.revalidate();
+            panelExtras.repaint();
 
             if (resa == null) {
-                JOptionPane.showMessageDialog(this, "❌ Réservation introuvable", "Erreur", JOptionPane.ERROR_MESSAGE);
+                lblInfoResa.setText(" ");
+                JOptionPane.showMessageDialog(this,
+                        "Réservation N° " + idResa + " introuvable",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
+            // ★ BLOCAGE : seules les réservations CONFIRMEES sont modifiables
+            if (resa.getStatut() != com.hotel.model.enumeration.StatutReservation.CONFIRMEE) {
+                lblInfoResa.setText("Réservation N° " + idResa + " — Statut : " + resa.getStatut());
+                lblInfoResa.setForeground(ThemeUtil.ROUGE_ERREUR);
+
+                String raison;
+                switch (resa.getStatut()) {
+                    case TERMINEE:
+                        raison = "Cette réservation est déjà TERMINÉE.\n"
+                                + "Le séjour du client est clôturé, plus aucun service ne peut être ajouté.";
+                        break;
+                    case ANNULEE:
+                        raison = "Cette réservation a été ANNULÉE.\n"
+                                + "Elle ne peut plus être modifiée.";
+                        break;
+                    default:
+                        raison = "Cette réservation n'est pas dans un statut modifiable.";
+                }
+
+                JOptionPane.showMessageDialog(this,
+                        raison + "\n\nSeules les réservations CONFIRMÉES peuvent être modifiées.",
+                        "Modification impossible",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Réservation CONFIRMEE → édition autorisée
+            lblInfoResa.setText("Réservation N° " + idResa + " — Statut : CONFIRMEE — Édition autorisée");
+            lblInfoResa.setForeground(ThemeUtil.VERT_VALIDATION);
             creerPanelExtras();
+
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "❌ ID invalide (nombre requis)", "Validation", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "ID invalide", "Validation", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -188,87 +183,101 @@ public class ModifierReservationFrame extends JFrame {
         selectedExtras.clear();
 
         List<ServiceSupplementaire> services = serviceDAO.listerTous();
-
         for (ServiceSupplementaire service : services) {
-            JPanel panelExtra = new JPanel(new BorderLayout());
-            panelExtra.setBackground(ThemeUtil.GRIS_FOND);
-            panelExtra.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                    BorderFactory.createEmptyBorder(8, 8, 8, 8)
+            JPanel ligne = new JPanel(new BorderLayout(8, 0));
+            ligne.setBackground(ThemeUtil.GRIS_FOND);
+            ligne.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                    BorderFactory.createEmptyBorder(8, 10, 8, 10)
             ));
+            ligne.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
             JLabel lblNom = new JLabel(service.getNomService() + " - " + String.format("%.2f MAD", service.getPrixService()));
             lblNom.setFont(ThemeUtil.POLICE_NORMAL);
 
             JPanel panelQte = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
             panelQte.setBackground(ThemeUtil.GRIS_FOND);
-
-            JButton btnMoins = new JButton("−");
-            btnMoins.setPreferredSize(new Dimension(30, 30));
-            btnMoins.setFont(new Font("Arial", Font.BOLD, 16));
-
+            JButton btnMoins = new JButton("-");
+            btnMoins.setPreferredSize(new Dimension(32, 28));
+            btnMoins.setFont(new Font("Segoe UI", Font.BOLD, 16));
             JLabel lblQte = new JLabel("0");
             lblQte.setFont(ThemeUtil.POLICE_BOUTON);
-            lblQte.setPreferredSize(new Dimension(30, 30));
+            lblQte.setPreferredSize(new Dimension(30, 28));
             lblQte.setHorizontalAlignment(JLabel.CENTER);
-
             JButton btnPlus = new JButton("+");
-            btnPlus.setPreferredSize(new Dimension(30, 30));
-            btnPlus.setFont(new Font("Arial", Font.BOLD, 16));
+            btnPlus.setPreferredSize(new Dimension(32, 28));
+            btnPlus.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
             final int idService = service.getIdService();
-
             btnPlus.addActionListener(e -> {
-                int qte = Integer.parseInt(lblQte.getText()) + 1;
-                lblQte.setText(String.valueOf(qte));
-                selectedExtras.put(idService, qte);
+                int q = Integer.parseInt(lblQte.getText()) + 1;
+                lblQte.setText(String.valueOf(q));
+                selectedExtras.put(idService, q);
             });
-
             btnMoins.addActionListener(e -> {
-                int qte = Math.max(0, Integer.parseInt(lblQte.getText()) - 1);
-                lblQte.setText(String.valueOf(qte));
-                if (qte == 0) {
-                    selectedExtras.remove(idService);
-                } else {
-                    selectedExtras.put(idService, qte);
-                }
+                int q = Math.max(0, Integer.parseInt(lblQte.getText()) - 1);
+                lblQte.setText(String.valueOf(q));
+                if (q == 0) selectedExtras.remove(idService);
+                else selectedExtras.put(idService, q);
             });
 
             panelQte.add(btnMoins);
             panelQte.add(lblQte);
             panelQte.add(btnPlus);
 
-            panelExtra.add(lblNom, BorderLayout.WEST);
-            panelExtra.add(panelQte, BorderLayout.EAST);
-
-            panelExtras.add(panelExtra);
+            ligne.add(lblNom, BorderLayout.WEST);
+            ligne.add(panelQte, BorderLayout.EAST);
+            panelExtras.add(ligne);
+            panelExtras.add(Box.createVerticalStrut(6));
         }
-
         panelExtras.revalidate();
         panelExtras.repaint();
     }
 
     private void sauvegarder() {
         try {
-            int idResa = Integer.parseInt(txtIdReservation.getText());
+            int idResa = Integer.parseInt(txtIdReservation.getText().trim());
 
-            for (Map.Entry<Integer, Integer> extra : selectedExtras.entrySet()) {
-                if (extra.getValue() > 0) {
+            Reservation verif = reservationService.obtenirDetailsReservation(idResa);
+            if (verif == null
+                    || verif.getStatut() != com.hotel.model.enumeration.StatutReservation.CONFIRMEE) {
+                JOptionPane.showMessageDialog(this,
+                        "Impossible de modifier : la réservation n'est pas (ou plus) au statut CONFIRMEE.",
+                        "Modification refusée",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (selectedExtras.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Aucun service à ajouter.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            for (Map.Entry<Integer, Integer> e : selectedExtras.entrySet()) {
+                if (e.getValue() > 0) {
                     ReservationServices rs = new ReservationServices();
                     rs.setIdReservation(idResa);
-                    rs.setIdService(extra.getKey());
-                    rs.setQuantite(extra.getValue());
+                    rs.setIdService(e.getKey());
+                    rs.setQuantite(e.getValue());
                     rs.setDateConsommation(LocalDate.now());
                     facturationService.ajouterConsommation(rs);
                 }
             }
 
-            JOptionPane.showMessageDialog(this, "✓ Services ajoutés avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
+            // Mise à jour du montant facture
+            double nouveauTotal = facturationService.recalculerEtMettreAJourMontantFacture(idResa);
+
+            JOptionPane.showMessageDialog(this,
+                    "Services ajoutés avec succès.\nNouveau total facture : "
+                            + String.format("%.2f MAD", nouveauTotal),
+                    "Succès", JOptionPane.INFORMATION_MESSAGE);
+
+            // ★ Retour au dashboard (au lieu de dispose() qui faisait quitter l'app)
+            retourDashboard();
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "❌ ID invalide", "Validation", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "ID invalide", "Validation", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

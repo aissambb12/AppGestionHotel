@@ -22,13 +22,18 @@ public class GestionClientsFrame extends JFrame {
     private JTable tableClients;
     private JTextField txtNom, txtPrenom, txtEmail, txtTel, txtCin;
     private JTextField txtRecherche;
+    private JButton btnEnregistrer;
+    private JLabel lblTitreForm;
+
+    // État : id du client en cours d'édition (0 = mode ajout, >0 = mode modification)
+    private int idClientEdition = 0;
 
     public GestionClientsFrame(Utilisateur receptionniste) {
         this.receptionnisteConnecte = receptionniste;
         this.clientService = new ClientService();
 
         setTitle("Hotel Manager - Gestion Clients");
-        setSize(1100, 750);
+        setSize(1150, 760);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         ThemeUtil.appliquerIconeFenetre(this);
@@ -39,37 +44,16 @@ public class GestionClientsFrame extends JFrame {
 
     private void initialiserComposants() {
         setLayout(new BorderLayout());
-        add(creerHeader(), BorderLayout.NORTH);
 
-        // Panel central : formulaire en haut, table en dessous, dans un seul JSplitPane-like avec BorderLayout interne.
+        JButton btnRetour = ThemeUtil.creerBoutonRetour(e ->
+                NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte)));
+        add(ThemeUtil.creerHeaderApp("GESTION DES CLIENTS", "icon_clients", btnRetour), BorderLayout.NORTH);
+
         JPanel centre = new JPanel(new BorderLayout(0, 0));
         centre.setBackground(ThemeUtil.GRIS_FOND);
         centre.add(creerFormulaire(), BorderLayout.NORTH);
         centre.add(creerPanelTable(), BorderLayout.CENTER);
-
         add(centre, BorderLayout.CENTER);
-    }
-
-    private JPanel creerHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel("GESTION DES CLIENTS");
-        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
-        lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-        ImageIcon ic = IconLoader.charger("icon_clients", 24);
-        if (ic != null) { lblTitre.setIcon(ic); lblTitre.setIconTextGap(10); }
-
-        JButton btnRetour = new JButton("Retour");
-        ThemeUtil.appliquerThemeBoutonSecondaire(btnRetour);
-        IconLoader.appliquerIcone(btnRetour, "icon_back");
-        btnRetour.addActionListener(e ->
-                NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte)));
-
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(btnRetour, BorderLayout.EAST);
-        return panel;
     }
 
     private JPanel creerFormulaire() {
@@ -85,14 +69,11 @@ public class GestionClientsFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Titre de section
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 6;
-        panel.add(ThemeUtil.creerTitreSection("Enregistrer un Nouveau Client"), gbc);
+        lblTitreForm = ThemeUtil.creerTitreSection("Enregistrer un Nouveau Client");
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 6;
+        panel.add(lblTitreForm, gbc);
         gbc.gridwidth = 1;
 
-        // Création des champs
         txtNom = new JTextField(12);
         txtPrenom = new JTextField(12);
         txtEmail = new JTextField(15);
@@ -104,34 +85,34 @@ public class GestionClientsFrame extends JFrame {
         ThemeUtil.appliquerThemeTextField(txtTel);
         ThemeUtil.appliquerThemeTextField(txtCin);
 
-        // Ligne 1 : labels
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        ajouterCellule(panel, gbc, 0, labelChamp("Nom *"));
-        ajouterCellule(panel, gbc, 1, labelChamp("Prénom *"));
-        ajouterCellule(panel, gbc, 2, labelChamp("CIN *"));
-        ajouterCellule(panel, gbc, 3, labelChamp("Email"));
-        ajouterCellule(panel, gbc, 4, labelChamp("Téléphone"));
+        gbc.gridy = 1; gbc.weightx = 0;
+        cellule(panel, gbc, 0, labelChamp("Nom *"));
+        cellule(panel, gbc, 1, labelChamp("Prénom *"));
+        cellule(panel, gbc, 2, labelChamp("CIN *"));
+        cellule(panel, gbc, 3, labelChamp("Email"));
+        cellule(panel, gbc, 4, labelChamp("Téléphone"));
 
-        // Ligne 2 : champs
-        gbc.gridy = 2;
-        gbc.weightx = 1.0;
-        ajouterCellule(panel, gbc, 0, txtNom);
-        ajouterCellule(panel, gbc, 1, txtPrenom);
-        ajouterCellule(panel, gbc, 2, txtCin);
-        ajouterCellule(panel, gbc, 3, txtEmail);
-        ajouterCellule(panel, gbc, 4, txtTel);
+        gbc.gridy = 2; gbc.weightx = 1.0;
+        cellule(panel, gbc, 0, txtNom);
+        cellule(panel, gbc, 1, txtPrenom);
+        cellule(panel, gbc, 2, txtCin);
+        cellule(panel, gbc, 3, txtEmail);
+        cellule(panel, gbc, 4, txtTel);
 
-        // Bouton "Enregistrer"
-        JButton btnAjouter = new JButton("Enregistrer Client");
-        ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouter);
-        IconLoader.appliquerIcone(btnAjouter, "icon_add");
-        btnAjouter.addActionListener(e -> ajouterClient());
+        btnEnregistrer = new JButton("Enregistrer");
+        ThemeUtil.appliquerThemeBoutonPrincipal(btnEnregistrer);
+        IconLoader.appliquerIcone(btnEnregistrer, "icon_add");
+        btnEnregistrer.addActionListener(e -> validerFormulaire());
 
-        gbc.gridy = 2;
-        gbc.gridx = 5;
-        gbc.weightx = 0;
-        panel.add(btnAjouter, gbc);
+        gbc.gridy = 2; gbc.gridx = 5; gbc.weightx = 0;
+        panel.add(btnEnregistrer, gbc);
+
+        // Petit bouton "Annuler édition" sous le bouton principal
+        JButton btnAnnulerEdit = new JButton("Annuler édition");
+        ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnulerEdit);
+        btnAnnulerEdit.addActionListener(e -> repasserEnModeAjout());
+        gbc.gridy = 3;
+        panel.add(btnAnnulerEdit, gbc);
 
         return panel;
     }
@@ -143,7 +124,7 @@ public class GestionClientsFrame extends JFrame {
         return lbl;
     }
 
-    private void ajouterCellule(JPanel panel, GridBagConstraints gbc, int col, JComponent comp) {
+    private void cellule(JPanel panel, GridBagConstraints gbc, int col, JComponent comp) {
         gbc.gridx = col;
         panel.add(comp, gbc);
     }
@@ -153,15 +134,13 @@ public class GestionClientsFrame extends JFrame {
         panel.setBackground(ThemeUtil.GRIS_FOND);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
 
-        // Barre d'outils : recherche + boutons
-        JPanel panelBoutons = new JPanel(new BorderLayout(10, 0));
-        panelBoutons.setBackground(Color.WHITE);
-        panelBoutons.setBorder(BorderFactory.createCompoundBorder(
+        JPanel barre = new JPanel(new BorderLayout(10, 0));
+        barre.setBackground(Color.WHITE);
+        barre.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        // Recherche dynamique
         JPanel panelRecherche = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         panelRecherche.setBackground(Color.WHITE);
         JLabel lblRecherche = new JLabel("Rechercher :");
@@ -178,9 +157,13 @@ public class GestionClientsFrame extends JFrame {
         panelRecherche.add(lblRecherche);
         panelRecherche.add(txtRecherche);
 
-        // Actions à droite
         JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panelActions.setBackground(Color.WHITE);
+
+        JButton btnModifier = new JButton("Modifier");
+        ThemeUtil.appliquerThemeBoutonAttention(btnModifier);
+        IconLoader.appliquerIcone(btnModifier, "icon_edit");
+        btnModifier.addActionListener(e -> chargerSelectionnePourEdition());
 
         JButton btnSupprimer = new JButton("Supprimer");
         ThemeUtil.appliquerThemeBoutonSuppression(btnSupprimer);
@@ -192,12 +175,13 @@ public class GestionClientsFrame extends JFrame {
         IconLoader.appliquerIcone(btnRafraichir, "icon_refresh");
         btnRafraichir.addActionListener(e -> { txtRecherche.setText(""); chargerDonnees(); });
 
+        panelActions.add(btnModifier);
         panelActions.add(btnSupprimer);
         panelActions.add(btnRafraichir);
 
-        panelBoutons.add(panelRecherche, BorderLayout.WEST);
-        panelBoutons.add(panelActions, BorderLayout.EAST);
-        panel.add(panelBoutons, BorderLayout.NORTH);
+        barre.add(panelRecherche, BorderLayout.WEST);
+        barre.add(panelActions, BorderLayout.EAST);
+        panel.add(barre, BorderLayout.NORTH);
 
         // Table
         String[] colonnes = {"ID", "Nom", "Prénom", "CIN", "Email", "Téléphone"};
@@ -211,7 +195,6 @@ public class GestionClientsFrame extends JFrame {
         JScrollPane scroll = new JScrollPane(tableClients);
         scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
         panel.add(scroll, BorderLayout.CENTER);
-
         return panel;
     }
 
@@ -226,7 +209,46 @@ public class GestionClientsFrame extends JFrame {
         }
     }
 
-    private void ajouterClient() {
+    private void chargerDonnees() {
+        modeleClients.setRowCount(0);
+        for (Client c : clientService.obtenirTousLesClients()) {
+            modeleClients.addRow(new Object[]{
+                    c.getIdClient(), c.getNom(), c.getPrenom(), c.getCin(), c.getEmail(), c.getTelephone()
+            });
+        }
+    }
+
+    // ★ Charge la ligne sélectionnée dans le formulaire pour modification
+    private void chargerSelectionnePourEdition() {
+        int ligne = tableClients.getSelectedRow();
+        if (ligne == -1) {
+            JOptionPane.showMessageDialog(this, "Veuillez d'abord sélectionner un client dans la liste.", "Sélection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        idClientEdition = (Integer) modeleClients.getValueAt(ligne, 0);
+        txtNom.setText(String.valueOf(modeleClients.getValueAt(ligne, 1)));
+        txtPrenom.setText(String.valueOf(modeleClients.getValueAt(ligne, 2)));
+        txtCin.setText(String.valueOf(modeleClients.getValueAt(ligne, 3)));
+        Object email = modeleClients.getValueAt(ligne, 4);
+        Object tel   = modeleClients.getValueAt(ligne, 5);
+        txtEmail.setText(email == null ? "" : email.toString());
+        txtTel.setText(tel == null ? "" : tel.toString());
+
+        // Mode édition
+        lblTitreForm.setText("Modifier le Client #" + idClientEdition);
+        btnEnregistrer.setText("Mettre à jour");
+        IconLoader.appliquerIcone(btnEnregistrer, "icon_edit");
+    }
+
+    private void repasserEnModeAjout() {
+        idClientEdition = 0;
+        viderFormulaire();
+        lblTitreForm.setText("Enregistrer un Nouveau Client");
+        btnEnregistrer.setText("Enregistrer");
+        IconLoader.appliquerIcone(btnEnregistrer, "icon_add");
+    }
+
+    private void validerFormulaire() {
         try {
             if (ValidationUtil.estVide(txtNom.getText()) || ValidationUtil.estVide(txtPrenom.getText())) {
                 JOptionPane.showMessageDialog(this, "Nom et Prénom obligatoires", "Validation", JOptionPane.WARNING_MESSAGE);
@@ -247,17 +269,30 @@ public class GestionClientsFrame extends JFrame {
                 return;
             }
 
-            Client client = new Client();
-            client.setNom(txtNom.getText());
-            client.setPrenom(txtPrenom.getText());
-            client.setEmail(txtEmail.getText());
-            client.setTelephone(txtTel.getText());
-            client.setCin(txtCin.getText());
+            Client c = new Client();
+            c.setNom(txtNom.getText().trim().toUpperCase());
+            c.setPrenom(txtPrenom.getText().trim());
+            c.setCin(txtCin.getText().trim().toUpperCase());
+            c.setEmail(txtEmail.getText().trim());
+            c.setTelephone(txtTel.getText().trim());
 
-            if (clientService.enregistrerClient(client)) {
-                JOptionPane.showMessageDialog(this, "Client enregistré avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
-                viderFormulaire();
-                chargerDonnees();
+            if (idClientEdition == 0) {
+                // AJOUT
+                if (clientService.enregistrerClient(c)) {
+                    JOptionPane.showMessageDialog(this, "Client enregistré avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    repasserEnModeAjout();
+                    chargerDonnees();
+                }
+            } else {
+                // MODIFICATION
+                c.setIdClient(idClientEdition);
+                if (clientService.modifierClient(c)) {
+                    JOptionPane.showMessageDialog(this, "Client mis à jour avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    repasserEnModeAjout();
+                    chargerDonnees();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Échec de la mise à jour (CIN ou email en doublon ?)", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
             }
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Validation", JOptionPane.WARNING_MESSAGE);
@@ -280,6 +315,7 @@ public class GestionClientsFrame extends JFrame {
         try {
             if (clientService.supprimerClient(id)) {
                 chargerDonnees();
+                repasserEnModeAjout();
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Suppression impossible (client lié à une réservation existante).",
@@ -296,15 +332,5 @@ public class GestionClientsFrame extends JFrame {
         txtEmail.setText("");
         txtTel.setText("");
         txtCin.setText("");
-    }
-
-    private void chargerDonnees() {
-        modeleClients.setRowCount(0);
-        List<Client> clients = clientService.obtenirTousLesClients();
-        for (Client c : clients) {
-            modeleClients.addRow(new Object[]{
-                    c.getIdClient(), c.getNom(), c.getPrenom(), c.getCin(), c.getEmail(), c.getTelephone()
-            });
-        }
     }
 }

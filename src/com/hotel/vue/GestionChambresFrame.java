@@ -86,7 +86,7 @@ public class GestionChambresFrame extends JFrame {
 
         JButton btnMaintenance = new JButton("Marquer en maintenance");
         btnMaintenance.setBackground(ThemeUtil.ORANGE_ATTENTION);
-        btnMaintenance.setForeground(ThemeUtil.BLANC);
+        btnMaintenance.setForeground(ThemeUtil.BLEU_NUIT);
         btnMaintenance.setFont(ThemeUtil.POLICE_BOUTON);
         btnMaintenance.setFocusPainted(false);
         btnMaintenance.setOpaque(true);
@@ -235,6 +235,7 @@ public class GestionChambresFrame extends JFrame {
 
         JButton btnAnnuler = new JButton("Annuler");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        IconLoader.appliquerIcone(btnAnnuler , "icon_cancel");
         btnAnnuler.addActionListener(e -> dialog.dispose());
 
         panelBoutons.add(btnAnnuler);

@@ -4,6 +4,7 @@ import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.Role;
 import com.hotel.model.enumeration.StatutUtilisateur;
 import com.hotel.service.UtilisateurService;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 import com.hotel.util.ValidationUtil;
 
@@ -35,28 +36,32 @@ public class GestionPersonnelFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        // === EN-TÊTE ===
+        // Header inchangé : NORTH
         JPanel panelHeader = creerHeader();
         add(panelHeader, BorderLayout.NORTH);
 
-        // === PANEL BOUTONS ===
-        JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.CENTER);
+        // ★ Nouveau panel central : boutons en haut + table qui remplit le reste
+        JPanel centre = new JPanel(new BorderLayout(0, 10));
+        centre.setBackground(ThemeUtil.GRIS_FOND);
+        centre.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // === TABLE ===
+        JPanel panelBoutons = creerPanelBoutons();
+        centre.add(panelBoutons, BorderLayout.NORTH);
+
+        // Création de la table
         String[] colonnes = {"ID", "Nom", "Prénom", "Email", "Rôle", "Statut"};
-        modelePersonnel = new DefaultTableModel(colonnes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+        modelePersonnel = new javax.swing.table.DefaultTableModel(colonnes, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         tablePersonnel = new JTable(modelePersonnel);
         ThemeUtil.appliquerThemeTable(tablePersonnel);
         tablePersonnel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tablePersonnel);
-        add(scrollPane, BorderLayout.SOUTH);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        centre.add(scrollPane, BorderLayout.CENTER);
+
+        add(centre, BorderLayout.CENTER);
     }
 
     private JPanel creerHeader() {
@@ -64,11 +69,11 @@ public class GestionPersonnelFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("👥 GESTION DU PERSONNEL");
+        JLabel lblTitre = new JLabel(" GESTION DU PERSONNEL");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
-        JButton btnRetour = new JButton("← Retour");
+        JButton btnRetour = new JButton("Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
@@ -78,6 +83,7 @@ public class GestionPersonnelFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        IconLoader.appliquerIcone(btnRetour , "icon_back");
         btnRetour.addActionListener(e ->
                 NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
 
@@ -96,32 +102,36 @@ public class GestionPersonnelFrame extends JFrame {
          * IMAGE À AJOUTER : add.png (48x48px)
          * Description: Icône d'un plus (+) vert pour l'ajout
          */
-        JButton btnAjouter = new JButton("➕ Ajouter Employé");
+        JButton btnAjouter = new JButton("Ajouter Employé");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnAjouter);
+        IconLoader.appliquerIcone(btnAjouter, "icon_add");
         btnAjouter.addActionListener(e -> afficherDialogueAjoutEmploye());
 
         /**
          * IMAGE À AJOUTER : (vert) Icône de validation (32x32px)
          * Description: Icône de validation/activation (coche verte)
          */
-        JButton btnActiver = new JButton("✅ Activer");
+        JButton btnActiver = new JButton("Activer");
         ThemeUtil.appliquerThemeBoutonValider(btnActiver);
+        IconLoader.appliquerIcone(btnActiver,"icon_user_add");
         btnActiver.addActionListener(e -> changerStatut(true));
 
         /**
          * IMAGE À AJOUTER : delete.png (48x48px)
          * Description: Icône d'une croix rouge pour désactivation
          */
-        JButton btnDesactiver = new JButton("❌ Désactiver");
+        JButton btnDesactiver = new JButton("Désactiver");
         ThemeUtil.appliquerThemeBoutonSuppression(btnDesactiver);
+        IconLoader.appliquerIcone(btnDesactiver , "icon_user_disable");
         btnDesactiver.addActionListener(e -> changerStatut(false));
 
         /**
          * IMAGE À AJOUTER : refresh.png (48x48px)
          * Description: Icône d'une flèche circulaire pour rafraîchissement
          */
-        JButton btnRafraichir = new JButton("🔄 Rafraîchir");
+        JButton btnRafraichir = new JButton("Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
+        IconLoader.appliquerIcone(btnRafraichir , "icon_refresh");
         btnRafraichir.addActionListener(e -> chargerDonnees());
 
         panel.add(btnAjouter);
@@ -228,15 +238,17 @@ public class GestionPersonnelFrame extends JFrame {
         ajouterChamp(panel, gbc, "Rôle :", comboRole);
 
         // Boutons
-        JButton btnValider = new JButton("✓ ENREGISTRER");
+        JButton btnValider = new JButton("ENREGISTRER");
         ThemeUtil.appliquerThemeBoutonValider(btnValider);
+        IconLoader.appliquerIcone(btnValider , "icon_check");
         gbc.gridy = 6;
         gbc.gridx = 0;
         gbc.gridwidth = 1;
         panel.add(btnValider, gbc);
 
-        JButton btnAnnuler = new JButton("✕ Annuler");
+        JButton btnAnnuler = new JButton("Annuler");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        IconLoader.appliquerIcone(btnAnnuler , "icon_cancel");
         gbc.gridx = 1;
         panel.add(btnAnnuler, gbc);
 

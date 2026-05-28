@@ -14,6 +14,7 @@ import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.model.enumeration.StatutReservation;
 import com.hotel.util.ValidationUtil;
 
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -49,23 +50,34 @@ public class FacturationService {
      * LE CHECK-OUT : Fin du séjour, calcul final et libération automatique des chambres.
      */
     public boolean realiserCheckOut(int idReservation) {
-        // 1. Calculer le montant absolu final via le DAO (Chambres + Extras consommés)
-        double totalFinal = factureDAO.calculerMontantTotal(idReservation);
-
-        // 2. Récupérer la facture pour mettre à jour son montant si nécessaire
-        Facture facture = factureDAO.trouverParReservation(idReservation);
-        if (facture != null) {
-            facture.setMontantTotal(totalFinal);
-            factureDAO.modifierStatut(facture.getIdFacture(), StatutFacture.EN_ATTENTE.name());
+        // 0. Vérification de statut : on refuse de checkouter une résa déjà finalisée
+        Reservation resa = reservationDAO.trouverParId(idReservation);
+        if (resa == null) {
+            throw new IllegalArgumentException("Réservation N° " + idReservation + " introuvable.");
+        }
+        if (resa.getStatut() == StatutReservation.TERMINEE) {
+            throw new IllegalStateException("Cette réservation est déjà TERMINEE. Le check-out a déjà été effectué.");
+        }
+        if (resa.getStatut() == StatutReservation.ANNULEE) {
+            throw new IllegalStateException("Cette réservation a été ANNULEE. Impossible d'effectuer un check-out.");
         }
 
-        // 3. Libération de toutes les chambres associées à cette réservation
-        List<ReservationChambre> chambresOccupees = reservationChambreDAO.listerParReservation(idReservation);
-        for (ReservationChambre rc : chambresOccupees) {
+        // 1. Calculer le montant final (chambres + extras)
+        double totalFinal = factureDAO.calculerMontantTotal(idReservation);
+
+        // 2. Mettre à jour le montant de la facture (statut reste EN_ATTENTE, paiement à venir)
+        Facture facture = factureDAO.trouverParReservation(idReservation);
+        if (facture != null) {
+            factureDAO.entrerMontant(facture , totalFinal);
+        }
+
+        // 3. Libération des chambres
+        List<ReservationChambre> chambres = reservationChambreDAO.listerParReservation(idReservation);
+        for (ReservationChambre rc : chambres) {
             chambreDAO.modifierStatut(rc.getIdChambre(), StatutChambre.DISPONIBLE.name());
         }
 
-        // 4. Clôturer définitivement la réservation
+        // 4. Clôture définitive de la réservation
         return reservationDAO.modifierStatut(idReservation, StatutReservation.TERMINEE.name());
     }
 
@@ -122,4 +134,33 @@ public class FacturationService {
     public Facture obtenirFactureReservation(int idReservation) {
         return factureDAO.trouverParReservation(idReservation);
     }
+
+    public double recalculerEtMettreAJourMontantFacture(int idReservation) {
+        double total = factureDAO.calculerMontantTotal(idReservation);
+        Facture f = factureDAO.trouverParReservation(idReservation);
+        if (f != null) {
+            f.setMontantTotal(total);
+            // On utilise modifierStatut juste pour déclencher l'update du champ via une variante :
+            // ici on ré-écrit complet via une requête dédiée si on a la méthode, sinon UPDATE direct.
+            try (java.sql.PreparedStatement ps = com.hotel.util.DatabaseConnection.getConnection()
+                    .prepareStatement("UPDATE factures SET montant_total=? WHERE id_facture=?")) {
+                ps.setDouble(1, total);
+                ps.setInt(2, f.getIdFacture());
+                ps.executeUpdate();
+            } catch (java.sql.SQLException e) {
+                System.err.println("recalculerEtMettreAJourMontantFacture : " + e.getMessage());
+            }
+        }
+        return total;
+    }
+
+    public Reservation obtenirReservation(int idReservation) {
+        return reservationDAO.trouverParId(idReservation);
+    }
+
+    public boolean mettreAJourStatutFacture(int idFacture, StatutFacture nouveauStatut) {
+        if (idFacture <= 0 || nouveauStatut == null) return false;
+        return factureDAO.modifierStatut(idFacture, nouveauStatut.name());
+    }
+
 }

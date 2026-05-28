@@ -5,6 +5,8 @@ import com.hotel.model.*;
 import com.hotel.model.enumeration.ModePaiement;
 import com.hotel.model.enumeration.StatutFacture;
 import com.hotel.service.FacturationService;
+import com.hotel.util.IconLoader;
+import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,29 +20,34 @@ public class FactureFrame extends JFrame {
     private FacturationService facturationService;
     private Facture facture;
     private List<ReservationServices> extras;
+    private Utilisateur receptionnisteConnecte; // peut être null si la frame est ouverte ailleurs
 
-    public FactureFrame(int idReservation, FacturationService facturationService) {
+    /** Nouveau constructeur préféré (pour retour dashboard). */
+    public FactureFrame(int idReservation, FacturationService facturationService, Utilisateur receptionniste) {
         this.idReservation = idReservation;
         this.facturationService = facturationService;
+        this.receptionnisteConnecte = receptionniste;
         this.facture = facturationService.obtenirFactureReservation(idReservation);
         this.extras = facturationService.obtenirDetailsConsommations(idReservation);
 
         setTitle("Hotel Manager - Facture N°" + idReservation);
-        setSize(900, 1000);
+        setSize(900, 900);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        ThemeUtil.appliquerIconeFenetre(this);
 
         initialiserComposants();
     }
 
+    /** Ancien constructeur conservé pour compatibilité avec les appels existants. */
+    public FactureFrame(int idReservation, FacturationService facturationService) {
+        this(idReservation, facturationService, null);
+    }
+
     private void initialiserComposants() {
         setLayout(new BorderLayout());
-
-        JPanel panelFacture = creerPanelFacture();
-        add(new JScrollPane(panelFacture), BorderLayout.CENTER);
-
-        JPanel panelPaiement = creerPanelPaiement();
-        add(panelPaiement, BorderLayout.SOUTH);
+        add(new JScrollPane(creerPanelFacture()), BorderLayout.CENTER);
+        add(creerPanelPaiement(), BorderLayout.SOUTH);
     }
 
     private JPanel creerPanelFacture() {
@@ -49,155 +56,102 @@ public class FactureFrame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // === EN-TÊTE FACTURE ===
-        JPanel panelEnTete = creerEnTeteFacture();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
+        // En-tête
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
-        panel.add(panelEnTete, gbc);
+        panel.add(creerEnTeteFacture(), gbc);
 
-        // Séparateur
-        gbc.gridy = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridy = 1;
         JSeparator sep1 = new JSeparator();
         sep1.setForeground(ThemeUtil.DORE_LUXE);
         panel.add(sep1, gbc);
 
-        // === INFORMATIONS ===
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Infos
+        gbc.gridy = 2; gbc.gridwidth = 1;
+        ajouterLigneInfo(panel, gbc, 2, "Réservation :", "N° " + idReservation);
+        ajouterLigneInfo(panel, gbc, 3, "Date :", facture.getDateFacture() != null
+                ? facture.getDateFacture().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "N/A");
+        ajouterLigneInfo(panel, gbc, 4, "Statut :", facture.getStatutFacture().toString());
 
-        JLabel lblResa = new JLabel("Réservation :");
-        lblResa.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        panel.add(lblResa, gbc);
+        gbc.gridy = 5; gbc.gridwidth = 2;
+        panel.add(new JSeparator(), gbc);
 
-        JLabel valResa = new JLabel("N° " + idReservation);
-        valResa.setFont(ThemeUtil.POLICE_NORMAL);
-        gbc.gridx = 1;
-        panel.add(valResa, gbc);
-
-        gbc.gridy = 3;
-        JLabel lblDate = new JLabel("Date :");
-        lblDate.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        panel.add(lblDate, gbc);
-
-        JLabel valDate = new JLabel(facture.getDateFacture() != null ?
-                facture.getDateFacture().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A");
-        valDate.setFont(ThemeUtil.POLICE_NORMAL);
-        gbc.gridx = 1;
-        panel.add(valDate, gbc);
-
-        gbc.gridy = 4;
-        JLabel lblStatut = new JLabel("Statut :");
-        lblStatut.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        panel.add(lblStatut, gbc);
-
-        JLabel valStatut = new JLabel(facture.getStatutFacture().toString());
-        valStatut.setFont(ThemeUtil.POLICE_NORMAL);
-        valStatut.setForeground(valStatut.getText().contains("PAYEE") ? ThemeUtil.VERT_VALIDATION : ThemeUtil.ROUGE_ERREUR);
-        gbc.gridx = 1;
-        panel.add(valStatut, gbc);
-
-        // Séparateur
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
-        JSeparator sep2 = new JSeparator();
-        panel.add(sep2, gbc);
-
-        // === DÉTAILS DES FRAIS ===
         gbc.gridy = 6;
-        gbc.gridwidth = 2;
-        JLabel lblDetails = new JLabel("📋 DÉTAILS DES FRAIS");
-        lblDetails.setFont(ThemeUtil.POLICE_TITRE_PETIT);
-        lblDetails.setForeground(ThemeUtil.BLEU_NUIT);
-        panel.add(lblDetails, gbc);
+        panel.add(ThemeUtil.creerTitreSection("DÉTAILS DES FRAIS"), gbc);
 
-        gbc.gridy = 7;
-        gbc.gridwidth = 1;
-        JLabel lblHebergement = new JLabel("Hébergement :");
-        lblHebergement.setFont(ThemeUtil.POLICE_NORMAL);
-        gbc.gridx = 0;
-        panel.add(lblHebergement, gbc);
-
+        // Hébergement
         double prixHebergement = facture.getMontantTotal();
-        JLabel lblPrixHebergement = new JLabel(String.format("%.2f MAD", prixHebergement));
-        lblPrixHebergement.setFont(ThemeUtil.POLICE_NORMAL);
-        lblPrixHebergement.setForeground(ThemeUtil.DORE_LUXE);
+        gbc.gridy = 7; gbc.gridwidth = 1; gbc.gridx = 0;
+        JLabel l1 = new JLabel("Hébergement (chambres + services)");
+        l1.setFont(ThemeUtil.POLICE_NORMAL);
+        panel.add(l1, gbc);
+
+        JLabel l1v = new JLabel(String.format("%.2f MAD", prixHebergement));
+        l1v.setFont(ThemeUtil.POLICE_NORMAL);
+        l1v.setForeground(ThemeUtil.DORE_LUXE);
         gbc.gridx = 1;
-        panel.add(lblPrixHebergement, gbc);
+        panel.add(l1v, gbc);
 
-        // Services supplémentaires
-        gbc.gridy = 8;
-        gbc.gridx = 0;
-        JLabel lblServices = new JLabel("Services :");
-        lblServices.setFont(ThemeUtil.POLICE_NORMAL);
-        panel.add(lblServices, gbc);
-
-        double prixServices = 0.0;
-        gbc.gridy = 9;
-
+        int row = 8;
         if (extras != null && !extras.isEmpty()) {
+            gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 2;
+            JLabel sub = new JLabel("Détail des services consommés :");
+            sub.setFont(ThemeUtil.POLICE_LABEL);
+            panel.add(sub, gbc);
+            row++;
+
             for (ReservationServices extra : extras) {
-                ServiceSupplementaire service = chargerService(extra.getIdService());
-                if (service != null) {
-                    double prix = service.getPrixService() * extra.getQuantite();
-                    prixServices += prix;
+                ServiceSupplementaire s = chargerService(extra.getIdService());
+                if (s == null) continue;
+                double prix = s.getPrixService() * extra.getQuantite();
+                gbc.gridwidth = 1; gbc.gridx = 0; gbc.gridy = row;
+                JLabel ls = new JLabel("  · " + s.getNomService() + "  x" + extra.getQuantite());
+                ls.setFont(ThemeUtil.POLICE_PETIT);
+                panel.add(ls, gbc);
 
-                    gbc.gridx = 0;
-                    JLabel lblService = new JLabel("  · " + service.getNomService() + " x" + extra.getQuantite());
-                    lblService.setFont(ThemeUtil.POLICE_PETIT);
-                    panel.add(lblService, gbc);
-
-                    gbc.gridx = 1;
-                    JLabel lblPrixService = new JLabel(String.format("%.2f MAD", prix));
-                    lblPrixService.setFont(ThemeUtil.POLICE_PETIT);
-                    panel.add(lblPrixService, gbc);
-
-                    gbc.gridy++;
-                }
+                JLabel lp = new JLabel(String.format("%.2f MAD", prix));
+                lp.setFont(ThemeUtil.POLICE_PETIT);
+                gbc.gridx = 1;
+                panel.add(lp, gbc);
+                row++;
             }
-        } else {
-            gbc.gridx = 1;
-            JLabel lblAucun = new JLabel("Aucun");
-            lblAucun.setFont(ThemeUtil.POLICE_PETIT);
-            panel.add(lblAucun, gbc);
-            gbc.gridy++;
         }
 
-        // Séparateur
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
+        // Total
+        gbc.gridx = 0; gbc.gridy = row++; gbc.gridwidth = 2;
         JSeparator sep3 = new JSeparator();
         sep3.setForeground(ThemeUtil.DORE_LUXE);
         panel.add(sep3, gbc);
 
-        gbc.gridy++;
-
-        // === TOTAL ===
-        double totalFinal = prixHebergement + prixServices;
-
+        gbc.gridy = row; gbc.gridwidth = 1; gbc.gridx = 0;
         JLabel lblTotal = new JLabel("MONTANT TOTAL :");
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        gbc.gridx = 0;
-        gbc.gridwidth = 1;
         panel.add(lblTotal, gbc);
 
-        JLabel lblMontantTotal = new JLabel(String.format("%.2f MAD", totalFinal));
-        lblMontantTotal.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblMontantTotal.setForeground(ThemeUtil.DORE_LUXE);
+        JLabel lblMontant = new JLabel(String.format("%.2f MAD", prixHebergement));
+        lblMontant.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblMontant.setForeground(ThemeUtil.DORE_LUXE);
         gbc.gridx = 1;
-        panel.add(lblMontantTotal, gbc);
+        panel.add(lblMontant, gbc);
 
         return panel;
+    }
+
+    private void ajouterLigneInfo(JPanel panel, GridBagConstraints gbc, int row, String label, String valeur) {
+        gbc.gridy = row; gbc.gridx = 0;
+        JLabel l = new JLabel(label);
+        l.setFont(ThemeUtil.POLICE_LABEL);
+        panel.add(l, gbc);
+        gbc.gridx = 1;
+        JLabel v = new JLabel(valeur);
+        v.setFont(ThemeUtil.POLICE_NORMAL);
+        panel.add(v, gbc);
     }
 
     private JPanel creerEnTeteFacture() {
@@ -205,110 +159,142 @@ public class FactureFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel lblLogo = new JLabel("🏨");
-        lblLogo.setFont(new Font("Arial", Font.PLAIN, 40));
-        lblLogo.setForeground(ThemeUtil.DORE_LUXE);
+        JLabel lblLogo = new JLabel();
+        ImageIcon logo = IconLoader.charger("app_logo", 50);
+        if (logo != null) lblLogo.setIcon(logo);
 
-        JPanel panelInfo = new JPanel(new GridBagLayout());
-        panelInfo.setBackground(ThemeUtil.BLEU_NUIT);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel info = new JPanel();
+        info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
+        info.setBackground(ThemeUtil.BLEU_NUIT);
 
         JLabel lblTitre = new JLabel("FACTURE OFFICIELLE");
-        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblTitre.setForeground(ThemeUtil.BLANC);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panelInfo.add(lblTitre, gbc);
+        info.add(lblTitre);
 
-        JLabel lblNumFacture = new JLabel("N° " + facture.getIdFacture());
-        lblNumFacture.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblNumFacture.setForeground(ThemeUtil.DORE_LUXE);
-        gbc.gridy = 1;
-        panelInfo.add(lblNumFacture, gbc);
+        JLabel lblNum = new JLabel("N° " + facture.getIdFacture());
+        lblNum.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblNum.setForeground(ThemeUtil.DORE_LUXE);
+        info.add(lblNum);
 
         panel.add(lblLogo, BorderLayout.WEST);
-        panel.add(panelInfo, BorderLayout.CENTER);
+        panel.add(Box.createHorizontalStrut(20), BorderLayout.CENTER);
+        panel.add(info, BorderLayout.EAST);
 
+        JPanel wrap = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        wrap.setBackground(ThemeUtil.BLEU_NUIT);
+        wrap.add(lblLogo);
+        wrap.add(Box.createHorizontalStrut(20));
+        wrap.add(info);
+        panel.add(wrap, BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel creerPanelPaiement() {
-        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        JLabel lblMode = new JLabel("💳 Mode de Paiement :");
+        JLabel lblMode = new JLabel("Mode de paiement :");
         lblMode.setFont(ThemeUtil.POLICE_LABEL);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 1;
-        panel.add(lblMode, gbc);
+        IconLoader.appliquerIcone(new JButton(), "icon_paiements"); // no-op si pas trouvé
 
         JComboBox<ModePaiement> comboMode = new JComboBox<>(ModePaiement.values());
         comboMode.setFont(ThemeUtil.POLICE_NORMAL);
-        gbc.gridx = 1;
-        panel.add(comboMode, gbc);
 
-        /**
-         * IMAGE À AJOUTER : save.png (48x48px)
-         * Description: Icône de sauvegarde/validation verte
-         */
-        JButton btnPayer = new JButton("✓ PAIEMENT EFFECTUÉ");
+        JButton btnPayer = new JButton("Paiement effectué");
         ThemeUtil.appliquerThemeBoutonValider(btnPayer);
-        btnPayer.setPreferredSize(new Dimension(150, 40));
+        IconLoader.appliquerIcone(btnPayer, "icon_check");
+        btnPayer.setPreferredSize(new Dimension(180, 38));
         btnPayer.addActionListener(e -> effectuerPaiement((ModePaiement) comboMode.getSelectedItem()));
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        panel.add(btnPayer, gbc);
 
-        /**
-         * IMAGE À AJOUTER : cancel.png (48x48px)
-         * Description: Icône d'une croix rouge
-         */
-        JButton btnAnnuler = new JButton("✕ ANNULER FACTURE");
+        JButton btnAnnuler = new JButton("Annuler facture");
         ThemeUtil.appliquerThemeBoutonSuppression(btnAnnuler);
-        btnAnnuler.setPreferredSize(new Dimension(150, 40));
-        btnAnnuler.addActionListener(e -> {
-            facture.setStatutFacture(StatutFacture.ANNULEE);
-            dispose();
-        });
-        gbc.gridx = 1;
-        panel.add(btnAnnuler, gbc);
+        IconLoader.appliquerIcone(btnAnnuler, "icon_delete");
+        btnAnnuler.setPreferredSize(new Dimension(170, 38));
+        btnAnnuler.addActionListener(e -> annulerFacture());
 
+        panel.add(lblMode);
+        panel.add(comboMode);
+        panel.add(btnPayer);
+        panel.add(btnAnnuler);
         return panel;
     }
 
     private void effectuerPaiement(ModePaiement modePaiement) {
         try {
+            // 1. On enregistre le paiement
             Paiement paiement = new Paiement();
             paiement.setIdFacture(facture.getIdFacture());
             paiement.setMontantPaye(facture.getMontantTotal());
             paiement.setDatePaiement(LocalDateTime.now());
             paiement.setModePaiement(modePaiement);
 
-            boolean succes = facturationService.enregistrerPaiement(paiement);
-            if (succes) {
-                facture.setStatutFacture(StatutFacture.PAYEE);
+            boolean succesPaiement = facturationService.enregistrerPaiement(paiement);
+            if (!succesPaiement) {
                 JOptionPane.showMessageDialog(this,
-                        "✓ Paiement effectué avec succès\n\n" +
-                                "Mode: " + modePaiement + "\n" +
-                                "Montant: " + String.format("%.2f MAD", facture.getMontantTotal()) + "\n" +
-                                "Statut: PAYÉE",
-                        "Succès",
-                        JOptionPane.INFORMATION_MESSAGE);
-                dispose();
+                        "Échec de l'enregistrement du paiement.",
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            // 2. ★ On PERSISTE le nouveau statut PAYEE en BDD (avant on ne le faisait qu'en mémoire)
+            boolean succesStatut = facturationService.mettreAJourStatutFacture(
+                    facture.getIdFacture(), StatutFacture.PAYEE);
+            if (!succesStatut) {
+                JOptionPane.showMessageDialog(this,
+                        "Paiement enregistré mais le statut de la facture n'a pas pu être mis à jour.",
+                        "Avertissement", JOptionPane.WARNING_MESSAGE);
+            }
+            facture.setStatutFacture(StatutFacture.PAYEE);
+
+            JOptionPane.showMessageDialog(this,
+                    "Paiement effectué avec succès.\n\n"
+                            + "Mode : " + modePaiement + "\n"
+                            + "Montant : " + String.format("%.2f MAD", facture.getMontantTotal()) + "\n"
+                            + "Statut facture : PAYEE",
+                    "Succès", JOptionPane.INFORMATION_MESSAGE);
+
+            retourDashboard();
+
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Erreur : " + ex.getMessage(),
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void annulerFacture() {
+        int rep = JOptionPane.showConfirmDialog(this,
+                "Voulez-vous vraiment annuler cette facture ?\n"
+                        + "Cette action est définitive (statut → ANNULEE).",
+                "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (rep != JOptionPane.YES_OPTION) return;
+
+        // ★ On PERSISTE l'annulation en BDD (avant on ne le faisait qu'en mémoire)
+        boolean ok = facturationService.mettreAJourStatutFacture(
+                facture.getIdFacture(), StatutFacture.ANNULEE);
+
+        if (ok) {
+            facture.setStatutFacture(StatutFacture.ANNULEE);
+            JOptionPane.showMessageDialog(this,
+                    "Facture annulée.\nStatut mis à jour : ANNULEE",
+                    "Annulation", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Échec de l'annulation en base de données.",
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        retourDashboard();
+    }
+
+    private void retourDashboard() {
+        if (receptionnisteConnecte != null) {
+            NavigationManager.retourVers(this, new DashboardReceptionnisteFrame(receptionnisteConnecte));
+        } else {
+            dispose();
         }
     }
 

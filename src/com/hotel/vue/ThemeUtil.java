@@ -4,6 +4,9 @@ import com.hotel.util.IconLoader;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 
 public class ThemeUtil {
@@ -19,8 +22,8 @@ public class ThemeUtil {
     public static final Color ROUGE_ERREUR = new Color(220, 53, 69);
     public static final Color ORANGE_ATTENTION = new Color(255, 159, 64);
 
-    // === POLICES ===
-    public static final Font POLICE_TITRE = new Font("Segoe UI", Font.BOLD, 24);
+    // === POLICES === (Segoe UI uniquement, AUCUN emoji partout — on utilise des PNG)
+    public static final Font POLICE_TITRE = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font POLICE_TITRE_PETIT = new Font("Segoe UI", Font.BOLD, 18);
     public static final Font POLICE_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
     public static final Font POLICE_NORMALE = new Font("Segoe UI", Font.PLAIN, 13);
@@ -32,61 +35,36 @@ public class ThemeUtil {
 
     // === BOUTONS ===
     public static void appliquerThemeBoutonPrincipal(JButton bouton) {
-        bouton.setBackground(DORE_LUXE);
-        bouton.setForeground(BLANC);
-        bouton.setFont(POLICE_BOUTON);
-        bouton.setFocusPainted(false);
-        bouton.setOpaque(true);
-        bouton.setContentAreaFilled(true);
-        bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DORE_LUXE, 1),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)
-        ));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        styleBouton(bouton, DORE_LUXE, BLEU_NUIT, DORE_LUXE);
     }
 
     public static void appliquerThemeBoutonSecondaire(JButton bouton) {
-        bouton.setBackground(GRIS_CLAIR);
-        bouton.setForeground(TEXTE_SOMBRE);
-        bouton.setFont(POLICE_BOUTON);
-        bouton.setFocusPainted(false);
-        bouton.setOpaque(true);
-        bouton.setContentAreaFilled(true);
-        bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)
-        ));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        styleBouton(bouton, GRIS_CLAIR, TEXTE_SOMBRE, new Color(200, 200, 200));
     }
 
     public static void appliquerThemeBoutonValider(JButton bouton) {
-        bouton.setBackground(VERT_VALIDATION);
-        bouton.setForeground(BLANC);
-        bouton.setFont(POLICE_BOUTON);
-        bouton.setFocusPainted(false);
-        bouton.setOpaque(true);
-        bouton.setContentAreaFilled(true);
-        bouton.setBorderPainted(true);
-        bouton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(VERT_VALIDATION, 1),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)
-        ));
-        bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        styleBouton(bouton, VERT_VALIDATION, BLEU_NUIT, VERT_VALIDATION);
     }
 
     public static void appliquerThemeBoutonSuppression(JButton bouton) {
-        bouton.setBackground(ROUGE_ERREUR);
-        bouton.setForeground(BLANC);
+        styleBouton(bouton, ROUGE_ERREUR, BLEU_NUIT, ROUGE_ERREUR);
+    }
+
+    public static void appliquerThemeBoutonAttention(JButton bouton) {
+        styleBouton(bouton, ORANGE_ATTENTION, BLEU_NUIT, ORANGE_ATTENTION);
+    }
+
+    private static void styleBouton(JButton bouton, Color fond, Color texte, Color bordure) {
+        bouton.setBackground(fond);
+        bouton.setForeground(texte);
         bouton.setFont(POLICE_BOUTON);
         bouton.setFocusPainted(false);
         bouton.setOpaque(true);
         bouton.setContentAreaFilled(true);
         bouton.setBorderPainted(true);
         bouton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ROUGE_ERREUR, 1),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)
+                BorderFactory.createLineBorder(bordure, 1),
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
         bouton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
@@ -104,26 +82,54 @@ public class ThemeUtil {
     }
 
     // === JTABLE ===
+    /**
+     * Renderer custom pour les entêtes de table.
+     * IMPORTANT : sous certains L&F (Windows, Nimbus) le setBackground/setForeground sur JTableHeader
+     * est ignoré. Ce renderer force le rendu correct.
+     */
+    private static class EnteteRenderer extends DefaultTableCellRenderer {
+        public EnteteRenderer() {
+            setHorizontalAlignment(SwingConstants.LEFT);
+            setOpaque(true);
+        }
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            lbl.setBackground(BLEU_NUIT);
+            lbl.setForeground(BLANC);
+            lbl.setFont(POLICE_LABEL);
+            lbl.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 1, new Color(30, 45, 60)),
+                    BorderFactory.createEmptyBorder(6, 10, 6, 10)
+            ));
+            return lbl;
+        }
+    }
+
     public static void appliquerThemeTable(JTable table) {
         table.setFont(POLICE_NORMAL);
-        table.setRowHeight(28);
+        table.setRowHeight(30);
         table.setGridColor(new Color(220, 220, 220));
         table.setSelectionBackground(DORE_LUXE);
         table.setSelectionForeground(BLANC);
         table.setForeground(TEXTE_SOMBRE);
         table.setBackground(BLANC);
         table.setShowVerticalLines(false);
-        table.getTableHeader().setFont(POLICE_LABEL);
-        table.getTableHeader().setBackground(BLEU_NUIT);
-        table.getTableHeader().setForeground(BLANC);
-        table.getTableHeader().setBorder(BorderFactory.createLineBorder(BLEU_NUIT));
-        table.getTableHeader().setReorderingAllowed(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        // Renderer pour TOUTES les colonnes de l'entête
+        JTableHeader header = table.getTableHeader();
+        header.setReorderingAllowed(false);
+        header.setPreferredSize(new Dimension(0, 36));
+        TableCellRenderer renderer = new EnteteRenderer();
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setHeaderRenderer(renderer);
+        }
+        header.setDefaultRenderer(renderer);
     }
 
     // === HELPERS UI ===
-    /**
-     * Bordure "carte" : ligne fine + padding intérieur.
-     */
     public static Border bordureCarte() {
         return BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
@@ -131,9 +137,6 @@ public class ThemeUtil {
         );
     }
 
-    /**
-     * Petit titre de section pour les formulaires.
-     */
     public static JLabel creerTitreSection(String texte) {
         JLabel lbl = new JLabel(texte);
         lbl.setFont(POLICE_TITRE_PETIT);
@@ -142,13 +145,47 @@ public class ThemeUtil {
         return lbl;
     }
 
-    /**
-     * Applique le logo de l'application comme iconImage de la JFrame (si disponible).
-     */
     public static void appliquerIconeFenetre(JFrame frame) {
         ImageIcon logo = IconLoader.charger("app_logo", 64);
         if (logo != null) {
             frame.setIconImage(logo.getImage());
         }
+    }
+
+    /**
+     * Crée un header standard : barre bleue avec titre (+ icône PNG optionnelle) à gauche
+     * et bouton retour à droite. PLUS AUCUN emoji Unicode dans le code.
+     */
+    public static JPanel creerHeaderApp(String titre, String nomIcone, JButton btnDroite) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(BLEU_NUIT);
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+
+        JLabel lblTitre = new JLabel(titre);
+        lblTitre.setFont(POLICE_TITRE);
+        lblTitre.setForeground(DORE_LUXE);
+        if (nomIcone != null) {
+            ImageIcon ic = IconLoader.charger(nomIcone, 26);
+            if (ic != null) {
+                lblTitre.setIcon(ic);
+                lblTitre.setIconTextGap(10);
+            }
+        }
+        panel.add(lblTitre, BorderLayout.WEST);
+        if (btnDroite != null) {
+            panel.add(btnDroite, BorderLayout.EAST);
+        }
+        return panel;
+    }
+
+    /**
+     * Crée un bouton "Retour" prêt à l'emploi avec icône PNG.
+     */
+    public static JButton creerBoutonRetour(java.awt.event.ActionListener action) {
+        JButton btn = new JButton("Retour");
+        appliquerThemeBoutonSecondaire(btn);
+        IconLoader.appliquerIcone(btn, "icon_back");
+        if (action != null) btn.addActionListener(action);
+        return btn;
     }
 }

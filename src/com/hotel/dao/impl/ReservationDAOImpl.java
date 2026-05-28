@@ -15,7 +15,7 @@ public class ReservationDAOImpl implements ReservationDAO {
 
     @Override
     public int ajouter(Reservation r) {
-        // Clé générée par MySQL est retournée
+        // Clé générée par MySQL est retournée ET posée sur le bean
         String sql = "INSERT INTO reservations (id_client, id_utilisateur, statut_reservation) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, r.getIdClient());
@@ -26,12 +26,14 @@ public class ReservationDAOImpl implements ReservationDAO {
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        return generatedKeys.getInt(1); // Retourne l'id_reservation généré
+                        int idGenere = generatedKeys.getInt(1);
+                        r.setIdReservation(idGenere); // <-- LA LIGNE CLEF QUI MANQUAIT
+                        return idGenere;
                     }
                 }
             }
         } catch (SQLException e) { e.printStackTrace(); }
-        return -1; // Échec
+        return -1;
     }
 
     @Override

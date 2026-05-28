@@ -2,6 +2,7 @@ package com.hotel.vue;
 
 import com.hotel.model.Utilisateur;
 import com.hotel.service.FacturationService;
+import com.hotel.util.IconLoader;
 import com.hotel.util.ValidationUtil;
 import com.hotel.util.NavigationManager;
 
@@ -41,7 +42,7 @@ public class StatistiquesFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("📊 CHIFFRE D'AFFAIRES");
+        JLabel lblTitre = new JLabel("CHIFFRE D'AFFAIRES");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
@@ -49,7 +50,7 @@ public class StatistiquesFrame extends JFrame {
          * IMAGE À AJOUTER : back.png (48x48px)
          * Description: Icône d'une flèche gauche
          */
-        JButton btnRetour = new JButton("← Retour");
+        JButton btnRetour = new JButton("Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
@@ -59,6 +60,7 @@ public class StatistiquesFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        IconLoader.appliquerIcone(btnRetour , "icon_back");
         btnRetour.addActionListener(e ->
                 NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
 
@@ -96,7 +98,7 @@ public class StatistiquesFrame extends JFrame {
         // Date début
         gbc.gridwidth = 1;
         gbc.gridy = 2;
-        JLabel lblDebut = new JLabel("Du (YYYY-MM-DD) :");
+        JLabel lblDebut = new JLabel("Du :");
         lblDebut.setFont(ThemeUtil.POLICE_LABEL);
         panel.add(lblDebut, gbc);
 
@@ -108,7 +110,7 @@ public class StatistiquesFrame extends JFrame {
         // Date fin
         gbc.gridx = 0;
         gbc.gridy = 3;
-        JLabel lblFin = new JLabel("Au (YYYY-MM-DD) :");
+        JLabel lblFin = new JLabel("Au :");
         lblFin.setFont(ThemeUtil.POLICE_LABEL);
         panel.add(lblFin, gbc);
 
@@ -122,7 +124,7 @@ public class StatistiquesFrame extends JFrame {
          * IMAGE À AJOUTER : (bleu) Icône calcul/statistiques (48x48px)
          * Description: Icône d'un graphique ou d'une calculatrice
          */
-        JButton btnCalculer = new JButton("📊 CALCULER CA");
+        JButton btnCalculer = new JButton(" CALCULER ");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnCalculer);
         btnCalculer.setPreferredSize(new Dimension(150, 40));
         gbc.gridx = 0;

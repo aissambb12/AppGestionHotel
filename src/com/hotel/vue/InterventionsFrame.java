@@ -2,8 +2,8 @@ package com.hotel.vue;
 
 import com.hotel.model.Maintenance;
 import com.hotel.model.Utilisateur;
-import com.hotel.model.enumeration.StatutMaintenance;
 import com.hotel.service.MaintenanceService;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
@@ -15,17 +15,18 @@ public class InterventionsFrame extends JFrame {
 
     private Utilisateur technicienConnecte;
     private MaintenanceService maintenanceService;
-    private DefaultTableModel modeleInterventions;
-    private JTable tableInterventions;
+    private DefaultTableModel modele;
+    private JTable table;
 
     public InterventionsFrame(Utilisateur technicien) {
         this.technicienConnecte = technicien;
         this.maintenanceService = new MaintenanceService();
 
         setTitle("Hotel Manager - Interventions en Cours");
-        setSize(1000, 700);
+        setSize(1100, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        ThemeUtil.appliquerIconeFenetre(this);
 
         initialiserComposants();
         chargerDonnees();
@@ -34,145 +35,98 @@ public class InterventionsFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        JPanel panelHeader = creerHeader();
-        add(panelHeader, BorderLayout.NORTH);
-
-        JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.CENTER);
-
-        String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin"};
-        modeleInterventions = new DefaultTableModel(colonnes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        tableInterventions = new JTable(modeleInterventions);
-        ThemeUtil.appliquerThemeTable(tableInterventions);
-        tableInterventions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        JScrollPane scrollPane = new JScrollPane(tableInterventions);
-        add(scrollPane, BorderLayout.SOUTH);
-    }
-
-    private JPanel creerHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel("🚨 INTERVENTIONS EN COURS");
-        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
-        lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-
-        /**
-         * IMAGE À AJOUTER : back.png (48x48px)
-         * Description: Icône d'une flèche gauche
-         */
-        JButton btnRetour = new JButton("← Retour");
-        btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
-        btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
-        btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
-        btnRetour.setFocusPainted(false);
-        btnRetour.setOpaque(true);
-        btnRetour.setContentAreaFilled(true);
-        btnRetour.setBorderPainted(true);
-        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-        btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e ->
+        JButton btnRetour = ThemeUtil.creerBoutonRetour(e ->
                 NavigationManager.retourVers(this, new DashboardMaintenanceFrame(technicienConnecte)));
+        add(ThemeUtil.creerHeaderApp("INTERVENTIONS EN COURS", "icon_maintenance", btnRetour), BorderLayout.NORTH);
 
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(btnRetour, BorderLayout.EAST);
-
-        return panel;
+        JPanel centre = new JPanel(new BorderLayout(0, 10));
+        centre.setBackground(ThemeUtil.GRIS_FOND);
+        centre.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        centre.add(creerPanelBoutons(), BorderLayout.NORTH);
+        centre.add(creerPanelTable(), BorderLayout.CENTER);
+        add(centre, BorderLayout.CENTER);
     }
 
     private JPanel creerPanelBoutons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
 
-        /**
-         * IMAGE À AJOUTER : (vert) Icône validation (48x48px)
-         * Description: Icône d'une coche verte
-         */
-        JButton btnTerminer = new JButton("✅ RÉPARATION TERMINÉE");
-        btnTerminer.setBackground(ThemeUtil.VERT_VALIDATION);
-        btnTerminer.setForeground(ThemeUtil.BLANC);
-        btnTerminer.setFont(ThemeUtil.POLICE_BOUTON);
-        btnTerminer.setFocusPainted(false);
-        btnTerminer.setOpaque(true);
-        btnTerminer.setContentAreaFilled(true);
-        btnTerminer.setBorderPainted(true);
-        btnTerminer.setBorder(BorderFactory.createLineBorder(ThemeUtil.VERT_VALIDATION, 1));
-        btnTerminer.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        JButton btnTerminer = new JButton("Marquer comme terminée");
+        ThemeUtil.appliquerThemeBoutonValider(btnTerminer);
+        IconLoader.appliquerIcone(btnTerminer, "icon_check");
         btnTerminer.addActionListener(e -> terminerIntervention());
 
-        /**
-         * IMAGE À AJOUTER : refresh.png (48x48px)
-         * Description: Icône d'une flèche circulaire
-         */
-        JButton btnRafraichir = new JButton("🔄 Rafraîchir");
+        JButton btnRafraichir = new JButton("Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
+        IconLoader.appliquerIcone(btnRafraichir, "icon_refresh");
         btnRafraichir.addActionListener(e -> chargerDonnees());
 
         panel.add(btnTerminer);
         panel.add(btnRafraichir);
-
         return panel;
     }
 
+    private JScrollPane creerPanelTable() {
+        String[] colonnes = {"ID", "ID Chambre", "Description", "Date Début", "Date Fin", "Statut"};
+        modele = new DefaultTableModel(colonnes, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        table = new JTable(modele);
+        ThemeUtil.appliquerThemeTable(table);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        return scroll;
+    }
+
     private void chargerDonnees() {
-        modeleInterventions.setRowCount(0);
+        modele.setRowCount(0);
         try {
-            List<Maintenance> maintenances = maintenanceService.listerMaintenancesEnCours();
-            for (Maintenance m : maintenances) {
-                modeleInterventions.addRow(new Object[]{
+            List<Maintenance> liste = maintenanceService.listerMaintenancesEnCours();
+            for (Maintenance m : liste) {
+                modele.addRow(new Object[]{
                         m.getIdMaintenance(),
                         m.getIdChambre(),
                         m.getDescription(),
                         m.getDateDebut(),
-                        m.getDateFin()
+                        m.getDateFin(),
+                        m.getStatutMaintenance()
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void terminerIntervention() {
-        int ligne = tableInterventions.getSelectedRow();
+        int ligne = table.getSelectedRow();
         if (ligne == -1) {
-            JOptionPane.showMessageDialog(this, "❌ Veuillez sélectionner une intervention", "Sélection", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une intervention", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        int idMaintenance = (Integer) modele.getValueAt(ligne, 0);
+        int idChambre     = (Integer) modele.getValueAt(ligne, 1);
+
+        int rep = JOptionPane.showConfirmDialog(this,
+                "Confirmer que la maintenance de la chambre " + idChambre + " est TERMINÉE ?\n"
+                        + "La chambre redeviendra DISPONIBLE.",
+                "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (rep != JOptionPane.YES_OPTION) return;
 
         try {
-            int idMaintenance = (Integer) modeleInterventions.getValueAt(ligne, 0);
-            int numChambre = (Integer) modeleInterventions.getValueAt(ligne, 1);
-
-            int confirmation = JOptionPane.showConfirmDialog(
-                    this,
-                    "Confirmez-vous que la réparation de la chambre " + numChambre + " est terminée ?\n\nElle redeviendra DISPONIBLE.",
-                    "Confirmation",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-            );
-
-            if (confirmation == JOptionPane.YES_OPTION) {
-                boolean succes = maintenanceService.terminerMaintenance(idMaintenance);
-                if (succes) {
-                    JOptionPane.showMessageDialog(this,
-                            "✓ Chambre " + numChambre + " réparée et libérée avec succès",
-                            "Succès",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    chargerDonnees();
-                } else {
-                    JOptionPane.showMessageDialog(this, "❌ Erreur lors de la terminaison", "Erreur", JOptionPane.ERROR_MESSAGE);
-                }
+            if (maintenanceService.terminerMaintenance(idMaintenance)) {
+                JOptionPane.showMessageDialog(this, "Maintenance clôturée. Chambre " + idChambre + " libérée.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                chargerDonnees();
+            } else {
+                JOptionPane.showMessageDialog(this, "Échec de la clôture", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

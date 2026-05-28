@@ -6,6 +6,8 @@ import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class DashboardMaintenanceFrame extends JFrame {
 
@@ -27,7 +29,7 @@ public class DashboardMaintenanceFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
         add(creerHeader(), BorderLayout.NORTH);
-        add(creerPanelIcones(), BorderLayout.CENTER);
+        add(creerCorps(), BorderLayout.CENTER);
     }
 
     private JPanel creerHeader() {
@@ -38,11 +40,11 @@ public class DashboardMaintenanceFrame extends JFrame {
         JLabel lblTitre = new JLabel("DÉPARTEMENT MAINTENANCE");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-        ImageIcon ic = IconLoader.charger("icon_maintenance", 24);
+        ImageIcon ic = IconLoader.charger("icon_maintenance", 26);
         if (ic != null) { lblTitre.setIcon(ic); lblTitre.setIconTextGap(10); }
 
-        JPanel panelDroite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        panelDroite.setOpaque(false);
+        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        droite.setOpaque(false);
 
         JLabel lblUser = new JLabel(technicienConnecte.getNom() + " " + technicienConnecte.getPrenom());
         lblUser.setFont(ThemeUtil.POLICE_NORMALE);
@@ -55,30 +57,47 @@ public class DashboardMaintenanceFrame extends JFrame {
         IconLoader.appliquerIcone(btnDeconnexion, "icon_logout");
         btnDeconnexion.addActionListener(e -> NavigationManager.naviguerVers(this, new LoginFrame()));
 
-        panelDroite.add(lblUser);
-        panelDroite.add(btnDeconnexion);
+        droite.add(lblUser);
+        droite.add(btnDeconnexion);
 
         panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(panelDroite, BorderLayout.EAST);
+        panel.add(droite, BorderLayout.EAST);
         return panel;
     }
 
-    private JPanel creerPanelIcones() {
-        JPanel panel = new JPanel(new GridLayout(1, 2, 30, 30));
-        panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
+    private JPanel creerCorps() {
+        JPanel corps = new JPanel(new BorderLayout());
+        corps.setBackground(ThemeUtil.GRIS_FOND);
+        corps.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        panel.add(creerCarteAction("INTERVENTIONS\nEN COURS", "icon_maintenance", ThemeUtil.ROUGE_ERREUR,
+        // Sous-titre / message d'accueil
+        JLabel lblAccueil = new JLabel("Bienvenue " + technicienConnecte.getPrenom() + ", choisissez une action :");
+        lblAccueil.setFont(ThemeUtil.POLICE_NORMAL);
+        lblAccueil.setForeground(new Color(80, 80, 80));
+        lblAccueil.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
+        corps.add(lblAccueil, BorderLayout.NORTH);
+
+        JPanel grille = new JPanel(new GridLayout(1, 2, 30, 30));
+        grille.setBackground(ThemeUtil.GRIS_FOND);
+
+        grille.add(creerCarte(
+                "INTERVENTIONS EN COURS",
+                "Visualiser et clôturer les pannes en cours sur les chambres",
+                "icon_maintenance", ThemeUtil.ROUGE_ERREUR,
                 () -> NavigationManager.naviguerVers(this, new InterventionsFrame(technicienConnecte))));
 
-        panel.add(creerCarteAction("HISTORIQUE DES\nRÉPARATIONS", "icon_facture", new Color(52, 152, 219),
+        grille.add(creerCarte(
+                "HISTORIQUE DES RÉPARATIONS",
+                "Consulter l'historique complet des interventions de maintenance",
+                "icon_facture", new Color(52, 152, 219),
                 () -> NavigationManager.naviguerVers(this, new HistoriqueFrame(technicienConnecte))));
 
-        return panel;
+        corps.add(grille, BorderLayout.CENTER);
+        return corps;
     }
 
-    private JPanel creerCarteAction(String texte, String nomIcone, Color couleur, Runnable action) {
-        JPanel btn = new JPanel(new GridBagLayout()) {
+    private JPanel creerCarte(String titre, String description, String nomIcone, Color couleur, Runnable action) {
+        JPanel carte = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -88,46 +107,49 @@ public class DashboardMaintenanceFrame extends JFrame {
                 super.paintComponent(g);
             }
         };
-        btn.setBackground(couleur);
-        btn.setOpaque(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        carte.setOpaque(false);
+        carte.setBackground(couleur);
+        carte.setBorder(BorderFactory.createEmptyBorder(30, 25, 30, 25));
+        carte.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 12, 0);
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 18, 0);
 
-        ImageIcon ic = IconLoader.charger(nomIcone, 56);
+        ImageIcon ic = IconLoader.charger(nomIcone, 64);
         if (ic != null) {
-            btn.add(new JLabel(ic), gbc);
-            gbc.gridy = 1;
+            carte.add(new JLabel(ic), gbc);
+            gbc.gridy++;
         }
-        JLabel lblTexte = new JLabel("<html><center>" + texte + "</center></html>");
-        lblTexte.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTexte.setForeground(ThemeUtil.BLANC);
-        btn.add(lblTexte, gbc);
 
-        final Color couleurOrigin = couleur;
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btn.setBackground(assombrir(couleurOrigin, 0.2f)); btn.repaint();
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent evt) {
-                btn.setBackground(couleurOrigin); btn.repaint();
-            }
-            @Override public void mouseClicked(java.awt.event.MouseEvent evt) {
-                if (action != null) action.run();
-            }
+        JLabel lblTitre = new JLabel(titre);
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitre.setForeground(ThemeUtil.BLANC);
+        lblTitre.setHorizontalAlignment(SwingConstants.CENTER);
+        carte.add(lblTitre, gbc);
+
+        gbc.gridy++;
+        gbc.insets = new Insets(10, 0, 0, 0);
+        JLabel lblDesc = new JLabel("<html><div style='text-align:center;'>" + description + "</div></html>");
+        lblDesc.setFont(ThemeUtil.POLICE_PETIT);
+        lblDesc.setForeground(new Color(240, 240, 240));
+        carte.add(lblDesc, gbc);
+
+        final Color origin = couleur;
+        carte.addMouseListener(new MouseAdapter() {
+            @Override public void mouseEntered(MouseEvent e) { carte.setBackground(assombrir(origin)); carte.repaint(); }
+            @Override public void mouseExited(MouseEvent e)  { carte.setBackground(origin); carte.repaint(); }
+            @Override public void mouseClicked(MouseEvent e) { if (action != null) action.run(); }
         });
-        return btn;
+        return carte;
     }
 
-    private Color assombrir(Color c, float f) {
+    private Color assombrir(Color c) {
+        float f = 0.2f;
         return new Color(
-                (int) (c.getRed()   * (1 - f)),
-                (int) (c.getGreen() * (1 - f)),
-                (int) (c.getBlue()  * (1 - f))
+                Math.max(0, (int) (c.getRed()   * (1 - f))),
+                Math.max(0, (int) (c.getGreen() * (1 - f))),
+                Math.max(0, (int) (c.getBlue()  * (1 - f)))
         );
     }
 }

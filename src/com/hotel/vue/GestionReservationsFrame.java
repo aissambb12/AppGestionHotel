@@ -4,6 +4,7 @@ import com.hotel.model.Reservation;
 import com.hotel.model.Utilisateur;
 import com.hotel.service.ReservationService;
 import com.hotel.service.FacturationService;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
@@ -35,26 +36,26 @@ public class GestionReservationsFrame extends JFrame {
 
     private void initialiserComposants() {
         setLayout(new BorderLayout());
+        add(creerHeader(), BorderLayout.NORTH);
 
-        JPanel panelHeader = creerHeader();
-        add(panelHeader, BorderLayout.NORTH);
+        JPanel centre = new JPanel(new BorderLayout(0, 10));
+        centre.setBackground(ThemeUtil.GRIS_FOND);
+        centre.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        centre.add(creerPanelBoutons(), BorderLayout.NORTH);
 
-        JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.CENTER);
-
-        String[] colonnes = {"ID Resa", "ID Client", "Utilisateur", "Date Création", "Statut"};
-        modeleReservations = new DefaultTableModel(colonnes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+        String[] colonnes = {"ID", "ID Client", "ID Utilisateur", "Date Création", "Statut"};
+        modeleReservations = new javax.swing.table.DefaultTableModel(colonnes, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         tableReservations = new JTable(modeleReservations);
         ThemeUtil.appliquerThemeTable(tableReservations);
         tableReservations.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tableReservations);
-        add(scrollPane, BorderLayout.SOUTH);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        centre.add(scrollPane, BorderLayout.CENTER);
+
+        add(centre, BorderLayout.CENTER);
     }
 
     private JPanel creerHeader() {
@@ -62,7 +63,7 @@ public class GestionReservationsFrame extends JFrame {
         panel.setBackground(ThemeUtil.BLEU_NUIT);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel lblTitre = new JLabel("📋 GESTION DES RÉSERVATIONS");
+        JLabel lblTitre = new JLabel(" GESTION DES RÉSERVATIONS");
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
@@ -70,7 +71,7 @@ public class GestionReservationsFrame extends JFrame {
          * IMAGE À AJOUTER : back.png (48x48px)
          * Description: Icône d'une flèche gauche
          */
-        JButton btnRetour = new JButton("← Retour");
+        JButton btnRetour = new JButton(" Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
         btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
@@ -80,6 +81,7 @@ public class GestionReservationsFrame extends JFrame {
         btnRetour.setBorderPainted(true);
         btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        IconLoader.appliquerIcone(btnRetour , "icon_back");
         btnRetour.addActionListener(e ->
                 NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
 
@@ -98,16 +100,18 @@ public class GestionReservationsFrame extends JFrame {
          * IMAGE À AJOUTER : (bleu) Icône détails/info (48x48px)
          * Description: Icône d'une loupe ou d'une information
          */
-        JButton btnDetails = new JButton("🔍 Voir Détails");
+        JButton btnDetails = new JButton("Voir Détails");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnDetails);
+        IconLoader.appliquerIcone(btnDetails , "icon_search");
         btnDetails.addActionListener(e -> afficherDetails());
 
         /**
          * IMAGE À AJOUTER : refresh.png (48x48px)
          * Description: Icône d'une flèche circulaire
          */
-        JButton btnRafraichir = new JButton("🔄 Rafraîchir");
+        JButton btnRafraichir = new JButton(" Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
+        IconLoader.appliquerIcone(btnRafraichir , "icon_refresh");
         btnRafraichir.addActionListener(e -> chargerDonnees());
 
         panel.add(btnDetails);

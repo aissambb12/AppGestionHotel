@@ -58,6 +58,19 @@ public class FactureDAOImpl implements FactureDAO {
         return null;
     }
 
+    public boolean entrerMontant(Facture facture , double montant){
+        String sql = "UPDATE factures SET montant_total=? WHERE id_facture=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, montant);
+            ps.setInt(2, facture.getIdFacture());
+            return ps.executeUpdate() > 0;
+        } catch (java.sql.SQLException e) {
+            System.err.println("realiserCheckOut maj montant : " + e.getMessage());
+        }
+        return false;
+    }
+
     @Override
     public double calculerChiffreAffaires(LocalDate dateDebut, LocalDate dateFin) {
         String sql = "SELECT SUM(montant_total) as total FROM factures WHERE statut_facture = 'PAYEE' AND DATE(date_facture) BETWEEN ? AND ?";
@@ -110,23 +123,33 @@ public class FactureDAOImpl implements FactureDAO {
 
     @Override
     public double calculerMontantTotal(int idReservation) {
-        String sql = "SELECT COALESCE(SUM(rc.prix_applique * DATEDIFF(rc.date_depart, rc.date_arrivee)), 0) as total_chambres " +
-                "FROM reservation_chambres rc " +
-                "WHERE rc.id_reservation = ?";
+        // Chambres : prix_applique × nombre de nuits
+        String sqlChambres = "SELECT COALESCE(SUM(rc.prix_applique * DATEDIFF(rc.date_depart, rc.date_arrivee)), 0) AS total " +
+                "FROM reservation_chambres rc WHERE rc.id_reservation = ?";
+        // Services supplémentaires : prix × quantité
+        String sqlServices = "SELECT COALESCE(SUM(s.prix_service * rs.quantite), 0) AS total " +
+                "FROM reservation_services rs " +
+                "JOIN services_supplementaires s ON rs.id_service = s.id_service " +
+                "WHERE rs.id_reservation = ?";
 
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idReservation);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble("total_chambres");
-                }
+        double total = 0.0;
+        try (PreparedStatement ps1 = conn.prepareStatement(sqlChambres)) {
+            ps1.setInt(1, idReservation);
+            try (ResultSet rs = ps1.executeQuery()) {
+                if (rs.next()) total += rs.getDouble("total");
             }
         } catch (SQLException e) {
-            System.err.println("❌ FactureDAO.calculerMontantTotal : " + e.getMessage());
+            System.err.println("FactureDAO.calculerMontantTotal (chambres) : " + e.getMessage());
         }
-        return 0.0;
+        try (PreparedStatement ps2 = conn.prepareStatement(sqlServices)) {
+            ps2.setInt(1, idReservation);
+            try (ResultSet rs = ps2.executeQuery()) {
+                if (rs.next()) total += rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("FactureDAO.calculerMontantTotal (services) : " + e.getMessage());
+        }
+        return total;
     }
 
     private Facture mapperFacture(ResultSet rs) throws SQLException {

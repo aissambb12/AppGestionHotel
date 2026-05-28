@@ -1,11 +1,13 @@
 package com.hotel.vue;
 
+import com.hotel.dao.impl.MaintenanceDAOImpl;
 import com.hotel.model.Maintenance;
 import com.hotel.model.Utilisateur;
-import com.hotel.service.MaintenanceService;
+import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
@@ -13,18 +15,19 @@ import java.util.List;
 public class HistoriqueFrame extends JFrame {
 
     private Utilisateur technicienConnecte;
-    private MaintenanceService maintenanceService;
-    private DefaultTableModel modeleHistorique;
-    private JTable tableHistorique;
+    private MaintenanceDAOImpl maintenanceDAO;
+    private DefaultTableModel modele;
+    private JTable table;
 
     public HistoriqueFrame(Utilisateur technicien) {
         this.technicienConnecte = technicien;
-        this.maintenanceService = new MaintenanceService();
+        this.maintenanceDAO = new MaintenanceDAOImpl();
 
-        setTitle("Hotel Manager - Historique Réparations");
-        setSize(1000, 700);
+        setTitle("Hotel Manager - Historique des Réparations");
+        setSize(1100, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        ThemeUtil.appliquerIconeFenetre(this);
 
         initialiserComposants();
         chargerDonnees();
@@ -33,93 +36,84 @@ public class HistoriqueFrame extends JFrame {
     private void initialiserComposants() {
         setLayout(new BorderLayout());
 
-        JPanel panelHeader = creerHeader();
-        add(panelHeader, BorderLayout.NORTH);
-
-        JPanel panelBoutons = creerPanelBoutons();
-        add(panelBoutons, BorderLayout.CENTER);
-
-        String[] colonnes = {"ID", "N° Chambre", "Description", "Date Début", "Date Fin", "Statut"};
-        modeleHistorique = new DefaultTableModel(colonnes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        tableHistorique = new JTable(modeleHistorique);
-        ThemeUtil.appliquerThemeTable(tableHistorique);
-        tableHistorique.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        JScrollPane scrollPane = new JScrollPane(tableHistorique);
-        add(scrollPane, BorderLayout.SOUTH);
-    }
-
-    private JPanel creerHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel("📋 HISTORIQUE DES RÉPARATIONS");
-        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
-        lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-
-        /**
-         * IMAGE À AJOUTER : back.png (48x48px)
-         * Description: Icône d'une flèche gauche
-         */
-        JButton btnRetour = new JButton("← Retour");
-        btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
-        btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
-        btnRetour.setFont(ThemeUtil.POLICE_BOUTON);
-        btnRetour.setFocusPainted(false);
-        btnRetour.setOpaque(true);
-        btnRetour.setContentAreaFilled(true);
-        btnRetour.setBorderPainted(true);
-        btnRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-        btnRetour.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRetour.addActionListener(e ->
+        JButton btnRetour = ThemeUtil.creerBoutonRetour(e ->
                 NavigationManager.retourVers(this, new DashboardMaintenanceFrame(technicienConnecte)));
+        add(ThemeUtil.creerHeaderApp("HISTORIQUE DES RÉPARATIONS", "icon_facture", btnRetour), BorderLayout.NORTH);
 
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(btnRetour, BorderLayout.EAST);
-
-        return panel;
+        JPanel centre = new JPanel(new BorderLayout(0, 10));
+        centre.setBackground(ThemeUtil.GRIS_FOND);
+        centre.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        centre.add(creerPanelBoutons(), BorderLayout.NORTH);
+        centre.add(creerPanelTable(), BorderLayout.CENTER);
+        add(centre, BorderLayout.CENTER);
     }
 
     private JPanel creerPanelBoutons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
 
-        /**
-         * IMAGE À AJOUTER : refresh.png (48x48px)
-         * Description: Icône d'une flèche circulaire
-         */
-        JButton btnRafraichir = new JButton("🔄 Rafraîchir");
+        JButton btnRafraichir = new JButton("Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
+        IconLoader.appliquerIcone(btnRafraichir, "icon_refresh");
         btnRafraichir.addActionListener(e -> chargerDonnees());
 
         panel.add(btnRafraichir);
-
         return panel;
     }
 
+    private JScrollPane creerPanelTable() {
+        String[] colonnes = {"ID", "ID Chambre", "Description", "Date Début", "Date Fin", "Statut"};
+        modele = new DefaultTableModel(colonnes, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        table = new JTable(modele);
+        ThemeUtil.appliquerThemeTable(table);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Coloriser la colonne Statut
+        table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, column);
+                if (!isSelected && value != null) {
+                    String s = value.toString();
+                    if ("TERMINEE".equals(s)) c.setForeground(ThemeUtil.VERT_VALIDATION);
+                    else                       c.setForeground(ThemeUtil.ORANGE_ATTENTION);
+                }
+                return c;
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        return scroll;
+    }
+
     private void chargerDonnees() {
-        modeleHistorique.setRowCount(0);
+        modele.setRowCount(0);
         try {
-            List<Maintenance> maintenances = maintenanceService.listerMaintenancesEnCours();
-            for (Maintenance m : maintenances) {
-                modeleHistorique.addRow(new Object[]{
-                        m.getIdMaintenance(),
-                        m.getIdChambre(),
-                        m.getDescription(),
-                        m.getDateDebut(),
-                        m.getDateFin(),
-                        m.getStatutMaintenance()
-                });
+            // ★ Avant on appelait listerMaintenancesEnCours() → tableau vide pour l'historique
+            // Maintenant on liste TOUTES les maintenances pour l'historique complet
+            List<Maintenance> liste = maintenanceDAO.listerToutes();
+            if (liste != null) {
+                for (Maintenance m : liste) {
+                    modele.addRow(new Object[]{
+                            m.getIdMaintenance(),
+                            m.getIdChambre(),
+                            m.getDescription(),
+                            m.getDateDebut(),
+                            m.getDateFin(),
+                            m.getStatutMaintenance()
+                    });
+                }
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "❌ Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
