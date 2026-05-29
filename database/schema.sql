@@ -32,7 +32,7 @@ CREATE TABLE chambres (
                           numero VARCHAR(10) UNIQUE NOT NULL,
                           categorie ENUM('SIMPLE', 'DOUBLE', 'SUITE') NOT NULL,
                           prix_unitaire DECIMAL(10, 2) NOT NULL,
-                          statut ENUM('DISPONIBLE', 'OCCUPEE', 'MAINTENANCE') DEFAULT 'DISPONIBLE',
+                          statut ENUM('DISPONIBLE', 'MAINTENANCE') DEFAULT 'DISPONIBLE',
                           CONSTRAINT chk_prix_chambre CHECK (prix_unitaire >= 0)
 ) ENGINE=InnoDB;
 

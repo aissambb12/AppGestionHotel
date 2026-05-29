@@ -50,13 +50,12 @@ public class FacturationService {
      * LE CHECK-OUT : Fin du séjour, calcul final et libération automatique des chambres.
      */
     public boolean realiserCheckOut(int idReservation) {
-        // 0. Vérification de statut : on refuse de checkouter une résa déjà finalisée
         Reservation resa = reservationDAO.trouverParId(idReservation);
         if (resa == null) {
-            throw new IllegalArgumentException("Réservation N° " + idReservation + " introuvable.");
+            throw new IllegalArgumentException("Réservation introuvable.");
         }
         if (resa.getStatut() == StatutReservation.TERMINEE) {
-            throw new IllegalStateException("Cette réservation est déjà TERMINEE. Le check-out a déjà été effectué.");
+            throw new IllegalStateException("Cette réservation a déjà été check-outée.");
         }
         if (resa.getStatut() == StatutReservation.ANNULEE) {
             throw new IllegalStateException("Cette réservation a été ANNULEE. Impossible d'effectuer un check-out.");
@@ -68,16 +67,11 @@ public class FacturationService {
         // 2. Mettre à jour le montant de la facture (statut reste EN_ATTENTE, paiement à venir)
         Facture facture = factureDAO.trouverParReservation(idReservation);
         if (facture != null) {
-            factureDAO.entrerMontant(facture , totalFinal);
+            factureDAO.entrerMontant(facture, totalFinal);
         }
 
-        // 3. Libération des chambres
-        List<ReservationChambre> chambres = reservationChambreDAO.listerParReservation(idReservation);
-        for (ReservationChambre rc : chambres) {
-            chambreDAO.modifierStatut(rc.getIdChambre(), StatutChambre.DISPONIBLE.name());
-        }
-
-        // 4. Clôture définitive de la réservation
+        // 3. Clôture définitive de la réservation
+        // (les chambres n'ont plus de statut OCCUPEE — l'occupation est portée par reservation_chambres)
         return reservationDAO.modifierStatut(idReservation, StatutReservation.TERMINEE.name());
     }
 
@@ -152,6 +146,24 @@ public class FacturationService {
             }
         }
         return total;
+    }
+
+    /**
+     * Liste toutes les factures par statut (EN_ATTENTE, PAYEE, ANNULEE).
+     */
+    public List<Facture> listerFacturesParStatut(StatutFacture statut) {
+        return factureDAO.listerParStatut(statut.name());
+    }
+
+    /**
+     * Réactive une facture annulée : repasse son statut à PAYEE (recompte dans le CA)
+     * ou à EN_ATTENTE selon le choix.
+     */
+    public boolean reactiverFacture(int idFacture, StatutFacture nouveauStatut) {
+        if (nouveauStatut == null || nouveauStatut == StatutFacture.ANNULEE) {
+            throw new IllegalArgumentException("Nouveau statut invalide pour une réactivation.");
+        }
+        return factureDAO.modifierStatut(idFacture, nouveauStatut.name());
     }
 
     public Reservation obtenirReservation(int idReservation) {

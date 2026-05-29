@@ -12,6 +12,7 @@ public interface FactureDAO {
     Facture trouverParId(int idFacture);
     double calculerChiffreAffaires(LocalDate dateDebut, LocalDate dateFin);
     Facture trouverParReservation(int idReservation); // Une seule facture officielle par réservation
+    List<Facture> listerParStatut(String statut);
     List<Facture> listerToutes();
 
     /**

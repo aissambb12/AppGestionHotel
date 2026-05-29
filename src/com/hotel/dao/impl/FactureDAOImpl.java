@@ -108,6 +108,21 @@ public class FactureDAOImpl implements FactureDAO {
     }
 
     @Override
+    public List<Facture> listerParStatut(String statut) {
+        List<Facture> liste = new ArrayList<>();
+        String sql = "SELECT * FROM factures WHERE statut_facture = ? ORDER BY date_facture DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, statut);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) liste.add(mapperFacture(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("FactureDAO.listerParStatut : " + e.getMessage());
+        }
+        return liste;
+    }
+
+    @Override
     public List<Facture> listerToutes() {
         List<Facture> liste = new ArrayList<>();
         String sql = "SELECT * FROM factures ORDER BY date_facture DESC";

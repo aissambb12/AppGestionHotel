@@ -4,6 +4,7 @@ import com.hotel.model.Chambre;
 import com.hotel.model.Utilisateur;
 import com.hotel.model.enumeration.StatutChambre;
 import com.hotel.service.ChambreService;
+import com.hotel.service.MaintenanceService;
 import com.hotel.util.IconLoader;
 import com.hotel.util.NavigationManager;
 import com.hotel.util.ValidationUtil;
@@ -12,17 +13,20 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.time.LocalDate;
 import java.util.List;
 
 public class GestionChambresFrame extends JFrame {
 
     private ChambreService chambreService;
+    private MaintenanceService maintenanceService;
     private DefaultTableModel modeleChambres;
     private JTable tableChambres;
     private Utilisateur adminConnecte;
 
     public GestionChambresFrame(Utilisateur admin) {
         this.chambreService = new ChambreService();
+        this.maintenanceService = new MaintenanceService();
         this.adminConnecte = admin;
 
         setTitle("Hotel Manager - Gestion Chambres");
@@ -37,38 +41,17 @@ public class GestionChambresFrame extends JFrame {
 
     private void initialiserComposants() {
         setLayout(new BorderLayout());
-        add(creerHeader(), BorderLayout.NORTH);
 
-        // Panel central : barre de boutons en haut + table qui prend tout le reste
+        JButton btnRetour = ThemeUtil.creerBoutonRetour(e ->
+                NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
+        add(ThemeUtil.creerHeaderApp("GESTION DES CHAMBRES", "icon_chambres", btnRetour), BorderLayout.NORTH);
+
         JPanel centre = new JPanel(new BorderLayout(0, 10));
         centre.setBackground(ThemeUtil.GRIS_FOND);
         centre.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         centre.add(creerPanelBoutons(), BorderLayout.NORTH);
         centre.add(creerPanelTable(), BorderLayout.CENTER);
-
         add(centre, BorderLayout.CENTER);
-    }
-
-    private JPanel creerHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(ThemeUtil.BLEU_NUIT);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        JLabel lblTitre = new JLabel("GESTION DES CHAMBRES");
-        lblTitre.setFont(ThemeUtil.POLICE_TITRE);
-        lblTitre.setForeground(ThemeUtil.DORE_LUXE);
-        ImageIcon ic = IconLoader.charger("icon_chambres", 24);
-        if (ic != null) { lblTitre.setIcon(ic); lblTitre.setIconTextGap(10); }
-
-        JButton btnRetour = new JButton("Retour");
-        ThemeUtil.appliquerThemeBoutonSecondaire(btnRetour);
-        IconLoader.appliquerIcone(btnRetour, "icon_back");
-        btnRetour.addActionListener(e ->
-                NavigationManager.retourVers(this, new DashboardAdminFrame(adminConnecte)));
-
-        panel.add(lblTitre, BorderLayout.WEST);
-        panel.add(btnRetour, BorderLayout.EAST);
-        return panel;
     }
 
     private JPanel creerPanelBoutons() {
@@ -84,24 +67,15 @@ public class GestionChambresFrame extends JFrame {
         IconLoader.appliquerIcone(btnAjouter, "icon_add");
         btnAjouter.addActionListener(e -> afficherDialogueAjoutChambre());
 
-        JButton btnMaintenance = new JButton("Marquer en maintenance");
-        btnMaintenance.setBackground(ThemeUtil.ORANGE_ATTENTION);
-        btnMaintenance.setForeground(ThemeUtil.BLEU_NUIT);
-        btnMaintenance.setFont(ThemeUtil.POLICE_BOUTON);
-        btnMaintenance.setFocusPainted(false);
-        btnMaintenance.setOpaque(true);
-        btnMaintenance.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ThemeUtil.ORANGE_ATTENTION, 1),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)
-        ));
-        btnMaintenance.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        JButton btnMaintenance = new JButton("Déclarer une panne");
+        ThemeUtil.appliquerThemeBoutonAttention(btnMaintenance);
         IconLoader.appliquerIcone(btnMaintenance, "icon_maintenance");
-        btnMaintenance.addActionListener(e -> changerStatutMaintenance());
+        btnMaintenance.addActionListener(e -> declarerPanne());
 
-        JButton btnDisponible = new JButton("Marquer disponible");
+        JButton btnDisponible = new JButton("Remettre disponible");
         ThemeUtil.appliquerThemeBoutonValider(btnDisponible);
         IconLoader.appliquerIcone(btnDisponible, "icon_check");
-        btnDisponible.addActionListener(e -> changerStatutDisponible());
+        btnDisponible.addActionListener(e -> remettreDisponible());
 
         JButton btnRafraichir = new JButton("Rafraîchir");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnRafraichir);
@@ -112,7 +86,6 @@ public class GestionChambresFrame extends JFrame {
         panel.add(btnMaintenance);
         panel.add(btnDisponible);
         panel.add(btnRafraichir);
-
         return panel;
     }
 
@@ -125,7 +98,7 @@ public class GestionChambresFrame extends JFrame {
         ThemeUtil.appliquerThemeTable(tableChambres);
         tableChambres.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Colorer la colonne Statut
+        // Coloriser la colonne Statut (2 valeurs uniquement : DISPONIBLE / MAINTENANCE)
         tableChambres.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -133,10 +106,9 @@ public class GestionChambresFrame extends JFrame {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected && value != null) {
                     String s = value.toString();
-                    if ("DISPONIBLE".equals(s))         c.setForeground(ThemeUtil.VERT_VALIDATION);
-                    else if ("OCCUPEE".equals(s))       c.setForeground(ThemeUtil.ROUGE_ERREUR);
-                    else if ("MAINTENANCE".equals(s))   c.setForeground(ThemeUtil.ORANGE_ATTENTION);
-                    else                                c.setForeground(ThemeUtil.TEXTE_SOMBRE);
+                    if ("DISPONIBLE".equals(s))       c.setForeground(ThemeUtil.VERT_VALIDATION);
+                    else if ("MAINTENANCE".equals(s)) c.setForeground(ThemeUtil.ORANGE_ATTENTION);
+                    else                              c.setForeground(ThemeUtil.TEXTE_SOMBRE);
                 }
                 return c;
             }
@@ -165,28 +137,31 @@ public class GestionChambresFrame extends JFrame {
         }
     }
 
-    private void changerStatutMaintenance() { changerStatut(StatutChambre.MAINTENANCE, "passée en maintenance"); }
-    private void changerStatutDisponible()  { changerStatut(StatutChambre.DISPONIBLE, "marquée disponible"); }
-
-    private void changerStatut(StatutChambre nouveauStatut, String message) {
+    /**
+     * Déclare une panne sur la chambre sélectionnée :
+     * - demande la description et les dates,
+     * - crée la ligne dans la table maintenances (visible côté technicien),
+     * - passe la chambre en MAINTENANCE.
+     */
+    private void declarerPanne() {
         int ligne = tableChambres.getSelectedRow();
         if (ligne == -1) {
             JOptionPane.showMessageDialog(this, "Veuillez sélectionner une chambre", "Sélection", JOptionPane.WARNING_MESSAGE);
             return;
         }
         int idChambre = (Integer) modeleChambres.getValueAt(ligne, 0);
-        try {
-            chambreService.modifierStatutChambre(idChambre, nouveauStatut.name());
-            JOptionPane.showMessageDialog(this, "Chambre " + message, "Succès", JOptionPane.INFORMATION_MESSAGE);
-            chargerDonnees();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        String numero = String.valueOf(modeleChambres.getValueAt(ligne, 1));
+        Object statutObj = modeleChambres.getValueAt(ligne, 4);
+        if (statutObj != null && "MAINTENANCE".equals(statutObj.toString())) {
+            JOptionPane.showMessageDialog(this,
+                    "La chambre " + numero + " est déjà en maintenance.",
+                    "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
         }
-    }
 
-    private void afficherDialogueAjoutChambre() {
-        JDialog dialog = new JDialog(this, "Ajouter une Chambre", true);
-        dialog.setSize(450, 320);
+        // Mini-dialogue panne
+        JDialog dialog = new JDialog(this, "Déclarer une panne - Chambre " + numero, true);
+        dialog.setSize(550, 420);
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -198,9 +173,146 @@ public class GestionChambresFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(ThemeUtil.creerTitreSection("Détails de la panne"), gbc);
+
+        // Description
+        gbc.gridwidth = 1; gbc.gridy = 1; gbc.gridx = 0; gbc.weightx = 0;
+        JLabel lblDesc = new JLabel("Description :");
+        lblDesc.setFont(ThemeUtil.POLICE_LABEL);
+        panel.add(lblDesc, gbc);
+
+        JTextArea txtDescription = new JTextArea(5, 30);
+        txtDescription.setLineWrap(true);
+        txtDescription.setWrapStyleWord(true);
+        txtDescription.setFont(ThemeUtil.POLICE_NORMAL);
+        txtDescription.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        JScrollPane scrollDesc = new JScrollPane(txtDescription);
+
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridheight = 2;
+        panel.add(scrollDesc, gbc);
+        gbc.gridheight = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Date début
+        gbc.gridy = 3; gbc.gridx = 0; gbc.weightx = 0;
+        JLabel lblDeb = new JLabel("Date début :");
+        lblDeb.setFont(ThemeUtil.POLICE_LABEL);
+        panel.add(lblDeb, gbc);
+
+        JTextField txtDebut = new JTextField(LocalDate.now().toString());
+        ThemeUtil.appliquerThemeTextField(txtDebut);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        panel.add(txtDebut, gbc);
+
+        // Date fin
+        gbc.gridy = 4; gbc.gridx = 0; gbc.weightx = 0;
+        JLabel lblFin = new JLabel("Date fin estimée :");
+        lblFin.setFont(ThemeUtil.POLICE_LABEL);
+        panel.add(lblFin, gbc);
+
+        JTextField txtFin = new JTextField(LocalDate.now().plusDays(7).toString());
+        ThemeUtil.appliquerThemeTextField(txtFin);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        panel.add(txtFin, gbc);
+
+        // Boutons
+        JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        boutons.setOpaque(false);
+
+        JButton btnValider = new JButton("Déclarer");
+        ThemeUtil.appliquerThemeBoutonAttention(btnValider);
+        IconLoader.appliquerIcone(btnValider, "icon_maintenance");
+
+        JButton btnAnnuler = new JButton("Annuler");
+        ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
+        IconLoader.appliquerIcone(btnAnnuler, "icon_cancel");
+        btnAnnuler.addActionListener(e -> dialog.dispose());
+
+        boutons.add(btnAnnuler);
+        boutons.add(btnValider);
+
+        gbc.gridy = 5; gbc.gridx = 0; gbc.gridwidth = 2;
+        gbc.insets = new Insets(20, 8, 0, 8);
+        panel.add(boutons, gbc);
+
+        btnValider.addActionListener(e -> {
+            try {
+                if (ValidationUtil.estVide(txtDescription.getText())) {
+                    JOptionPane.showMessageDialog(dialog, "La description est obligatoire.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                LocalDate debut = LocalDate.parse(txtDebut.getText().trim());
+                LocalDate fin   = LocalDate.parse(txtFin.getText().trim());
+
+                boolean ok = maintenanceService.declarerPanneAvecChambre(
+                        idChambre, txtDescription.getText().trim(), debut, fin);
+
+                if (ok) {
+                    JOptionPane.showMessageDialog(dialog,
+                            "Panne déclarée. La chambre " + numero + " est passée en maintenance.\n"
+                                    + "Un ticket a été créé dans le tableau des interventions.",
+                            "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    chargerDonnees();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Échec de la déclaration.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (java.time.format.DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(dialog, "Format de date invalide (yyyy-MM-dd attendu).", "Validation", JOptionPane.WARNING_MESSAGE);
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Validation", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
+    }
+
+    private void remettreDisponible() {
+        int ligne = tableChambres.getSelectedRow();
+        if (ligne == -1) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une chambre", "Sélection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int idChambre = (Integer) modeleChambres.getValueAt(ligne, 0);
+        String numero = String.valueOf(modeleChambres.getValueAt(ligne, 1));
+
+        int rep = JOptionPane.showConfirmDialog(this,
+                "Confirmer la remise en service de la chambre " + numero + " ?\n"
+                        + "Les maintenances EN_COURS associées seront marquées TERMINEE.",
+                "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (rep != JOptionPane.YES_OPTION) return;
+
+        try {
+            maintenanceService.libererChambre(idChambre);
+            JOptionPane.showMessageDialog(this, "Chambre " + numero + " remise en service.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            chargerDonnees();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void afficherDialogueAjoutChambre() {
+        JDialog dialog = new JDialog(this, "Ajouter une Chambre", true);
+        dialog.setSize(450, 340);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         panel.add(ThemeUtil.creerTitreSection("Nouvelle Chambre"), gbc);
         gbc.gridwidth = 1;
 
@@ -225,7 +337,6 @@ public class GestionChambresFrame extends JFrame {
         gbc.gridx = 1; gbc.weightx = 1.0;
         panel.add(txtPrix, gbc);
 
-        // Boutons
         JPanel panelBoutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panelBoutons.setOpaque(false);
 
@@ -235,7 +346,7 @@ public class GestionChambresFrame extends JFrame {
 
         JButton btnAnnuler = new JButton("Annuler");
         ThemeUtil.appliquerThemeBoutonSecondaire(btnAnnuler);
-        IconLoader.appliquerIcone(btnAnnuler , "icon_cancel");
+        IconLoader.appliquerIcone(btnAnnuler, "icon_cancel");
         btnAnnuler.addActionListener(e -> dialog.dispose());
 
         panelBoutons.add(btnAnnuler);

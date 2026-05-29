@@ -73,8 +73,9 @@ public class ChambreService {
         if (nouveauStatut == null || nouveauStatut.trim().isEmpty()) {
             throw new IllegalArgumentException("Le statut ne peut pas être vide.");
         }
-
-        // Appel au DAO qui exécute l'UPDATE en base de données
+        if (!"DISPONIBLE".equals(nouveauStatut) && !"MAINTENANCE".equals(nouveauStatut)) {
+            throw new IllegalArgumentException("Statut chambre invalide : seuls DISPONIBLE et MAINTENANCE sont permis.");
+        }
         return chambreDAO.modifierStatut(idChambre, nouveauStatut);
     }
 

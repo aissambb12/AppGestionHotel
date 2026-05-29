@@ -68,9 +68,9 @@ public class DashboardAdminFrame extends JFrame {
     }
 
     private JPanel creerPanelIcones() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 20, 20));
+        JPanel panel = new JPanel(new GridLayout(2, 3, 20, 20));
         panel.setBackground(ThemeUtil.GRIS_FOND);
-        panel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         panel.add(creerCarteAction(
                 "GESTION DU PERSONNEL", "icon_clients", ThemeUtil.BLEU_NUIT,
@@ -87,6 +87,17 @@ public class DashboardAdminFrame extends JFrame {
         panel.add(creerCarteAction(
                 "CHIFFRE D'AFFAIRES", "icon_paiements", new Color(155, 89, 182),
                 () -> NavigationManager.naviguerVers(this, new StatistiquesFrame(adminConnecte))));
+
+        // ★ Nouvelle tuile : gestion des factures annulées (réservée à l'admin)
+        panel.add(creerCarteAction(
+                "FACTURES ANNULÉES", "icon_facture", new Color(231, 76, 60),
+                () -> NavigationManager.naviguerVers(this, new FacturesAnnuleesFrame(adminConnecte))));
+
+        // 6ème cellule : placeholder vide pour équilibrer la grille
+        JPanel vide = new JPanel();
+        vide.setBackground(ThemeUtil.GRIS_FOND);
+        vide.setOpaque(false);
+        panel.add(vide);
 
         return panel;
     }
