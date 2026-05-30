@@ -124,7 +124,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(0, 0, 25, 0);
         panel.add(lblDesc, gbc);
 
-        // Label erreur (réservé même vide)
+        // Label erreur
         lblErreur = new JLabel(" ");
         lblErreur.setForeground(ThemeUtil.ROUGE_ERREUR);
         lblErreur.setFont(new Font("Segoe UI", Font.PLAIN, 12));

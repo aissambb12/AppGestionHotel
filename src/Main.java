@@ -6,7 +6,7 @@ import javax.swing.*;
 public class Main {
 
     public static void main(String[] args) {
-        // Ferme proprement la connexion BDD à la sortie de la JVM
+
         Runtime.getRuntime().addShutdownHook(new Thread(DatabaseConnection::fermerConnexion));
 
         SwingUtilities.invokeLater(() -> {

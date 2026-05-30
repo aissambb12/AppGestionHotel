@@ -1,4 +1,12 @@
-# 🏨 AppGestionHotel - Application de Gestion d'Hôtel
+# AppGestionHotel
+
+Application de bureau (Java Swing + MySQL) pour la gestion d'un hôtel :
+chambres, clients, réservations, check-in/check-out, maintenance,
+restauration et facturation.
+
+## Prérequis
+- JDK 17 ou supérieur
+- MySQL 5.7+ (ou MariaDB)# 🏨 AppGestionHotel - Application de Gestion d'Hôtel
 
 ## 📌 Vue d'ensemble
 
@@ -19,11 +27,12 @@
 
 ## 👥 Informations sur le groupe
 
-| # | Nom | Prénom | Rôle |
-|----|-----|--------|------|
-| 1 | *À compléter* | *À compléter* | Développeur |
-| 2 | *À compléter* | *À compléter* | Développeur |
-| 3 | *À compléter* | *À compléter* | Développeur |
+| # | Nom         | Prénom     | Rôle |
+|---|-------------|------------|------|
+| 1 | *Boubrik*   | *Aissam*   | Développeur |
+| 2 | *Elouahabi* | *Zakaria*  | Développeur |
+| 3 | *Hachou*    | *Yassine*  | Développeur |
+| 4 | *Laacha*    | *Mohammad* | Développeur |
 
 **Email de contact** : *À compléter*
 
@@ -494,7 +503,7 @@ utilisateurs ───┐
 ✅ Clés étrangères avec `ON DELETE CASCADE` ou `ON DELETE RESTRICT`  
 ✅ Contraintes CHECK pour prix, dates, quantités  
 ✅ Unicité sur CIN, email, numéro chambre  
-✅ Codage UTF-8 pour caractères spéciaux  
+✅ Codage UTF-8 pour caractères spéciaux
 
 ---
 
@@ -724,3 +733,15 @@ Avant de soumettre le projet, vérifier :
 **Dernière mise à jour** : 30 mai 2026  
 **Version** : 1.0.0  
 **Licence** : © 2026 - Tous droits réservés
+- Le pilote JDBC est fourni dans `lib/mysql-connector-java-5.1.29.jar`
+
+## Installation de la base
+1. Lancer MySQL.
+2. Exécuter `database/schema.sql` (crée la base `hotel_db` et les tables).
+3. Exécuter `database/data.sql` (données de démonstration).
+4. Vérifier les identifiants de connexion dans
+   `src/com/hotel/util/DatabaseConnection.java` (URL, USER, PASSWORD).
+
+## Lancement
+- Sous IntelliJ : ouvrir le projet, lancer la classe `Main`.
+- En ligne de commande :
