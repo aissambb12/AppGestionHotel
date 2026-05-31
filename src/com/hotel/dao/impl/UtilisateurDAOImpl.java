@@ -145,7 +145,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     }
 
     /**
-     * Méthode utilitaire privée pour éviter la duplication de code lors de la lecture du ResultSet.
+     Méthode utilitaire privée pour éviter la duplication de code lors de la lecture du ResultSet.
      */
     private Utilisateur mapperUtilisateur(ResultSet rs) throws SQLException {
         return new Utilisateur(

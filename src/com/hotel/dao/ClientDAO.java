@@ -8,7 +8,7 @@ public interface ClientDAO {
     boolean modifier(Client client);
     boolean supprimer(int idClient);
     Client trouverParId(int idClient);
-    Client trouverParCin(String cin); // Exigence légale pour éviter les doublons
+    Client trouverParCin(String cin); // Exigence éviter les doublons
     List<Client> listerTous();
-    List<Client> rechercherParMotCle(String motCle); // Recherche dynamique (par nom, prénom ou CIN) pour l'UI Swing
+    List<Client> rechercherParMotCle(String motCle); // Recherche dynamique (par nom, prénom ou CIN)
 }

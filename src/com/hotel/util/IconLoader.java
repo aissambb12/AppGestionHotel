@@ -5,18 +5,6 @@ import java.awt.*;
 import java.io.File;
 import java.net.URL;
 
-/**
- * Charge les icones PNG de l'application.
- *
- * Strategie de recherche (dans l'ordre) :
- *   1. Le classpath (fonctionne quand 'src/resources' est marque Resources Root
- *      et que le projet a ete reconstruit).
- *   2. Le disque, en repli (fonctionne meme si le build n'a pas copie les ressources,
- *      tant que l'app est lancee depuis la racine du projet).
- *
- * Essaie aussi plusieurs suffixes ("", "_64", "_24", ...) pour s'adapter
- * aux differentes tailles de PNG presentes dans resources/icons.
- */
 public class IconLoader {
 
     private IconLoader() {}

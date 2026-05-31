@@ -27,7 +27,7 @@ public class ClientService {
             throw new IllegalArgumentException("Le CIN est obligatoire pour des raisons légales.");
         }
 
-        // 2. Règle métier : Le CIN doit être unique
+
         Client clientExistantCin = clientDAO.trouverParCin(client.getCin().trim());
         if (clientExistantCin != null) {
             throw new IllegalArgumentException("Un client avec le CIN " + client.getCin() + " existe déjà dans le système.");

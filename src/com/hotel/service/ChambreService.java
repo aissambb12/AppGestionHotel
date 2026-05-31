@@ -64,7 +64,7 @@ public class ChambreService {
     }
 
     /**
-     * Modifie le statut d'une chambre (ex: DISPONIBLE, OCCUPEE, EN_MAINTENANCE)
+     * Modifie le statut d'une chambre
      */
     public boolean modifierStatutChambre(int idChambre, String nouveauStatut) {
         if (idChambre <= 0) {

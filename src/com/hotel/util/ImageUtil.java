@@ -6,10 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
 
-/**
- * Utilitaire centralisé pour charger et gérer les images
- * Supporte les images manquantes avec fallback
- */
+
 public class ImageUtil {
 
     private static final String RESOURCES_PATH = "src/resources/images/";

@@ -56,9 +56,7 @@ public class UtilisateurService {
         return utilisateurDAO.modifier(utilisateur);
     }
 
-    /**
-     * Soft Delete (Désactivation d'un employé)
-     */
+
     public boolean desactiverEmploye(int idUtilisateur) {
         return utilisateurDAO.modifierStatut(idUtilisateur, StatutUtilisateur.INACTIF.name());
     }

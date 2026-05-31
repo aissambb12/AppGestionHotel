@@ -10,10 +10,7 @@ public class NavigationManager {
 
     private NavigationManager() {}
 
-    /**
-     * Ouvre une nouvelle fenêtre et ferme l'ancienne proprement.
-     * Utilisé pour la navigation principale (dashboard → écran enfant, ou déconnexion).
-     */
+
     public static void naviguerVers(JFrame frameActuelle, JFrame frameNouvelle) {
         if (frameNouvelle != null) {
             frameNouvelle.setVisible(true);
@@ -23,10 +20,6 @@ public class NavigationManager {
         }
     }
 
-    /**
-     * Retour depuis un sous-écran vers son dashboard parent.
-     * Recrée la fenêtre parente (puisqu'elle a été disposée à l'ouverture).
-     */
     public static void retourVers(JFrame frameActuelle, JFrame dashboardParent) {
         if (dashboardParent != null) {
             dashboardParent.setVisible(true);
