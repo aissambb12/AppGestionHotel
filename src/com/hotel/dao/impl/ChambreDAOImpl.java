@@ -132,9 +132,9 @@ public class ChambreDAOImpl implements ChambreDAO {
                 "AND c.id_chambre NOT IN (" +
                 "  SELECT DISTINCT rc.id_chambre FROM reservation_chambres rc " +
                 "  INNER JOIN reservations r ON rc.id_reservation = r.id_reservation " +
-                "  WHERE r.statut_reservation != 'ANNULEE' " +
+                "  WHERE r.statut_reservation = 'CONFIRMEE' " +
                 "  AND rc.date_arrivee < ? " +
-                "  AND rc.date_depart > ?" +
+                "  AND rc.date_depart > ? " +
                 ") ORDER BY c.numero";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

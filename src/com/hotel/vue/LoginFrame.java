@@ -50,7 +50,7 @@ public class LoginFrame extends JFrame {
         panel.setPreferredSize(new Dimension(380, 580));
         panel.setBorder(new EmptyBorder(80, 40, 40, 40));
 
-        // Logo (image si disponible, sinon emoji)
+        // Logo (image)
         ImageIcon logoIcone = IconLoader.charger("app_logo", 110);
         JLabel lblLogo;
         if (logoIcone != null) {

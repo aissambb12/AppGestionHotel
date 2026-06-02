@@ -253,8 +253,7 @@ public class GestionChambresFrame extends JFrame {
 
                 if (ok) {
                     JOptionPane.showMessageDialog(dialog,
-                            "Panne déclarée. La chambre " + numero + " est passée en maintenance.\n"
-                                    + "Un ticket a été créé dans le tableau des interventions.",
+                            "Panne déclarée. La chambre " + numero + " est passée en maintenance.\n",
                             "Succès", JOptionPane.INFORMATION_MESSAGE);
                     dialog.dispose();
                     chargerDonnees();
