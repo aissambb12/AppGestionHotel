@@ -15,10 +15,6 @@ public interface FactureDAO {
     List<Facture> listerParStatut(String statut);
     List<Facture> listerToutes();
 
-    /**
-     * Calcule automatiquement le montant total cumulé (Prix des chambres retenues * nombre de nuits
-     * + somme des services supplémentaires consommés).
-     * Cette méthode sera appelée pour initialiser le montant lors du Check-out.
-     */
+
     double calculerMontantTotal(int idReservation);
 }

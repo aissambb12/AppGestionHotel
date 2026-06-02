@@ -67,10 +67,8 @@ public class GestionReservationsFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
-        /**
-         * IMAGE À AJOUTER : back.png (48x48px)
-         * Description: Icône d'une flèche gauche
-         */
+        // Icône d'une flèche gauche
+
         JButton btnRetour = new JButton(" Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);

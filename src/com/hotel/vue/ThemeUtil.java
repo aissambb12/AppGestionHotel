@@ -22,7 +22,7 @@ public class ThemeUtil {
     public static final Color ROUGE_ERREUR = new Color(220, 53, 69);
     public static final Color ORANGE_ATTENTION = new Color(255, 159, 64);
 
-    // === POLICES === (Segoe UI uniquement, AUCUN emoji partout — on utilise des PNG)
+    // === POLICES ===
     public static final Font POLICE_TITRE = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font POLICE_TITRE_PETIT = new Font("Segoe UI", Font.BOLD, 18);
     public static final Font POLICE_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
@@ -82,11 +82,6 @@ public class ThemeUtil {
     }
 
     // === JTABLE ===
-    /**
-     * Renderer custom pour les entêtes de table.
-     * IMPORTANT : sous certains L&F (Windows, Nimbus) le setBackground/setForeground sur JTableHeader
-     * est ignoré. Ce renderer force le rendu correct.
-     */
     private static class EnteteRenderer extends DefaultTableCellRenderer {
         public EnteteRenderer() {
             setHorizontalAlignment(SwingConstants.LEFT);
@@ -152,10 +147,6 @@ public class ThemeUtil {
         }
     }
 
-    /**
-     * Crée un header standard : barre bleue avec titre (+ icône PNG optionnelle) à gauche
-     * et bouton retour à droite. PLUS AUCUN emoji Unicode dans le code.
-     */
     public static JPanel creerHeaderApp(String titre, String nomIcone, JButton btnDroite) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(BLEU_NUIT);

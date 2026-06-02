@@ -140,7 +140,7 @@ public class ModifierReservationFrame extends JFrame {
                 return;
             }
 
-            // ★ BLOCAGE : seules les réservations CONFIRMEES sont modifiables
+            // BLOCAGE : seules les réservations CONFIRMEES sont modifiables
             if (resa.getStatut() != com.hotel.model.enumeration.StatutReservation.CONFIRMEE) {
                 lblInfoResa.setText("Réservation N° " + idResa + " — Statut : " + resa.getStatut());
                 lblInfoResa.setForeground(ThemeUtil.ROUGE_ERREUR);

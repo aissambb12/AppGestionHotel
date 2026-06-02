@@ -13,9 +13,6 @@ public interface ChambreDAO {
     List<Chambre> listerToutes();
     List<Chambre> listerParStatut(String statut);
 
-    /**
-     * Recherche les chambres disponibles pour une catégorie et une période données.
-     * C'est la méthode maîtresse pour éviter le surbooking (Overbooking).
-     */
+
     List<Chambre> listerChambresDisponibles(LocalDate arrivee, LocalDate depart, String categorie);
 }

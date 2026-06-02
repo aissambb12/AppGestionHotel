@@ -15,7 +15,7 @@ public class ReservationDAOImpl implements ReservationDAO {
 
     @Override
     public int ajouter(Reservation r) {
-        // Clé générée par MySQL est retournée ET posée sur le bean
+
         String sql = "INSERT INTO reservations (id_client, id_utilisateur, statut_reservation) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, r.getIdClient());

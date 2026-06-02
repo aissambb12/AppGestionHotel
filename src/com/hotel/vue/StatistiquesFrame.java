@@ -46,10 +46,7 @@ public class StatistiquesFrame extends JFrame {
         lblTitre.setFont(ThemeUtil.POLICE_TITRE);
         lblTitre.setForeground(ThemeUtil.DORE_LUXE);
 
-        /**
-         * IMAGE À AJOUTER : back.png (48x48px)
-         * Description: Icône d'une flèche gauche
-         */
+
         JButton btnRetour = new JButton("Retour");
         btnRetour.setBackground(ThemeUtil.GRIS_CLAIR);
         btnRetour.setForeground(ThemeUtil.TEXTE_SOMBRE);
@@ -120,10 +117,6 @@ public class StatistiquesFrame extends JFrame {
         panel.add(txtFin, gbc);
 
         // Bouton Calculer
-        /**
-         * IMAGE À AJOUTER : (bleu) Icône calcul/statistiques (48x48px)
-         * Description: Icône d'un graphique ou d'une calculatrice
-         */
         JButton btnCalculer = new JButton(" CALCULER ");
         ThemeUtil.appliquerThemeBoutonPrincipal(btnCalculer);
         btnCalculer.setPreferredSize(new Dimension(150, 40));

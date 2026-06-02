@@ -61,10 +61,10 @@ public class FacturationService {
             throw new IllegalStateException("Cette réservation a été ANNULEE. Impossible d'effectuer un check-out.");
         }
 
-        // 1. Calculer le montant final (chambres + extras)
+        // 1. Calculer le montant final
         double totalFinal = factureDAO.calculerMontantTotal(idReservation);
 
-        // 2. Mettre à jour le montant de la facture (statut reste EN_ATTENTE, paiement à venir)
+        // 2. Mettre à jour le montant de la facture
         Facture facture = factureDAO.trouverParReservation(idReservation);
         if (facture != null) {
             factureDAO.entrerMontant(facture, totalFinal);
@@ -76,7 +76,7 @@ public class FacturationService {
     }
 
     /**
-     * Calcule le CA sur une période donnée (factures PAYEES uniquement).
+     * Calcule le CA sur une période donnée .
      */
     public double obtenirChiffreAffaires(LocalDate dateDebut, LocalDate dateFin) {
         if (dateDebut == null || dateFin == null) {

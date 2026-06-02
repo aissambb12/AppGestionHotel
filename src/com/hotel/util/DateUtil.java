@@ -17,7 +17,6 @@ public class DateUtil {
 
     /**
      * Convertit un texte (ex: "2026-06-02") en objet LocalDate.
-     * Très utile pour récupérer ce que l'utilisateur tape dans un JTextField Swing.
      */
     public static LocalDate stringVersLocalDate(String dateTexte) {
         if (ValidationUtil.estVide(dateTexte)) return null;

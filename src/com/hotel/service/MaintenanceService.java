@@ -36,10 +36,6 @@ public class MaintenanceService {
         return succes;
     }
 
-    /**
-     * Helper utilisé par GestionChambresFrame quand l'admin déclare une panne.
-     * Crée la ligne maintenance ET passe la chambre en MAINTENANCE.
-     */
     public boolean declarerPanneAvecChambre(int idChambre, String description,
                                             LocalDate dateDebut, LocalDate dateFin) {
         if (idChambre <= 0) {
@@ -70,8 +66,7 @@ public class MaintenanceService {
 
     /**
      * Termine la maintenance active sur une chambre ET la libère.
-     * Utilisé soit depuis InterventionsFrame (côté maintenance),
-     * soit depuis GestionChambresFrame quand l'admin veut remettre directement la chambre disponible.
+
      */
     public boolean terminerMaintenance(int idMaintenance) {
         Maintenance m = maintenanceDAO.trouverParId(idMaintenance);

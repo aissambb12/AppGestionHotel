@@ -9,9 +9,6 @@ public interface ReservationChambreDAO {
     boolean libererChambre(int idReservation, int idChambre);
     List<ReservationChambre> listerParReservation(int idReservation); // Permet de voir toutes les chambres d'un groupe
 
-    /**
-     * Vérifie si une chambre spécifique est occupée ou réservée sur une période donnée.
-     * Sécurité double au niveau du DAO avant l'insertion finale.
-     */
+
     boolean estChambreOccupee(int idChambre, LocalDate arrivee, LocalDate depart);
 }
